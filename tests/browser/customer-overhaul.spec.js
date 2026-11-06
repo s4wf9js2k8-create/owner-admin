@@ -12,8 +12,8 @@ async function openCustomer(page) {
 test("customer task board supports task creation, checklist, notes and status changes",async ({page})=>{
   await openCustomer(page);
   await navigate(page,"Tasks & projects");
-  await expect(page.getByRole("heading",{name:"Tasks & Projects"})).toBeVisible();
-  await expect(page.getByRole("button",{name:"Board"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Tasks & Projects",exact:true})).toBeVisible();
+  await expect(page.getByRole("button",{name:"Board",exact:true})).toBeVisible();
   await page.getByRole("button",{name:"New task"}).click();
   await page.getByRole("textbox",{name:"Task title"}).fill("Sample review workshop equipment");
   await page.getByRole("textbox",{name:"Description"}).fill("Inspect sample equipment and record findings");
@@ -30,7 +30,7 @@ test("customer task board supports task creation, checklist, notes and status ch
   await expect(page.getByText("Sample check begun")).toBeVisible();
   await page.getByRole("combobox",{name:"Task status"}).selectOption("Complete");
   await page.getByRole("button",{name:"Close dialog"}).click();
-  await page.getByRole("button",{name:"List"}).click();
+  await page.getByRole("button",{name:"List",exact:true}).click();
   await expect(page.getByRole("row").filter({hasText:"Sample review workshop equipment"})).toContainText("Complete");
   await navigate(page,"Calendar");
   await expect(page.getByRole("heading",{name:"Calendar"}).first()).toBeVisible();
@@ -66,7 +66,7 @@ test("different customer modules use purpose-built presentation",async ({page})=
   await expect(page.locator(".purpose-card").first()).toBeVisible();
   await navigate(page,"Tasks & projects");
   await expect(page.locator(".kanban-column")).toHaveCount(3);
-  await page.getByRole("button",{name:"List"}).click();
+  await page.getByRole("button",{name:"List",exact:true}).click();
   await expect(page.getByRole("table")).toBeVisible();
 });
 
