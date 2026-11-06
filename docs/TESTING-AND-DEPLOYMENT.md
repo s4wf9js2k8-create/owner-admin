@@ -25,3 +25,5 @@ On 6 November 2026: lint passed; 5 model tests passed; production build passed; 
 ## Backend preparation coverage
 
 `npm test` discovers all `tests/*.test.js`, including the fictional adapter contract suite. Browser tests inject alternate adapters at the entry module to exercise loading, load retry, mutation failure and empty states without shipping fault controls in the app. The reset and drawer tests run at all three configured viewport sizes. No real accounts or Firebase calls are used. The future security suite is specified in [THREAT-MODEL.md](THREAT-MODEL.md); it has not been implemented or passed.
+
+CI uses GitHub’s Ubuntu runner preinstalled Chrome through `CHROMIUM_PATH=/usr/bin/google-chrome`, running the same Playwright Chromium projects without downloading a second browser or reinstalling system packages. Local runs continue to use `/usr/bin/chromium` when present or Playwright-managed Chromium otherwise.
