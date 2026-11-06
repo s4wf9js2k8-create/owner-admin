@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { isTaskModule } from "./customerModules";
+import { isTaskModule, moduleInfo } from "./customerModules";
+import CustomerPeopleOps from "./CustomerPeopleOps";
+import CustomerAssetOps from "./CustomerAssetOps";
 import { moduleAllowed, demoRoleDefaults, scopedRecords } from "./customerWorkflows";
 import CustomerTaskBoard from "./CustomerTaskBoard";
 import CustomerModulePage from "./CustomerModulePage";
@@ -54,7 +56,9 @@ export default function CustomerWorkspace({
   else if(current==="Notifications")content=<CustomerNotifications {...shared} readIds={readIds} setReadIds={setReadIds}/>;
   else if(current==="Settings")content=<CustomerSettings org={visibleOrg} prefs={prefs} setPrefs={setPrefs} roles={customerRoles} setRoles={setCustomerRoles} roleModules={roleModules} setRoleModules={setRoleModules} customerRole={customerRole}/>;
   else if(current==="Insights"||current==="Reporting"||current==="Reports & analytics")content=<CustomerInsights {...shared}/>;
-  else if(isTaskModule(current))content=<CustomerTaskBoard org={visibleOrg} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} actor={actor} canEdit={canEdit} canCreate={canCreate} canApprove={canApprove} createRequest={createRequest} focusId={focusId}/>;
+  else if(isTaskModule(current))content=<CustomerTaskBoard org={visibleOrg} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} actor={actor} canEdit={canEdit} canCreate={canCreate} canApprove={canApprove} createRequest={createRequest} focusId={focusId} onNavigate={navigate}/>;
+  else if(["people","timesheets","schedule","leave","training"].includes(moduleInfo(current).type))content=<CustomerPeopleOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit} canApprove={canApprove}/>;
+  else if(["assets","maintenance","inspections","inventory"].includes(moduleInfo(current).type))content=<CustomerAssetOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit} canApprove={canApprove}/>;
   else content=<CustomerModulePage key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canEdit={canEdit} canCreate={canCreate} canApprove={canApprove}/>;
   return <div className={"customer-shell "+(prefs.compact?"customer-compact":"")}>
     <div className="customer-context"><span>{org.name}</span><span>Fictional customer demo</span><span>{visibleOrg.modules.length} accessible modules</span></div>
