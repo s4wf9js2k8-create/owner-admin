@@ -1,5 +1,6 @@
 # Future Owner Admin Firebase design — documentation only
 
+Historical preparation: Channel Systems has selected an independent PostgreSQL/Node/Docker backend. This Firebase work is retained for reference and is not used by the new backend. See [self-hosting](self-hosting/README.md).
 No Firebase project has been selected, initialized, accessed or connected. There is no Firebase SDK, live config, billing setup or real account here. Issue #8 adds an offline interface and an unwired deny-all prototype Rules file; see [Firebase preparation](FIREBASE-PREPARATION.md). EVLT's live repository, Firebase configuration, credentials, database and hosting must not be accessed or modified as part of this design work. Reusing the EVLT project is an unapproved option requiring a separate security and operational feasibility review. Google quota approval may be needed if separate projects are chosen; this proposal makes no production-security claim.
 
 ## Architecture assessment: separate project recommended, decision awaits approval

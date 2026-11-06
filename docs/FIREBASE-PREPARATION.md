@@ -1,5 +1,6 @@
 # Dedicated Channel Systems Firebase preparation — issue #8
 
+Historical preparation: Channel Systems has selected an independent PostgreSQL/Node/Docker backend. This Firebase work is retained for reference and is not used by the new backend. See [self-hosting](self-hosting/README.md).
 Status: offline interface and prototype policy only. No SDK, live project, app registration, credentials, authentication provider, deployment or paid service has been added. EVLT is untouched. The unchanged public demo still uses `fictional.js`; its production import graph contains neither the offline service nor the Firebase preparation module.
 
 ## Use and contracts
