@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Panel, Empty, Modal } from "./components";
+import { Panel, Empty, Modal, Status } from "./components";
 import { CalendarDays, CheckCircle2, ClipboardList, List, LayoutGrid, Plus, Search, SlidersHorizontal, Clock3, Flag, UserRound, ArrowRight, Repeat2 } from "lucide-react";
 
 const states = ["Planned", "In progress", "Complete"];
