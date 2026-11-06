@@ -64,15 +64,15 @@ test("customer modules are interactive and session records remain scoped", async
     .getByRole("button", { name: "Explore customer workspace" })
     .click();
   await navigate(page, "Volunteers");
-  await page.getByRole("button", { name: "New directory" }).click();
-  await page.getByLabel("Record title").fill("Sample isolated volunteer");
+  await page.getByRole("button", { name: "Add person" }).click();
+  await page.getByRole("textbox", { name: "Name", exact: true }).fill("Sample isolated volunteer");
   await page
-    .getByLabel("Description", { exact: true })
+    .getByLabel("Profile notes", { exact: true })
     .fill("Fictional welcome team");
-  await page.getByRole("button", { name: "Create sample record" }).click();
-  await page.getByRole("button", {name:"View Sample isolated volunteer"}).click();
-  await page.getByLabel("Record status").selectOption("Complete");
-  await expect(page.getByLabel("Record status")).toHaveValue("Complete");
+  await page.getByRole("button", { name: "Save sample person" }).click();
+  await page.locator(".people-profile").filter({hasText:"Sample isolated volunteer"}).getByRole("button",{name:"Open profile"}).click();
+  await page.getByRole("textbox",{name:"Team",exact:true}).fill("Sample welcome team");
+  await expect(page.getByRole("textbox",{name:"Team",exact:true})).toHaveValue("Sample welcome team");
   await page.getByRole("button", {name:"Close dialog"}).click();
   await page
     .getByLabel("Example workspace", { exact: true })
