@@ -1,6 +1,6 @@
 import React,{useState} from "react";
 import {Panel,Empty,Status} from "./components";
-import {CalendarDays,Users,Ticket,Plus,CheckCircle2,Clock3} from "lucide-react";
+import {CalendarDays,Ticket,Plus,CheckCircle2,Clock3} from "lucide-react";
 const fmt = d => d?new Date(d).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short"}):"Unscheduled";
 const capacity = e => Math.max(0,Number(e.capacity)||0);
 const eventRows = (records,org)=>records.filter(r=>r.orgId===org.id&&["Events & bookings","Events"].includes(r.module)&&r.recordType!=="booking");
