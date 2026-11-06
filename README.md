@@ -51,3 +51,5 @@ The generic record workflow demonstrates reusable infrastructure, not finished a
 The existing business and sales documents are drafts, not product claims or pricing commitments.
 
 Offline development: see the [offline backend foundation](docs/OFFLINE-BACKEND.md) for synthetic sessions, tenant-authorized resource operations, tests and future integration gates. The public demonstration remains on its fictional adapter; no live authentication or database is connected.
+
+[Dedicated Firebase preparation](docs/FIREBASE-PREPARATION.md) documents the offline-only interface, draft collections/Rules and environment inventory for a future independently approved Channel Systems project. It cannot connect to a live Firebase project.
