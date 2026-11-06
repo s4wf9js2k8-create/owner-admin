@@ -111,10 +111,10 @@ test("explicit reset clears records, settings, activity and navigation", async (
     .getByRole("button", { name: "Explore customer workspace" })
     .click();
   await navigate(page, "Volunteers");
-  await page.getByRole("button", { name: "Add sample record" }).click();
+  await page.getByRole("button", { name: "New directory" }).click();
   await page.getByLabel("Record title").fill("Fictional reset example");
-  await page.getByLabel("Details", { exact: true }).fill("Session only");
-  await page.getByRole("button", { name: "Save sample record" }).click();
+  await page.getByLabel("Description", { exact: true }).fill("Session only");
+  await page.getByRole("button", { name: "Create sample record" }).click();
   await expect(
     page.getByText("Fictional reset example", { exact: true }),
   ).toBeVisible();
