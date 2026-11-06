@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Panel, Empty, Status } from "./components";
-import { AlertTriangle, ArrowRight, Bell, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, ClipboardList, Filter, LayoutDashboard, Plus, Search, Settings2, ShieldCheck, Sparkles, UserRound, Zap, Building2, TrendingUp } from "lucide-react";
-import { moduleInfo, moduleTypeLabel, isTaskModule } from "./customerModules";
+import { AlertTriangle, ArrowRight, Bell, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, ClipboardList, LayoutDashboard, Plus, Search, ShieldCheck, Zap, Building2 } from "lucide-react";
+import { moduleInfo } from "./customerModules";
 const today = () => new Date().toISOString().slice(0,10);
 const format = d => d ? new Date(d.slice(0,10)+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) : "Not scheduled";
 const priorityScore = p => ({Urgent:4,High:3,Normal:2,Low:1}[p]||2);
@@ -11,7 +11,7 @@ const upcoming = all => [...all].filter(r=>recordDate(r)).sort((a,b)=>recordDate
 const stat = (icon,label,value,caption) => <div className="metric-tile">{icon}<span>{label}</span><strong>{value}</strong><small>{caption}</small></div>;
 function dateName(date) {return date.toLocaleDateString("en-GB",{month:"long",year:"numeric"});}
 function recordTitle(record) {return record.title;}
-export function CustomerDashboard({org,records,onNavigate,onUpdate}) {
+export function CustomerDashboard({org,records,onNavigate}) {
   const all=records.filter(r=>r.orgId===org.id && org.modules.includes(r.module));
   const open=all.filter(r=>r.status!=="Complete");
   const overdue=open.filter(isLate);
@@ -36,7 +36,7 @@ export function CustomerDashboard({org,records,onNavigate,onUpdate}) {
         {attention.length ? attention.slice(0,6).map(r=><div className="attention-row" key={r.id}>
           <div className={"attention-icon "+(isLate(r)?"attention-late":"")}><ClipboardList size={17}/></div>
           <div><h3>{recordTitle(r)}</h3><small>{r.module} · {r.owner||"Unassigned"} · {format(r.dueDate)}</small></div>
-          <button onClick={()=>onNavigate(isTaskModule(r.module)?"Tasks & projects":r.module)} aria-label={"View "+r.title}><ArrowRight size={17}/></button>
+          <button onClick={()=>onNavigate(r.module)} aria-label={"View "+r.title}><ArrowRight size={17}/></button>
         </div>) : <Empty>Everything is completed.</Empty>}
         <button className="text-action" onClick={()=>onNavigate("My work")}>Open full work queue <ArrowRight size={15}/></button>
       </Panel>
@@ -74,7 +74,7 @@ export function CustomerMyWork({org,records,onNavigate,onUpdate}) {
     {results.length?<div className="work-feed">{results.map(r=><article key={r.id} className="work-feed-item">
       <div className="work-feed-icon"><ClipboardList size={19}/></div>
       <div><small className="eyebrow">{r.module}</small><h3>{r.title}</h3><p>{r.detail||"No additional details."}</p><div className="work-tags"><Status>{r.status}</Status><span>{r.priority||"Normal"} priority</span><span>{r.owner||"Unassigned"}</span><span className={isLate(r)?"task-overdue":""}>{format(r.dueDate)}</span></div></div>
-      <div className="work-feed-actions">{r.status!=="Complete"&&<button onClick={()=>onUpdate(org.id,r.id,{status:"Complete"})}><CheckCircle2 size={16}/> Mark done</button>}<button onClick={()=>onNavigate(isTaskModule(r.module)?"Tasks & projects":r.module)}>Open <ArrowRight size={15}/></button></div>
+      <div className="work-feed-actions">{r.status!=="Complete"&&<button onClick={()=>onUpdate(org.id,r.id,{status:"Complete"})}><CheckCircle2 size={16}/> Mark done</button>}<button onClick={()=>onNavigate(r.module)}>Open <ArrowRight size={15}/></button></div>
     </article>)}</div>:<Empty>Nothing matches those filters.</Empty>}
   </div>;
 }
