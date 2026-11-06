@@ -31,3 +31,7 @@ CI uses GitHub’s Ubuntu runner preinstalled Chrome through `CHROMIUM_PATH=/usr
 ## Offline tenant policy (issue #4)
 
 Run `npm run test:policy` (or `node --test tests/tenant-policy.test.js`) with Node.js 22+; no npm dependencies, network access, Firebase SDK/CLI, real project or emulator is required. The existing `npm test` glob includes its 14 named tests in CI, bringing unit/model/policy coverage to 30 tests. The policy uses only synthetic A/B fixtures outside `src/`; it establishes model invariants, not Firebase Rules/Auth/IAM enforcement. See [the proof-of-concept README](../proof-of-concepts/tenant-authorization/README.md) and [the decision record](TENANCY-DECISION.md) for exact limits and future checks.
+
+## Issue #6 offline foundation
+
+The disposable [offline service](OFFLINE-BACKEND.md) is covered by `tests/offline.test.js` (automatically included in `npm test`) and `tests/browser/offline.spec.js` (all three Chromium viewport projects). It is never mounted in the public demonstration or included in its production import graph. Branch CI validates it without deploying; the existing Pages workflow still deploys only main or explicit workflow dispatch. No workflow is changed by this implementation.

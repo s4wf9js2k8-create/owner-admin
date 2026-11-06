@@ -40,3 +40,7 @@ See [future Firebase design](FIREBASE-DESIGN.md) and [threat model and security 
 ## Offline architecture assessment (issue #4)
 
 [TENANCY-DECISION.md](TENANCY-DECISION.md) reviews this boundary against shared/separate Firebase and Postgres alternatives. The [synthetic policy model](../proof-of-concepts/tenant-authorization/README.md) explores only a hypothetical trusted record API; it is not imported by this adapter or the public demo and provides no live authentication or Firebase isolation. Real token verification, identity-realm binding, current authoritative state and transaction-safe authorization remain implementation gates.
+
+## Offline service implementation (issue #6)
+
+A separate [offline backend foundation](OFFLINE-BACKEND.md) now implements protected-style resource ports with fake sessions, memberships, invitations, configuration, versioned CRUD and internal audit. The public adapter described above remains unchanged. The offline service deliberately excludes unsafe demo snapshot/reset/bulk replacement/audit append ports; it must not be mistaken for live authentication or database isolation. See the linked port reference and future integration checklist.
