@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { modules, toggleModule } from "../model";
 import { Panel } from "../components";
-import { Blocks, CheckCircle2, Search } from "lucide-react";
+import { Blocks, CheckCircle2 } from "lucide-react";
 const groups = [
   ["Work & collaboration",["Tasks & projects","Documents & files","Reports & analytics","Forms and surveys"]],
   ["People & scheduling",["Staff & volunteers","Attendance & timesheets","Shift rotas","Leave and availability","Training and qualifications"]],
