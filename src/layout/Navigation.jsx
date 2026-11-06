@@ -10,6 +10,9 @@ import {
   Settings,
   Menu,
   X,
+  CalendarDays,
+  ClipboardList,
+  ChartNoAxesCombined,
 } from "lucide-react";
 const pages = [
   ["Overview", LayoutDashboard],
@@ -87,7 +90,7 @@ export default function Navigation({ controller }) {
         </div>
         <nav aria-label="Main navigation">
           {(customer
-            ? ["Dashboard", ...active.modules].map((n) => [n, LayoutDashboard])
+            ? [["Dashboard", LayoutDashboard], ["My work", ClipboardList], ["Calendar", CalendarDays], ["Insights", ChartNoAxesCombined], ...active.modules.map((n) => [n, LayoutDashboard])]
             : pages
           ).map(([name, Icon]) => (
             <button
