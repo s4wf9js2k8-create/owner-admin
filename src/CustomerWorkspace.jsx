@@ -10,7 +10,9 @@ export default function CustomerWorkspace({
   setPage,
 }) {
   const [query, setQuery] = useState(""),
-    [adding, setAdding] = useState(false);
+    [adding, setAdding] = useState(false),
+    [statusFilter, setStatusFilter] = useState("All"),
+    [sortBy, setSortBy] = useState("title");
   const current = org.modules.includes(page) ? page : "Dashboard";
   const all = visibleRecords(records, org),
     rows = visibleRecords(
@@ -19,6 +21,18 @@ export default function CustomerWorkspace({
       current === "Dashboard" || current === "Reporting" ? null : current,
       query,
     );
+  const open = all.filter((r) => r.status !== "Complete");
+  const complete = all.filter((r) => r.status === "Complete");
+  const completion = all.length ? Math.round((complete.length / all.length) * 100) : 0;
+  const filtered = rows.filter((r) => statusFilter === "All" || r.status === statusFilter)
+    .sort((a, b) => sortBy === "status" ? a.status.localeCompare(b.status) || a.title.localeCompare(b.title) : a.title.localeCompare(b.title));
+  const moduleHelp = {
+    Tasks: "Track operational work through planning, delivery and completion. Assignment and due dates are not yet supported.",
+    Attendance: "View sample attendance records. Clock-in, approval and timesheet calculations are not yet implemented.",
+    Maintenance: "Track sample maintenance jobs. Asset registers, inspection sign-off and scheduled servicing are not yet implemented.",
+    Documents: "Track sample document records. File versioning and approvals are not yet implemented.",
+    Events: "Track sample events. Scheduling, staffing and capacity management are not yet implemented.",
+  };
   return (
     <>
       <div className="heading">
@@ -46,6 +60,11 @@ export default function CustomerWorkspace({
               </article>
             ))}
           </div>
+          <Panel title="Operational snapshot">
+            <p>{open.length} outstanding records across {org.modules.filter((m) => m !== "Reporting").length} operational modules · {completion}% complete.</p>
+            <progress value={completion} max="100" aria-label="Overall completion percentage" style={{width:"100%"}} />
+            {open.length === 0 && <p>Nothing currently needs attention in this fictional workspace.</p>}
+          </Panel>
           <Panel title="Your workspace">
             <div className="quick-actions">
               {org.modules.map((m) => (
@@ -62,8 +81,7 @@ export default function CustomerWorkspace({
             </div>
           </Panel>
           <Panel title="Daily attention list">
-            {all
-              .filter((r) => r.status !== "Complete")
+            {open
               .slice(0, 5)
               .map((r) => (
                 <div className="ticket" key={r.id}>
@@ -73,6 +91,7 @@ export default function CustomerWorkspace({
                   <button onClick={() => setPage(r.module)}>Open module</button>
                 </div>
               ))}
+            {open.length > 5 && <p className="muted">Showing the first five outstanding records. Open a module for the full list.</p>}
           </Panel>
         </>
       ) : current === "Reporting" ? (
@@ -81,20 +100,17 @@ export default function CustomerWorkspace({
             Counts reflect this organisation’s enabled modules and session
             changes.
           </p>
-          <Table headings={["Module", "Records", "Complete"]}>
+          <div className="cards"><article><small>Total records</small><strong>{all.length}</strong></article><article><small>Outstanding</small><strong>{open.length}</strong></article><article><small>Completion rate</small><strong>{completion}%</strong></article></div>
+          <Table headings={["Module", "Records", "Outstanding", "Complete", "Completion rate"]}>
             {org.modules
               .filter((m) => m !== "Reporting")
               .map((m) => (
                 <tr key={m}>
                   <th scope="row">{m}</th>
                   <td>{all.filter((r) => r.module === m).length}</td>
-                  <td>
-                    {
-                      all.filter(
-                        (r) => r.module === m && r.status === "Complete",
-                      ).length
-                    }
-                  </td>
+                  <td>{all.filter((r) => r.module === m && r.status !== "Complete").length}</td>
+                  <td>{all.filter((r) => r.module === m && r.status === "Complete").length}</td>
+                  <td>{all.some((r) => r.module === m) ? Math.round(100 * all.filter((r) => r.module === m && r.status === "Complete").length / all.filter((r) => r.module === m).length) + "%" : "—"}</td>
                 </tr>
               ))}
           </Table>
@@ -102,6 +118,8 @@ export default function CustomerWorkspace({
         </Panel>
       ) : (
         <Panel title={current}>
+          <p className="muted">{moduleHelp[current] || "Manage fictional records for this module. Specialist workflows are still in development."}</p>
+          <div className="cards"><article><small>Records</small><strong>{all.filter(r => r.module === current).length}</strong></article><article><small>Outstanding</small><strong>{all.filter(r => r.module === current && r.status !== "Complete").length}</strong></article><article><small>Completed</small><strong>{all.filter(r => r.module === current && r.status === "Complete").length}</strong></article></div>
           <div className="toolbar">
             <input
               aria-label="Search module records"
@@ -109,11 +127,14 @@ export default function CustomerWorkspace({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
+            <label>Status <select aria-label="Filter records by status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>{["All", "Planned", "In progress", "Complete"].map(x => <option key={x}>{x}</option>)}</select></label>
+            <label>Sort <select aria-label="Sort module records" value={sortBy} onChange={e => setSortBy(e.target.value)}><option value="title">Title</option><option value="status">Status</option></select></label>
             <button onClick={() => setAdding(true)}>Add sample record</button>
           </div>
-          {rows.length ? (
+          <p role="status">Showing {filtered.length} of {all.filter(r => r.module === current).length} records</p>
+          {filtered.length ? (
             <Table headings={["Record", "Details", "Progress"]}>
-              {rows.map((r) => (
+              {filtered.map((r) => (
                 <tr key={r.id}>
                   <th scope="row">{r.title}</th>
                   <td>{r.detail}</td>
@@ -134,7 +155,7 @@ export default function CustomerWorkspace({
               ))}
             </Table>
           ) : (
-            <Empty />
+            <Empty>No records match these filters. Try another status or search term.</Empty>
           )}
           <p className="muted">
             Progress is a generic demonstration workflow. Attendance approval,
