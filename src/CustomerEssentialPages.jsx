@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Panel, Empty, Status } from "./components";
-import { AlertTriangle, ArrowRight, Bell, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, ClipboardList, LayoutDashboard, Plus, Search, ShieldCheck, Zap, Building2, Users } from "lucide-react";
+import { AlertTriangle, ArrowRight, Bell, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, ClipboardList, LayoutDashboard, Plus, Search, ShieldCheck, Building2, Users } from "lucide-react";
 import { moduleInfo, isTaskModule } from "./customerModules";
 import { onSiteEntries, upcomingShifts, firstModuleOfType } from "./customerWorkflows";
 const today = () => new Date().toISOString().slice(0,10);
@@ -11,7 +11,6 @@ const isLate = r => r.status!=="Complete" && r.dueDate && r.dueDate < today();
 const upcoming = all => [...all].filter(r=>recordDate(r)).sort((a,b)=>recordDate(a).localeCompare(recordDate(b)));
 const stat = (icon,label,value,caption) => <div className="metric-tile">{icon}<span>{label}</span><strong>{value}</strong><small>{caption}</small></div>;
 function dateName(date) {return date.toLocaleDateString("en-GB",{month:"long",year:"numeric"});}
-function recordTitle(record) {return record.title;}
 const widgetNames={staff:"Staff on site",shifts:"Upcoming shifts",attention:"Work needing attention",progress:"Completion progress"};
 export function CustomerDashboard({org,records,onNavigate,prefs,setPrefs,actor}) {
   const [customising,setCustomising]=useState(false);
@@ -120,25 +119,47 @@ export function CustomerNotifications({org,records,readIds,setReadIds,onNavigate
     {!visible.length&&<Empty>You're all caught up with this notification filter.</Empty>}</div>;
 }
 const permissions=["View","Create","Edit","Approve","Export","Manage"];
-export function CustomerSettings({org,prefs,setPrefs,roles,setRoles}) {
+export function CustomerSettings({org,records,prefs,setPrefs,roles,setRoles,roleModules,setRoleModules,roleTeams,setRoleTeams,customerRole,canManage,onNavigate}) {
   const [newRole,setNewRole]=useState("");
   const [role,setRole]=useState("Administrator");
   const roleNames=Object.keys(roles);
   const selected=roles[role]||[];
-  return <div className="utility-page"><div className="customer-page-intro"><div><span className="eyebrow">WORKSPACE PREFERENCES</span><h2>Settings</h2><p>Configure this fictional workspace and try a custom-role permissions builder.</p></div></div>
-    <div className="settings-layout"><Panel title="Workspace preferences"><div className="settings-sample-brand"><Building2 size={26}/><div><strong>{org.name}</strong><small>Example organisation · {org.modules.length} modules</small></div></div>
-      <label>Default home view<select value={prefs.home||"Dashboard"} onChange={e=>setPrefs({...prefs,home:e.target.value})}>{["Dashboard","My work","Calendar"].map(x=><option key={x}>{x}</option>)}</select></label>
-      <label className="setting-toggle"><input type="checkbox" checked={Boolean(prefs.compact)} onChange={e=>setPrefs({...prefs,compact:e.target.checked})}/> Compact display preference</label>
-      <label className="setting-toggle"><input type="checkbox" checked={prefs.reminders!==false} onChange={e=>setPrefs({...prefs,reminders:e.target.checked})}/> Show overdue reminders in the demo</label>
-      <p className="module-disclaimer">Preferences are demonstration-only and remain in this session. No real account settings are changed.</p>
-    </Panel>
-    <Panel title="Custom roles & permissions"><p className="panel-helper">Prototype a role, then choose which actions it can perform. Actual access control must be implemented on the server before release.</p>
-      <label>Edit role<select aria-label="Choose custom role" value={role} onChange={e=>setRole(e.target.value)}>{roleNames.map(name=><option key={name}>{name}</option>)}</select></label>
-      <div className="permission-grid">{permissions.map(p=><label className="permission-switch" key={p}><input type="checkbox" checked={selected.includes(p)} onChange={e=>setRoles(current=>({...current,[role]:e.target.checked?[...new Set([...(current[role]||[]),p])]:(current[role]||[]).filter(x=>x!==p)}))}/><span>{p}</span></label>)}</div>
-      <form className="create-role-form" onSubmit={e=>{e.preventDefault();const name=newRole.trim();if(name && !roles[name]){setRoles(prev=>({...prev,[name]:["View"]}));setRole(name);setNewRole("");}}}><label>New role<input value={newRole} maxLength={40} onChange={e=>setNewRole(e.target.value)} placeholder="e.g. Team leader" required /></label><button type="submit"><Plus size={16}/> Add role</button></form>
-      <p className="module-disclaimer">This visual role builder does not enforce permissions or create real staff accounts.</p>
-    </Panel></div>
-    <Panel title="Enabled modules"><div className="module-shortcut-grid">{org.modules.map(m=><div className="module-shortcut module-shortcut-static" key={m}><ShieldCheck size={20}/><span><strong>{m}</strong><small>{moduleInfo(m).subtitle}</small></span></div>)}</div></Panel>
+  const permitted=roleModules[role]||[];
+  const selectedAll=permitted.includes("*");
+  const teams=[...new Set(records.filter(r=>["Staff & volunteers","Staff","Volunteers"].includes(r.module)).map(r=>r.team).filter(Boolean))];
+  const availableWidgets={staff:"Staff on site",shifts:"Upcoming shifts",attention:"Work needing attention",progress:"Completion progress"};
+  const toggleModule=(module,enabled)=>{
+    const current=selectedAll?[...org.modules]:permitted.filter(x=>x!=="*");
+    setRoleModules(old=>({...old,[role]:enabled?[...new Set([...current,module])]:current.filter(x=>x!==module)}));
+  };
+  return <div className="utility-page"><div className="customer-page-intro"><div><span className="eyebrow">WORKSPACE PREFERENCES</span><h2>Settings</h2><p>Configure the dashboard and try role, action, module and team scoping using temporary sample data.</p></div></div>
+    <div className="settings-layout">
+      <Panel title="Workspace preferences">
+        <div className="settings-sample-brand"><Building2 size={26}/><div><strong>{org.name}</strong><small>Example organisation · {org.modules.length} visible modules</small></div></div>
+        <label>Preferred start view<select value={prefs.home||"Dashboard"} onChange={e=>setPrefs({...prefs,home:e.target.value})}>{["Dashboard","My work","Calendar"].map(x=><option key={x}>{x}</option>)}</select></label>
+        <button onClick={()=>onNavigate(prefs.home||"Dashboard")}>Go to preferred start view</button>
+        <label className="setting-toggle"><input type="checkbox" checked={Boolean(prefs.compact)} onChange={e=>setPrefs({...prefs,compact:e.target.checked})}/> Compact display</label>
+        <label className="setting-toggle"><input type="checkbox" checked={prefs.reminders!==false} onChange={e=>setPrefs({...prefs,reminders:e.target.checked})}/> Show overdue notifications</label>
+        <h3>Dashboard widgets</h3>
+        <div className="permission-grid">{Object.entries(availableWidgets).map(([id,label])=><label className="permission-switch" key={id}><input type="checkbox" checked={(prefs.widgets||[]).includes(id)} onChange={e=>setPrefs({...prefs,widgets:e.target.checked?[...new Set([...(prefs.widgets||[]),id])]:(prefs.widgets||[]).filter(x=>x!==id)})}/>{label}</label>)}</div>
+        <p className="module-disclaimer">These settings change the demo immediately, and reset when you refresh.</p>
+      </Panel>
+      <Panel title="Custom roles & permissions">
+        <p className="panel-helper">Choose what a simulated role can do, which modules it sees and the team it covers. Current role: <strong>{customerRole}</strong>.</p>
+        <label>Edit role<select aria-label="Choose custom role" value={role} onChange={e=>setRole(e.target.value)}>{roleNames.map(name=><option key={name}>{name}</option>)}</select></label>
+        <h3>Allowed actions</h3>
+        <div className="permission-grid">{permissions.map(p=><label className="permission-switch" key={p}><input type="checkbox" disabled={!canManage} checked={selected.includes(p)} onChange={e=>setRoles(current=>({...current,[role]:e.target.checked?[...new Set([...(current[role]||[]),p])]:(current[role]||[]).filter(x=>x!==p)}))}/><span>{p}</span></label>)}</div>
+        <h3>Module visibility</h3>
+        <div className="permission-grid">{org.modules.map(m=><label className="permission-switch" key={m}><input type="checkbox" disabled={!canManage} checked={selectedAll||permitted.includes(m)} onChange={e=>toggleModule(m,e.target.checked)}/><span>{m}</span></label>)}</div>
+        <label>Team restriction<select aria-label="Role team scope" disabled={!canManage} value={roleTeams[role]||"All teams"} onChange={e=>setRoleTeams(old=>({...old,[role]:e.target.value}))}><option>All teams</option>{teams.map(team=><option key={team}>{team}</option>)}</select></label>
+        <form className="create-role-form" onSubmit={e=>{e.preventDefault();const name=newRole.trim();if(name&&!roles[name]){setRoles(prev=>({...prev,[name]:["View"]}));setRoleModules(old=>({...old,[name]:[]}));setRoleTeams(old=>({...old,[name]:"All teams"}));setRole(name);setNewRole("");}}}>
+          <label>New role<input value={newRole} maxLength={40} onChange={e=>setNewRole(e.target.value)} placeholder="e.g. Team leader" required disabled={!canManage}/></label>
+          <button type="submit" disabled={!canManage}><Plus size={16}/> Add role</button>
+        </form>
+        <p className="module-disclaimer">This is only a role-visibility demonstration. It does not authenticate users or enforce server-side permissions.</p>
+      </Panel>
+    </div>
+    <Panel title="Available modules"><div className="module-shortcut-grid">{org.modules.map(m=><div className="module-shortcut module-shortcut-static" key={m}><ShieldCheck size={20}/><span><strong>{m}</strong><small>{moduleInfo(m).subtitle}</small></span></div>)}</div></Panel>
   </div>;
 }
 export function CustomerInsights({org,records,onNavigate}) {
