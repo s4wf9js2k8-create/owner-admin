@@ -21,8 +21,8 @@ test("customer task board supports task creation, checklist, notes and status ch
   await page.getByLabel("Due date").fill("2026-11-20");
   await page.getByRole("textbox",{name:"Checklist items (one per line)"}).fill("Prepare kit\nCheck readings");
   await page.getByRole("button",{name:"Create task"}).click();
-  await expect(page.getByRole("button",{name:"Sample review workshop equipment"})).toBeVisible();
-  await page.getByRole("button",{name:"Sample review workshop equipment"}).click();
+  await expect(page.getByRole("button",{name:"Sample review workshop equipment",exact:true})).toBeVisible();
+  await page.getByRole("button",{name:"Sample review workshop equipment",exact:true}).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.getByRole("checkbox",{name:"Prepare kit"}).check();
   await page.getByRole("textbox",{name:"New note"}).fill("Sample check begun");
