@@ -86,7 +86,7 @@ test("customer modules are interactive and session records remain scoped", async
     .selectOption("demo-engineering");
   await navigate(page, "Work orders");
   await expect(
-    page.getByRole("row").filter({ hasText: "Replace pump seal" }),
+    page.getByText("Replace pump seal", { exact: true }),
   ).toBeVisible();
   await page
     .getByLabel("Example workspace", { exact: true })
