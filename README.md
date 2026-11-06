@@ -55,3 +55,5 @@ Offline development: see the [offline backend foundation](docs/OFFLINE-BACKEND.m
 [Dedicated Firebase preparation](docs/FIREBASE-PREPARATION.md) documents the offline-only interface, draft collections/Rules and environment inventory for a future independently approved Channel Systems project. It cannot connect to a live Firebase project.
 
 Try **Company onboarding simulation** for operator provisioning, Essential/Professional/Enterprise templates, client package/feature requests and explicit approval. See [the workflow and service reference](docs/COMPANY-ONBOARDING.md). All identities, companies and invitations remain fictional and disposable.
+
+The selected backend direction is now **self-hosted PostgreSQL + Node.js + Docker Compose**. See [installation, security, recovery and verification](docs/self-hosting/README.md). The explicit **Private server workspace** connects to the same-origin API; the fictional demo remains the default. Firebase preparation is historical only. No live server has been deployed, and this foundation is not yet approved for production/customer data.

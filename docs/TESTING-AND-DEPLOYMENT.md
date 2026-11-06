@@ -45,3 +45,7 @@ Verified locally on 2026-11-06: lint passed, all 45 unit/model/service/policy/pr
 ## Issue #10 company onboarding
 
 Verified locally on 2026-11-06: lint passed, all 50 unit/model/service/security/preparation tests passed, production build passed, all 45 Chromium browser cases passed across desktop/phone/tablet, and `git diff --check` passed. The new browser cases cover operator approval of package and feature requests and company provisioning/invitation/suspension/reactivation. No Firebase, Rules or deployment configuration changed. The [onboarding simulation](COMPANY-ONBOARDING.md) remains explicitly fictional and disposable; it makes no production security or billing claims.
+
+## Independent PostgreSQL backend
+
+The selected replacement is now Node/PostgreSQL/Docker. See [self-hosted test evidence](self-hosting/TESTING.md) and [installation and launch gates](self-hosting/README.md). Local checks passed 52 frontend/model tests, nine real PostgreSQL integration groups, 51 browser cases, Docker image/Compose health and the packaged backup/restore/browser rehearsal. No live deployment occurred. The existing demo remains independent; Firebase preparation is historical only.

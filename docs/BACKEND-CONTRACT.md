@@ -52,3 +52,7 @@ A separate [offline backend foundation](OFFLINE-BACKEND.md) now implements prote
 ## Company onboarding service ports (issue #10)
 
 The offline service now adds operator-only companies, versioned package templates and request/approval ports. Tenant admins submit requests but cannot grant entitlements. See [company onboarding](COMPANY-ONBOARDING.md) for signatures, catalogue compatibility and limitations. Existing fictional adapter and Firebase preparation signatures are preserved.
+
+## Independent PostgreSQL service
+
+[Self-hosting](self-hosting/README.md) documents the selected replacement direction: a server-authorized Node API, PostgreSQL RLS and private filesystem storage. `src/backend/postgres.js` provides same-origin auth/record operations while demo/offline contracts stay unchanged. The private workspace opts in explicitly; no environment setting silently replaces the public demonstration. Authenticated server projections intentionally exclude global fixture snapshots, demo resets and client-supplied audit append. Firebase preparation remains historical only.

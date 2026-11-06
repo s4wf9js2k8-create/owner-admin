@@ -63,3 +63,7 @@ See [adapter contracts](BACKEND-CONTRACT.md), [documentation-only Firebase desig
 ## Offline foundation (issue #6)
 
 [OFFLINE-BACKEND.md](OFFLINE-BACKEND.md) documents the separately instantiated, disposable service behind protected-style resource ports. It models current-state authorization and synthetic sessions without changing the public dashboard, and provides a migration boundary for a separately approved Firebase or PostgreSQL implementation. No live service is connected.
+
+## Selected backend direction: independent PostgreSQL
+
+The [self-hosted backend](self-hosting/README.md) implements a separate Node API, PostgreSQL schema/RLS and Docker Compose runtime. Existing fictional and offline adapters remain intact; the Firebase preparation is retained as history and is not used by this backend. An explicit same-origin PostgreSQL client and private workspace provide an initial transition path. No live server, EVLT resource, paid cloud database or deployment is involved. Read the documented launch gates before considering real data.

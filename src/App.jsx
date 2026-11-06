@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import CompanyOnboarding from "./CompanyOnboarding";
+import ServerWorkspace from "./ServerWorkspace";
 import { ShieldAlert } from "lucide-react";
 import { createFictionalBackend } from "./backend/fictional";
 import { BackendState } from "./layout/BackendState";
@@ -17,6 +18,7 @@ import UsersPage from "./pages/UsersPage";
 import SupportPage from "./pages/SupportPage";
 import SettingsPage from "./pages/SettingsPage";
 export default function App({ backend: suppliedBackend }) {
+  const [serverWorkspace, setServerWorkspace] = useState(false);
   const [onboarding, setOnboarding] = useState(false);
   const [demoBackend] = useState(() => createFictionalBackend());
   const backend = suppliedBackend || demoBackend;
@@ -41,6 +43,8 @@ export default function App({ backend: suppliedBackend }) {
     error,
     retry,
   } = controller;
+  if (serverWorkspace)
+    return <ServerWorkspace onClose={() => setServerWorkspace(false)} />;
   if (onboarding)
     return <CompanyOnboarding onClose={() => setOnboarding(false)} />;
   return (
@@ -66,6 +70,9 @@ export default function App({ backend: suppliedBackend }) {
           </div>
           <div className="toolbar">
             <button onClick={reset}>Reset fictional demo</button>
+            <button onClick={() => setServerWorkspace(true)}>
+              Private server workspace
+            </button>
             <button onClick={() => setOnboarding(true)}>
               Company onboarding simulation
             </button>

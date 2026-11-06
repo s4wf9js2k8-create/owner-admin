@@ -1,0 +1,76 @@
+name: channel-systems
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: channel
+      POSTGRES_USER: channel_migrator
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run the local environment generator first}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U channel_migrator -d channel"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1.0
+    # No host ports: PostgreSQL is reachable only on the private Compose network.
+    networks: [private]
+  migrate:
+    image: channel-systems-api:local
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      MIGRATION_DATABASE_URL: postgres://channel_migrator:${DB_PASSWORD}@db:5432/channel
+      API_DB_PASSWORD: ${API_DB_PASSWORD:?Run the local environment generator first}
+    command: [sh, -c, "node src/migrate.js && node src/provision.js"]
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [private]
+    restart: "no"
+  api:
+    image: channel-systems-api:local
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      DATABASE_URL: postgres://channel_app:${API_DB_PASSWORD}@db:5432/channel
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:3000}
+      INSECURE_LOCAL_HTTP: ${INSECURE_LOCAL_HTTP:-false}
+      STORAGE_ROOT: /data/uploads
+      RECOVERY_ROOT: /data/recovery
+      STORAGE_ALLOCATION_BYTES: ${STORAGE_ALLOCATION_BYTES:-21474836480}
+    volumes:
+      - uploads:/data/uploads
+      - recovery:/data/recovery
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          'fetch("http://localhost:3000/api/health").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 1.0
+    networks: [private]
+volumes:
+  database:
+  uploads:
+  recovery:
+networks:
+  private:

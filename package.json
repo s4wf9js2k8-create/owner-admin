@@ -11,7 +11,9 @@
     "test:e2e": "playwright test",
     "lint": "eslint .",
     "format": "prettier --write src tests *.js package.json .github/workflows/*.yml",
-    "test:policy": "node --test tests/tenant-policy.test.js"
+    "test:policy": "node --test tests/tenant-policy.test.js",
+    "test:integration": "npm --prefix server test",
+    "test:compose": "node server/scripts/verify-compose.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
