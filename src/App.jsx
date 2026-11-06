@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import OwnerBusinessPages, { ownerSeed } from "./OwnerBusinessPages";
 import CompanyOnboarding from "./CompanyOnboarding";
 import ServerWorkspace from "./ServerWorkspace";
 import { ShieldAlert } from "lucide-react";
@@ -20,6 +21,7 @@ import SettingsPage from "./pages/SettingsPage";
 export default function App({ backend: suppliedBackend }) {
   const [serverWorkspace, setServerWorkspace] = useState(false);
   const [onboarding, setOnboarding] = useState(false);
+  const [ownerData, setOwnerData] = useState(ownerSeed);
   const [demoBackend] = useState(() => createFictionalBackend());
   const backend = suppliedBackend || demoBackend;
   const controller = useConsoleController(backend);
@@ -69,7 +71,7 @@ export default function App({ backend: suppliedBackend }) {
             {message}
           </div>
           <div className="toolbar">
-            <button onClick={reset}>Reset fictional demo</button>
+            <button onClick={async () => { await reset(); setOwnerData(ownerSeed); }}>Reset fictional demo</button>
             <button onClick={() => setServerWorkspace(true)}>
               Private server workspace
             </button>
@@ -110,7 +112,7 @@ export default function App({ backend: suppliedBackend }) {
                   </label>
                 </div>
                 <CustomerWorkspace
-                  key={active.id + customerPage}
+                  key={active.id}
                   org={active}
                   records={records}
                   page={customerPage}
@@ -167,6 +169,9 @@ export default function App({ backend: suppliedBackend }) {
                 {page === "Activity Logs" && <Activity logs={logs} />}
                 {page === "Settings" && (
                   <SettingsPage controller={controller} />
+                )}
+                {["Onboarding","Branding Templates","Client Insights","Feature Requests","Sales Leads","Announcements","Infrastructure"].includes(page) && (
+                  <OwnerBusinessPages page={page} controller={controller} data={ownerData} setData={setOwnerData} onOpenServer={() => setServerWorkspace(true)} onOpenOnboarding={() => setOnboarding(true)} />
                 )}
               </>
             ))}
