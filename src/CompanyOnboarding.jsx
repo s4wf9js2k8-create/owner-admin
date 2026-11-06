@@ -28,7 +28,7 @@ export default function CompanyOnboarding({ onClose }) {
                 orgs.map((o) => client.workspace.requests(o.id)),
               )
             ).flat();
-      if (!cancelled) setData({ client, orgs, packages, requests });
+      if (!cancelled) setData({ uid, client, orgs, packages, requests });
     })().catch((e) => {
       if (!cancelled) setError(e.code ?? "UNAVAILABLE");
     });
@@ -71,8 +71,8 @@ export default function CompanyOnboarding({ onClose }) {
               Simulation action failed: {error}. Reload the workspace and retry.
             </p>
           )}
-          {!data && !error && <p role="status">Loading fictional workspace…</p>}
-          {data && (
+          {(!data || data.uid !== uid) && !error && <p role="status">Loading fictional workspace…</p>}
+          {data && data.uid === uid && (
             <>
               {uid === "owner" && (
                 <>
