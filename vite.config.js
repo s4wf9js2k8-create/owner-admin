@@ -1,2 +1,2 @@
 import { defineConfig } from "vite";
-export default defineConfig({ base: process.env.VERCEL ? "/" : "/owner-admin/" });
+export default defineConfig({ base: "/owner-admin/" });
