@@ -40,7 +40,6 @@ const pages = [
   ["Users", Users],
   ["Support", LifeBuoy],
   ["Activity Logs", ScrollText],
-  ["Settings", Settings],
   ["Onboarding", UserPlus],
   ["Branding Templates", Palette],
   ["Client Insights", ChartNoAxesCombined],
@@ -48,6 +47,7 @@ const pages = [
   ["Sales Leads", Target],
   ["Announcements", Megaphone],
   ["Infrastructure", Server],
+  ["Settings", Settings],
 ];
 const iconFor = name => ({people:Users,timesheets:Clock3,assets:Package,maintenance:Wrench,inspections:ClipboardCheck,documents:FileText,schedule:CalendarDays,events:CalendarDays,bookings:CalendarDays,donations:HeartHandshake,fleet:CarFront,archives:Folder,projects:ClipboardList,reporting:ChartNoAxesCombined,training:UserRound}[moduleInfo(name).type] || Blocks);
 export default function Navigation({ controller }) {
