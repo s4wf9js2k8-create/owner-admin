@@ -60,27 +60,36 @@ export function CustomerDashboard({org,records,onNavigate,prefs,setPrefs,actor})
     <Panel title="Your enabled tools"><p className="panel-helper">Choose a distinct workflow. These shortcuts reflect the modules available to the simulated role.</p><div className="module-shortcut-grid">{org.modules.filter(m=>!isTaskModule(m)).concat(org.modules.some(isTaskModule)?["Tasks & projects"]:[]).map(name=><button key={name} className="module-shortcut" onClick={()=>onNavigate(name)}><span className="shortcut-icon"><LayoutDashboard size={18}/></span><span><strong>{name}</strong><small>{moduleInfo(name).subtitle}</small></span><ArrowRight size={15}/></button>)}</div></Panel>
   </div>;
 }
-export function CustomerMyWork({org,records,onNavigate,onUpdate}) {
+export function CustomerMyWork({org,records,onNavigate,onUpdate,actor,canEdit}) {
   const [query,setQuery]=useState("");
   const [filter,setFilter]=useState("Outstanding");
   const [priority,setPriority]=useState("All");
-  const work=records.filter(r=>r.orgId===org.id && org.modules.includes(r.module));
-  const results=work.filter(r=> (filter==="All" || (filter==="Outstanding"?r.status!=="Complete":filter==="Overdue"?isLate(r):r.status===filter))
-    && (priority==="All"||r.priority===priority)
-    && [r.title,r.detail,r.owner,r.module].join(" ").toLowerCase().includes(query.toLowerCase()))
-    .sort((a,b)=>Number(isLate(b))-Number(isLate(a)) || priorityScore(b.priority)-priorityScore(a.priority) || (a.dueDate||"9999").localeCompare(b.dueDate||"9999"));
+  const [scope,setScope]=useState("Mine");
+  const all=records.filter(r=>r.orgId===org.id&&org.modules.includes(r.module));
+  const staff=all.find(r=>["Staff & volunteers","Staff","Volunteers"].includes(r.module)&&r.title===actor);
+  const teamMembers=all.filter(r=>["Staff & volunteers","Staff","Volunteers"].includes(r.module)&&r.team&&r.team===staff?.team).map(r=>r.title);
+  const work=all.filter(r=>["projects","maintenance","inspections","schedule","leave","events","bookings"].includes(moduleInfo(r.module).type));
+  const scoped=work.filter(r=>scope==="All"||(scope==="Mine"?r.owner===actor||r.person===actor:teamMembers.includes(r.owner)||teamMembers.includes(r.person)||r.owner===actor||r.person===actor));
+  const results=scoped.filter(r=>(filter==="All"||(filter==="Outstanding"?r.status!=="Complete":filter==="Overdue"?isLate(r):r.status===filter))
+    &&(priority==="All"||r.priority===priority)
+    &&[r.title,r.detail,r.owner,r.person,r.module].join(" ").toLowerCase().includes(query.toLowerCase()))
+    .sort((a,b)=>Number(isLate(b))-Number(isLate(a))||priorityScore(b.priority)-priorityScore(a.priority)||(a.dueDate||"9999").localeCompare(b.dueDate||"9999"));
+  const todayItems=work.filter(r=>recordDate(r)===today()&&(r.owner===actor||r.person===actor));
+  const navigateRecord=r=>onNavigate(isTaskModule(r.module)?"Tasks & projects":r.module,{recordId:r.id});
   return <div className="utility-page">
-    <div className="customer-page-intro"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>My work</h2><p>Everything that needs attention, grouped in one practical work queue.</p></div></div>
-    <div className="customer-metrics">{stat(<Clock3 size={18}/>,"Outstanding",work.filter(r=>r.status!=="Complete").length,"Records to action")}{stat(<AlertTriangle size={18}/>,"Overdue",work.filter(isLate).length,"Past deadline")}{stat(<CheckCircle2 size={18}/>,"Completed",work.filter(r=>r.status==="Complete").length,"Finished items")}</div>
-    <div className="customer-tools"><label className="search-field"><Search size={17}/><input aria-label="Search my work" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search work, people, or modules"/></label>
+    <div className="customer-page-intro"><div><span className="eyebrow">YOUR DAY & ASSIGNMENTS</span><h2>My work</h2><p>Personal work, your team's assignments and the next actions needed.</p></div></div>
+    <div className="customer-metrics">{stat(<ClipboardList size={18}/>,"My assignments",work.filter(r=>r.owner===actor||r.person===actor).length,"Tasks, shifts and bookings")}{stat(<AlertTriangle size={18}/>,"Overdue",scoped.filter(isLate).length,"Within this view")}{stat(<CheckCircle2 size={18}/>,"Completed",scoped.filter(r=>r.status==="Complete").length,"Finished records")}</div>
+    <div className="my-work-agenda"><h3>Today's agenda</h3>{todayItems.length?todayItems.map(r=><button key={r.id} onClick={()=>navigateRecord(r)}><CalendarDays size={16}/><span>{r.title}<small>{r.module}</small></span><ArrowRight size={15}/></button>):<p>No dated sample activities assigned to you today.</p>}</div>
+    <div className="customer-tools"><label className="search-field"><Search size={17}/><input aria-label="Search my work" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search tasks, shifts, people"/></label>
+      <label>Scope<select aria-label="Work scope" value={scope} onChange={e=>setScope(e.target.value)}><option value="Mine">Assigned to me</option><option value="Team">My team</option><option value="All">All permitted work</option></select></label>
       <label>Show<select aria-label="Filter my work" value={filter} onChange={e=>setFilter(e.target.value)}>{["Outstanding","Overdue","Planned","In progress","Complete","All"].map(x=><option key={x}>{x}</option>)}</select></label>
       <label>Priority<select aria-label="Filter work priority" value={priority} onChange={e=>setPriority(e.target.value)}>{["All","Low","Normal","High","Urgent"].map(x=><option key={x}>{x}</option>)}</select></label></div>
-    <p className="muted" role="status">{results.length} matching records</p>
+    <p className="muted" role="status">{results.length} matching assignments</p>
     {results.length?<div className="work-feed">{results.map(r=><article key={r.id} className="work-feed-item">
       <div className="work-feed-icon"><ClipboardList size={19}/></div>
-      <div><small className="eyebrow">{r.module}</small><h3>{r.title}</h3><p>{r.detail||"No additional details."}</p><div className="work-tags"><Status>{r.status}</Status><span>{r.priority||"Normal"} priority</span><span>{r.owner||"Unassigned"}</span><span className={isLate(r)?"task-overdue":""}>{format(r.dueDate)}</span></div></div>
-      <div className="work-feed-actions">{r.status!=="Complete"&&<button onClick={()=>onUpdate(org.id,r.id,{status:"Complete"})}><CheckCircle2 size={16}/> Mark done</button>}<button onClick={()=>onNavigate(r.module)}>Open <ArrowRight size={15}/></button></div>
-    </article>)}</div>:<Empty>Nothing matches those filters.</Empty>}
+      <div><small className="eyebrow">{r.module}</small><h3>{r.title}</h3><p>{r.detail||"No additional details."}</p><div className="work-tags"><Status>{r.status}</Status><span>{r.priority||"Normal"} priority</span><span>{r.owner||r.person||"Unassigned"}</span><span className={isLate(r)?"task-overdue":""}>{format(recordDate(r))}</span></div></div>
+      <div className="work-feed-actions">{canEdit&&r.status!=="Complete"&&["projects","maintenance"].includes(moduleInfo(r.module).type)&&<button onClick={()=>onUpdate(org.id,r.id,{status:"Complete"})}><CheckCircle2 size={16}/> Mark done</button>}<button onClick={()=>navigateRecord(r)}>Open <ArrowRight size={15}/></button></div>
+    </article>)}</div>:<Empty>No work matches those filters. Choose another scope to explore team assignments.</Empty>}
   </div>;
 }
 function monthDays(year,month) {
@@ -105,10 +114,10 @@ export function CustomerCalendar({org,records,onNavigate}) {
     <Panel title="Upcoming dates"><div className="agenda-list">{upcoming(events).filter(r=>recordDate(r)>=today()).slice(0,8).map(r=><div key={r.id} className="upcoming-row"><span className="upcoming-date">{format(recordDate(r))}</span><div><strong>{r.title}</strong><small>{r.module} · {r.status}</small></div><button onClick={()=>onNavigate(r.module)}>Open</button></div>)}</div></Panel>
   </div>;
 }
-export function CustomerNotifications({org,records,readIds,setReadIds,onNavigate}) {
+export function CustomerNotifications({org,records,readIds,setReadIds,onNavigate,prefs}) {
   const [filter,setFilter]=useState("Unread");
   const all=records.filter(r=>r.orgId===org.id&&org.modules.includes(r.module));
-  const notifications=all.filter(r=>isLate(r)||["Urgent","High"].includes(r.priority)&&r.status!=="Complete")
+  const notifications=all.filter(r=>(prefs?.reminders!==false&&isLate(r))||["Urgent","High"].includes(r.priority)&&r.status!=="Complete")
     .map(r=>({id:r.id,title:isLate(r)?"Overdue: "+r.title:"High priority: "+r.title,record:r,kind:isLate(r)?"Overdue":"Priority"}));
   const visible=notifications.filter(n=>filter==="All"||(filter==="Unread"?!readIds.includes(n.id):readIds.includes(n.id)));
   return <div className="utility-page"><div className="customer-page-intro"><div><span className="eyebrow">ACTIVITY & REMINDERS</span><h2>Notifications</h2><p>In-app reminders calculated from sample deadlines and priorities. No email or push notifications are sent.</p></div>
