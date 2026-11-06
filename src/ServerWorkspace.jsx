@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { createPostgresClient } from "./backend/postgres";
 import { Panel } from "./components";
+import ServerManagement from "./ServerManagement";
 export default function ServerWorkspace({ onClose }) {
   const [client] = useState(() => createPostgresClient());
   const [session, setSession] = useState(null),
@@ -180,21 +181,7 @@ export default function ServerWorkspace({ onClose }) {
             </button>
             {session.platformAdmin && (
               <>
-                <Panel title="Server storage">
-                  <p>
-                    Configured upload allocation:{" "}
-                    {storage
-                      ? Math.round(storage.allocation_bytes / 1024 ** 3)
-                      : 0}{" "}
-                    GiB
-                  </p>
-                  {storage?.companies.map((c) => (
-                    <p key={c.id}>
-                      {c.name}: {c.used_bytes} bytes used / {c.quota_bytes}{" "}
-                      bytes quota
-                    </p>
-                  ))}
-                </Panel>
+                <ServerManagement client={client} storage={storage} busy={busy} onRefresh={() => run(() => refresh(true))} />
                 <Panel title="Create server company">
                   <form
                     onSubmit={(e) => {
