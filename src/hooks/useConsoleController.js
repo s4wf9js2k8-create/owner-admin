@@ -18,7 +18,7 @@ export function useConsoleController(backend) {
     [customerPage, setCustomerPage] = useState("Dashboard"),
     [confirm, setConfirm] = useState(null),
     [ticketId, setTicketId] = useState("ticket-1"),
-    [customerRole,setCustomerRole] = useState("Manager"),
+    [customerRole,setCustomerRole] = useState("Administrator"),
     [customerRoles,setCustomerRoles] = useState(demoRoleDefaults),
     [roleModules,setRoleModules] = useState(defaultRoleModules),
     [roleTeams,setRoleTeams] = useState({Administrator:"All teams",Manager:"All teams",Staff:"All teams",Viewer:"All teams"});
@@ -82,7 +82,7 @@ export function useConsoleController(backend) {
       setTicketId("ticket-1");
       setQuery("");
       setStatusFilter("All");
-      setCustomerRole("Manager");
+      setCustomerRole("Administrator");
       setCustomerRoles(demoRoleDefaults);
       setRoleModules(defaultRoleModules);
       setRoleTeams({Administrator:"All teams",Manager:"All teams",Staff:"All teams",Viewer:"All teams"});
