@@ -37,6 +37,12 @@ export default function App({ backend: suppliedBackend }) {
     customer,
     customerPage,
     setCustomerPage,
+    customerRole,
+    setCustomerRole,
+    customerRoles,
+    setCustomerRoles,
+    roleModules,
+    setRoleModules,
     active,
     log,
     run,
@@ -117,6 +123,12 @@ export default function App({ backend: suppliedBackend }) {
                   records={records}
                   page={customerPage}
                   setPage={setCustomerPage}
+                  customerRole={customerRole}
+                  setCustomerRole={setCustomerRole}
+                  customerRoles={customerRoles}
+                  setCustomerRoles={setCustomerRoles}
+                  roleModules={roleModules}
+                  setRoleModules={setRoleModules}
                   onAdd={async (r) => {
                     const saved = await run(() =>
                       backend.records.create(r.orgId, r),
@@ -129,10 +141,9 @@ export default function App({ backend: suppliedBackend }) {
                     return saved;
                   }}
                   onUpdate={async (orgId, id, patch) => {
-                    if (
-                      await run(() => backend.records.update(orgId, id, patch))
-                    )
-                      log("Updated sample record progress", orgId);
+                    const changed = await run(() => backend.records.update(orgId, id, patch));
+                    if (changed) await log("Updated sample operational record", orgId);
+                    return changed;
                   }}
                 />
               </>
