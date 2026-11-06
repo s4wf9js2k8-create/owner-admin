@@ -16,12 +16,12 @@ export default function CustomerEventsOps({org,module,records,onAdd,onUpdate,can
  const update=(r,patch)=>onUpdate(org.id,r.id,patch);
  const addEvent=async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.currentTarget));if(!f.title.trim()||!f.startTime)return;
  const saved=await onAdd({orgId:org.id,module,recordType:"event",title:f.title.trim(),detail:f.detail||"",startTime:f.startTime,location:f.location||"",capacity:Math.max(1,Number(f.capacity)||1),owner:f.owner||"",status:"Planned",createdAt:new Date().toISOString()});if(saved){setForm(false);setNotice("Event added to the shared calendar.");setSelected(saved.id);}};
- const addBooking=async e=>{e.preventDefault();if(!event)return;const f=Object.fromEntries(new FormData(e.currentTarget));const guests=Math.max(1,Number(f.guests)||1);
+ const addBooking=async e=>{e.preventDefault();if(!event)return;const form=e.currentTarget;const f=Object.fromEntries(new FormData(form));const guests=Math.max(1,Number(f.guests)||1);
  const bookingStatus=used(event)+guests<=capacity(event)?"Confirmed":"Waitlist";
  const saved=await onAdd({orgId:org.id,module,recordType:"booking",eventId:event.id,title:String(f.title||"").trim(),contact:String(f.contact||"").trim(),guests,bookingStatus,status:bookingStatus==="Confirmed"?"Planned":"Waiting",createdAt:new Date().toISOString()});
- if(saved){setNotice(bookingStatus==="Confirmed"?"Booking confirmed in the demo.":"Capacity exceeded; booking added to the waitlist.");e.currentTarget.reset();}};
+ if(saved){setNotice(bookingStatus==="Confirmed"?"Booking confirmed in the demo.":"Capacity exceeded; booking added to the waitlist.");form.reset();}};
  const changeBooking=async(b,next)=>{
- if(next==="Confirmed"&&event&&used(event)+Math.max(1,Number(b.guests)||1)>capacity(event)){setNotice("Not enough spaces. Increase capacity or free places first.");return;}
+ if(["Confirmed","Checked in"].includes(next)&&!["Confirmed","Checked in"].includes(b.bookingStatus)&&event&&used(event)+Math.max(1,Number(b.guests)||1)>capacity(event)){setNotice("Not enough spaces. Increase capacity or free places first.");return;}
  const ok=await update(b,{bookingStatus:next,status:next==="Cancelled"?"Cancelled":next==="Waitlist"?"Waiting":"Planned"});
  if(ok)setNotice("Booking updated; attendee counts have been recalculated.");};
  return <div className="events-ops">
