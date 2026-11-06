@@ -94,7 +94,7 @@ export default function CustomerModulePage({org,module,records,onAdd,onUpdate,fo
     <div className="form-pair"><label>Progress<select aria-label="Record status" disabled={!canEdit} value={r.status||"Planned"} onChange={e=>update(r,{status:e.target.value})}>{["Planned","In progress","Complete"].map(x=><option key={x}>{x}</option>)}</select></label>
     <label>Priority<select aria-label="Record priority" disabled={!canEdit} value={r.priority||"Normal"} onChange={e=>update(r,{priority:e.target.value})}>{["Low","Normal","High","Urgent"].map(x=><option key={x}>{x}</option>)}</select></label></div>
     <label>Next deadline<input aria-label="Record due date" disabled={!canEdit} type="date" value={r.dueDate||""} onChange={e=>update(r,{dueDate:e.target.value})}/></label>
-    {spec.fields.filter(field=>Array.isArray(field[2])).map(field=><label key={field[0]}>{field[1]}<select value={r[field[0]]||field[2][0]} onChange={e=>update(r,{[field[0]]:e.target.value})}>{field[2].map(x=><option key={x}>{x}</option>)}</select></label>)}
+    {spec.fields.filter(field=>Array.isArray(field[2])).map(field=><label key={field[0]}>{field[1]}<select disabled={!canEdit} value={r[field[0]]||field[2][0]} onChange={e=>update(r,{[field[0]]:e.target.value})}>{field[2].map(x=><option key={x}>{x}</option>)}</select></label>)}
     <p className="muted">Changes in this demonstration are local to the browser session. This is not a legally valid approval, signature, payroll or accounting record.</p>
   </div>;
   const rowAction = r => <button type="button" onClick={()=>setSelected(r.id)} aria-label={"View "+r.title}>View details</button>;
