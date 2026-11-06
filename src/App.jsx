@@ -43,6 +43,8 @@ export default function App({ backend: suppliedBackend }) {
     setCustomerRoles,
     roleModules,
     setRoleModules,
+    roleTeams,
+    setRoleTeams,
     active,
     log,
     run,
@@ -129,6 +131,8 @@ export default function App({ backend: suppliedBackend }) {
                   setCustomerRoles={setCustomerRoles}
                   roleModules={roleModules}
                   setRoleModules={setRoleModules}
+                  roleTeams={roleTeams}
+                  setRoleTeams={setRoleTeams}
                   onAdd={async (r) => {
                     const saved = await run(() =>
                       backend.records.create(r.orgId, r),
