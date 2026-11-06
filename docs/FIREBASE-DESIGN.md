@@ -1,6 +1,6 @@
 # Future Owner Admin Firebase design — documentation only
 
-No Firebase project has been selected, initialized, accessed or connected. There is no Firebase SDK, config, deployable rules file, billing setup or real account here. EVLT's live repository, Firebase configuration, credentials, database and hosting must not be accessed or modified as part of this design work. Reusing the EVLT project is an unapproved option requiring a separate security and operational feasibility review. Google quota approval may be needed if separate projects are chosen; this proposal makes no production-security claim.
+No Firebase project has been selected, initialized, accessed or connected. There is no Firebase SDK, live config, billing setup or real account here. Issue #8 adds an offline interface and an unwired deny-all prototype Rules file; see [Firebase preparation](FIREBASE-PREPARATION.md). EVLT's live repository, Firebase configuration, credentials, database and hosting must not be accessed or modified as part of this design work. Reusing the EVLT project is an unapproved option requiring a separate security and operational feasibility review. Google quota approval may be needed if separate projects are chosen; this proposal makes no production-security claim.
 
 ## Architecture assessment: separate project recommended, decision awaits approval
 
@@ -34,7 +34,7 @@ Proposed Firestore layout:
 
 Plan a server-mediated write boundary initially. Browser Firestore writes are denied; reads may be scoped direct queries only after emulator rules and identity tests pass. Firestore Rules must default-deny unknown paths and collection-group queries. For every permitted read, verify authentication, active account, active organisation, current membership, allowed action and entitlement. Use path orgId/moduleId, never a client-controlled field as proof. Scope list queries to one tenant/module and enforce bounded limits; rules are not filters. Do not authorize broad reads assuming a client `where` or UI filter supplies isolation.
 
-If direct writes are later proposed, separately review explicit field allowlists, types, sizes, create versus update invariants, immutable orgId/moduleId/owner IDs, valid transitions, and forbidden membership/claim/entitlement changes. Never allow a recursive catch-all rule to override a narrower deny. There is deliberately no runnable rules file in this change.
+If direct writes are later proposed, separately review explicit field allowlists, types, sizes, create versus update invariants, immutable orgId/moduleId/owner IDs, valid transitions, and forbidden membership/claim/entitlement changes. Never allow a recursive catch-all rule to override a narrower deny. The subsequent issue #8 preparation adds a draft deny-all Rules file without deployment wiring; direct access remains prohibited.
 
 The Admin SDK bypasses Firestore Rules. Every server handler must enforce the same checks itself, reject forged path/body identities and use narrowly scoped service identities/IAM. Never ship service credentials to the browser. Rate limit privileged operations and exports. Validate all strings and module-specific schemas; React escaping is not input authorization.
 

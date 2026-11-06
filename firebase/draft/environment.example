@@ -1,0 +1,13 @@
+# Preparation code accepts only offline mode and reserved synthetic IDs.
+CHANNEL_FIREBASE_MODE=offline
+CHANNEL_FIREBASE_PROJECT_ID=demo-channel-systems
+
+# Future approved integration ONLY: do not put credentials in this file.
+# CHANNEL_FIREBASE_PROJECT_ID=<independently-approved-channel-systems-project>
+# CHANNEL_FIREBASE_AUTH_DOMAIN=<that-project>.firebaseapp.com
+# CHANNEL_FIREBASE_API_KEY=<public-web-app-config-reviewed-for-that-project>
+# CHANNEL_FIREBASE_APP_ID=<public-web-app-id>
+# CHANNEL_FIREBASE_AUTH_EMULATOR_URL=http://127.0.0.1:9099
+# CHANNEL_FIREBASE_FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+# Server-only: GOOGLE_APPLICATION_CREDENTIALS=<approved-local-secret-file-path>
+# Prefer workload identity in hosted environments; never expose admin credentials.

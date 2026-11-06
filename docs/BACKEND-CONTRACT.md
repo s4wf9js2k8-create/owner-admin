@@ -44,3 +44,7 @@ See [future Firebase design](FIREBASE-DESIGN.md) and [threat model and security 
 ## Offline service implementation (issue #6)
 
 A separate [offline backend foundation](OFFLINE-BACKEND.md) now implements protected-style resource ports with fake sessions, memberships, invitations, configuration, versioned CRUD and internal audit. The public adapter described above remains unchanged. The offline service deliberately excludes unsafe demo snapshot/reset/bulk replacement/audit append ports; it must not be mistaken for live authentication or database isolation. See the linked port reference and future integration checklist.
+
+## Firebase preparation interface (issue #8)
+
+[Firebase preparation](FIREBASE-PREPARATION.md) provides configurable, offline-only auth and record ports using an injected synthetic transport. It preserves the offline service's signatures while intentionally excluding unrestricted demo ports. No Firebase SDK or live connection exists; prototype Firestore Rules deny all direct client access.
