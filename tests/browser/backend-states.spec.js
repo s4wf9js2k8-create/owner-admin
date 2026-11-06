@@ -116,7 +116,7 @@ test("explicit reset clears records, settings, activity and navigation", async (
   await page.getByLabel("Profile notes", { exact: true }).fill("Session only");
   await page.getByRole("button", { name: "Save sample person" }).click();
   await expect(
-    page.getByText("Fictional reset example", { exact: true }),
+    page.getByRole("heading", { name: "Fictional reset example", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Reset fictional demo" }).click();
   await page
