@@ -40,4 +40,8 @@ Emulator tests are a launch gate, not included as passing claims in this PR: no 
 - Build/CI: lint, unit tests, production GitHub Pages build and Chromium tests. These checks do not establish production security or Safari compatibility.
 - Future launch gate: negative Rules and trusted-handler suites, two-tenant staging verification, MFA/revocation, rate limits, distributed conflicts, backup restore/export/deletion exercises and independent security review.
 
-Residual risks today: every fictional fixture is public, browser activity can be edited, demo role/module checks can be bypassed, writes are not durable or distributed, and no real access-control mechanism exists. Do not import real data or advertise secure tenancy based on this demo. See [project prerequisites](FIREBASE-DESIGN.md#steps-requiring-a-newly-approved-separate-project-before-go-live).
+Residual risks today: every fictional fixture is public, browser activity can be edited, demo role/module checks can be bypassed, writes are not durable or distributed, and no real access-control mechanism exists. Do not import real data or advertise secure tenancy based on this demo. See [project prerequisites](FIREBASE-DESIGN.md#separate-project-implementation-path-conditional-not-yet-approved).
+
+## Offline proof of concept (issue #4)
+
+The [pure synthetic policy suite](../proof-of-concepts/tenant-authorization/README.md) now implements 14 named policy cases for the record boundary: A/B reads/writes/lists, forged org/module/record IDs and roles, revoked membership, disabled modules, unauthenticated/suspended access, role limits, default deny and field validation. These are JavaScript model checks, **not negative Firestore Rules tests**. The Rules, real Auth, privileged API/IAM, concurrency, audit, recovery and rollout gates above remain unverified. See [TENANCY-DECISION.md](TENANCY-DECISION.md) for sourced architecture tradeoffs and the current recommendation to keep EVLT independent.

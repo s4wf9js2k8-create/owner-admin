@@ -33,6 +33,9 @@ The generic record workflow demonstrates reusable infrastructure, not finished a
 
 ## Documentation
 
+- [Tenancy decision matrix, evidence and offline-test limitations](docs/TENANCY-DECISION.md)
+- [Synthetic authorization model (no Firebase or network required)](proof-of-concepts/tenant-authorization/README.md)
+
 - [Backend contracts and fictional adapter](docs/BACKEND-CONTRACT.md)
 - [Future Firebase design and separate-project launch prerequisites](docs/FIREBASE-DESIGN.md)
 - [Threat model and security test plan](docs/THREAT-MODEL.md)

@@ -36,3 +36,7 @@ Define stable error codes before implementing remote calls: unauthenticated, for
 In-process changes are sequenced synchronously before their Promise resolves; simultaneous demo creates preserve independent changes. `getRevision()` is only a local notification counter, not a distributed version check. Production updates need per-resource expected versions and Firestore transactions; stale edits must return conflict, not silently overwrite another user's change. Provisioning and invitations require idempotency keys. Privileged mutation plus audit outbox must commit atomically; retrying an operation must not duplicate its effects.
 
 See [future Firebase design](FIREBASE-DESIGN.md) and [threat model and security test plan](THREAT-MODEL.md). Passing demo tests establishes UI and adapter correctness only.
+
+## Offline architecture assessment (issue #4)
+
+[TENANCY-DECISION.md](TENANCY-DECISION.md) reviews this boundary against shared/separate Firebase and Postgres alternatives. The [synthetic policy model](../proof-of-concepts/tenant-authorization/README.md) explores only a hypothetical trusted record API; it is not imported by this adapter or the public demo and provides no live authentication or Firebase isolation. Real token verification, identity-realm binding, current authoritative state and transaction-safe authorization remain implementation gates.
