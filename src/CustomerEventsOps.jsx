@@ -1,0 +1,40 @@
+import React,{useState} from "react";
+import {Panel,Empty,Status} from "./components";
+import {CalendarDays,Users,Ticket,Plus,CheckCircle2,Clock3} from "lucide-react";
+const fmt = d => d?new Date(d).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short"}):"Unscheduled";
+const capacity = e => Math.max(0,Number(e.capacity)||0);
+const eventRows = (records,org)=>records.filter(r=>r.orgId===org.id&&["Events & bookings","Events"].includes(r.module)&&r.recordType!=="booking");
+const bookingRows = (records,org)=>records.filter(r=>r.orgId===org.id&&["Events & bookings","Events"].includes(r.module)&&r.recordType==="booking");
+export default function CustomerEventsOps({org,module,records,onAdd,onUpdate,canCreate=true,canEdit=true}) {
+ const [tab,setTab]=useState("events"),[selected,setSelected]=useState(""),[notice,setNotice]=useState(""),[form,setForm]=useState(false);
+ const events=eventRows(records,org),bookings=bookingRows(records,org);
+ const event=events.find(e=>e.id===selected)||events[0];
+ const forEvent=e=>bookings.filter(b=>b.eventId===e.id);
+ const admitted=e=>forEvent(e).filter(b=>b.bookingStatus==="Confirmed"||b.bookingStatus==="Checked in");
+ const used=e=>admitted(e).reduce((n,b)=>n+Math.max(1,Number(b.guests)||1),0);
+ const booked=e=>forEvent(e).reduce((n,b)=>n+Math.max(1,Number(b.guests)||1),0);
+ const update=(r,patch)=>onUpdate(org.id,r.id,patch);
+ const addEvent=async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.currentTarget));if(!f.title.trim()||!f.startTime)return;
+ const saved=await onAdd({orgId:org.id,module,recordType:"event",title:f.title.trim(),detail:f.detail||"",startTime:f.startTime,location:f.location||"",capacity:Math.max(1,Number(f.capacity)||1),owner:f.owner||"",status:"Planned",createdAt:new Date().toISOString()});if(saved){setForm(false);setNotice("Event added to the shared calendar.");setSelected(saved.id);}};
+ const addBooking=async e=>{e.preventDefault();if(!event)return;const f=Object.fromEntries(new FormData(e.currentTarget));const guests=Math.max(1,Number(f.guests)||1);
+ const bookingStatus=used(event)+guests<=capacity(event)?"Confirmed":"Waitlist";
+ const saved=await onAdd({orgId:org.id,module,recordType:"booking",eventId:event.id,title:String(f.title||"").trim(),contact:String(f.contact||"").trim(),guests,bookingStatus,status:bookingStatus==="Confirmed"?"Planned":"Waiting",createdAt:new Date().toISOString()});
+ if(saved){setNotice(bookingStatus==="Confirmed"?"Booking confirmed in the demo.":"Capacity exceeded; booking added to the waitlist.");e.currentTarget.reset();}};
+ const changeBooking=async(b,next)=>{
+ if(next==="Confirmed"&&event&&used(event)+Math.max(1,Number(b.guests)||1)>capacity(event)){setNotice("Not enough spaces. Increase capacity or free places first.");return;}
+ const ok=await update(b,{bookingStatus:next,status:next==="Cancelled"?"Cancelled":next==="Waitlist"?"Waiting":"Planned"});
+ if(ok)setNotice("Booking updated; attendee counts have been recalculated.");};
+ return <div className="events-ops">
+ <div className="customer-page-intro"><div><span className="eyebrow">EVENT DELIVERY</span><h2>Events & visitor bookings</h2><p>Plan events, allocate places, manage waiting lists and check in attendees.</p></div>{canCreate&&<button className="action-primary" onClick={()=>setForm(v=>!v)}><Plus size={16}/> New event</button>}</div>
+ <div className="customer-metrics"><div className="metric-tile"><CalendarDays/><span>Events</span><strong>{events.length}</strong></div><div className="metric-tile"><Ticket/><span>Confirmed places</span><strong>{bookings.filter(b=>["Confirmed","Checked in"].includes(b.bookingStatus)).reduce((n,b)=>n+(Number(b.guests)||1),0)}</strong></div><div className="metric-tile"><Clock3/><span>Waiting list</span><strong>{bookings.filter(b=>b.bookingStatus==="Waitlist").length}</strong></div><div className="metric-tile"><CheckCircle2/><span>Checked in</span><strong>{bookings.filter(b=>b.bookingStatus==="Checked in").reduce((n,b)=>n+(Number(b.guests)||1),0)}</strong></div></div>
+ {notice&&<p role="status" className="module-disclaimer">{notice}</p>}
+ {form&&<Panel title="Plan an event"><form onSubmit={addEvent} className="customer-form"><div className="form-pair"><label>Event name<input name="title" required maxLength={100}/></label><label>Starts<input name="startTime" type="datetime-local" required/></label><label>Venue<input name="location" maxLength={90}/></label><label>Capacity<input name="capacity" type="number" min="1" defaultValue="30" required/></label><label>Event lead<input name="owner" maxLength={90}/></label></div><label>Plan and notes<textarea name="detail" rows={2}/></label><button type="submit" className="action-primary">Create event</button></form></Panel>}
+ <div className="segmented-actions">{[["events","Event planner"],["bookings","Booking desk"],["checkin","Check-in"]].map(([id,label])=><button key={id} className={tab===id?"is-active":""} onClick={()=>setTab(id)}>{label}</button>)}</div>
+ {tab==="events"&&<div className="purpose-grid">{events.map(e=><article className="purpose-card" key={e.id}><span className="eyebrow">{fmt(e.startTime)}</span><h3>{e.title}</h3><p>{e.detail||"No event notes"}</p><div className="purpose-properties"><div><small>Venue</small><strong>{e.location||"Unassigned"}</strong></div><div><small>Event lead</small><strong>{e.owner||"Unassigned"}</strong></div><div><small>Confirmed</small><strong>{used(e)} / {capacity(e)}</strong></div><div><small>Waiting</small><strong>{forEvent(e).filter(b=>b.bookingStatus==="Waitlist").length}</strong></div></div><progress value={Math.min(used(e),capacity(e))} max={Math.max(1,capacity(e))}/><button onClick={()=>{setSelected(e.id);setTab("bookings")}}>Manage bookings</button></article>)}{!events.length&&<Empty>No events planned yet.</Empty>}</div>}
+ {tab!=="events"&&<><Panel title="Choose event"><label>Event<select aria-label="Choose event" value={event?.id||""} onChange={e=>setSelected(e.target.value)}>{events.map(e=><option key={e.id} value={e.id}>{e.title} — {fmt(e.startTime)}</option>)}</select></label>{event&&<p className="panel-helper">{used(event)} confirmed places of {capacity(event)} · {forEvent(event).filter(b=>b.bookingStatus==="Waitlist").length} on waiting list</p>}</Panel>
+ {tab==="bookings"&&event&&canCreate&&<Panel title="Reserve places"><form onSubmit={addBooking} className="owner-inline-form"><label>Attendee or group<input name="title" required maxLength={100}/></label><label>Contact reference (fictional)<input name="contact" maxLength={100}/></label><label>Places<input name="guests" type="number" min="1" defaultValue="1" required/></label><button className="action-primary" type="submit">Reserve places</button></form></Panel>}
+ {event&&<Panel title={tab==="checkin"?"Visitor check-in":"Attendees and waiting list"}><div className="table-wrap"><table><thead><tr><th>Attendee</th><th>Places</th><th>Booking status</th><th>Action</th></tr></thead><tbody>{forEvent(event).filter(b=>tab!=="checkin"||["Confirmed","Checked in"].includes(b.bookingStatus)).map(b=><tr key={b.id}><td><strong>{b.title}</strong><small className="cell-subtitle">{b.contact||"No contact reference"}</small></td><td>{b.guests||1}</td><td><Status>{b.bookingStatus}</Status></td><td>{canEdit?<select aria-label={"Booking status for "+b.title} value={b.bookingStatus} onChange={e=>changeBooking(b,e.target.value)}>{["Confirmed","Waitlist","Checked in","Cancelled"].map(s=><option key={s}>{s}</option>)}</select>:"View only"}</td></tr>)}</tbody></table></div>{!forEvent(event).length&&<Empty>No bookings for this event.</Empty>}</Panel>}
+ {!event&&<Empty>Create an event before accepting bookings.</Empty>}</>}
+ <p className="module-disclaimer">Demo only: no payments, real tickets, public bookings or messages are sent. Booking and check-in changes update the event totals immediately.</p>
+ </div>;
+}
