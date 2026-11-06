@@ -1,6 +1,6 @@
 # Owner Admin
 
-A React/Vite public **fictional-data demonstration** of a configurable organisation management product. No authentication, database, payments, persistent storage or production authorisation exists. Never enter real personal data, credentials or customer records. All changes reset on refresh.
+A React/Vite public **fictional-data demonstration** of a configurable organisation management product. No authentication, database, payments, persistent storage or production authorisation exists. Never enter real personal data, credentials or customer records. All changes reset on refresh or with **Reset fictional demo**.
 
 EVLT is a separate project. This repository neither connects to nor configures EVLT services.
 
@@ -32,6 +32,10 @@ Vite serves the app under `/owner-admin/`. Browser tests use installed `/usr/bin
 The generic record workflow demonstrates reusable infrastructure, not finished attendance, finance or engineering domain logic. Editing a sector label preserves existing modules and records; configure modules separately. Archiving preserves fixtures and removes the organisation from preview choices. Customer preview can still show a suspended organisation because it demonstrates UI, not access enforcement.
 
 ## Documentation
+
+- [Backend contracts and fictional adapter](docs/BACKEND-CONTRACT.md)
+- [Future Firebase design and separate-project launch prerequisites](docs/FIREBASE-DESIGN.md)
+- [Threat model and security test plan](docs/THREAT-MODEL.md)
 
 - [Architecture and onboarding](docs/ARCHITECTURE.md)
 - [Priorities and implementation status](docs/PRODUCT-ROADMAP.md)

@@ -149,17 +149,17 @@ export default function CustomerWorkspace({
           onClose={() => setAdding(false)}
         >
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               const f = new FormData(e.currentTarget);
-              onAdd({
+              const saved = await onAdd({
                 orgId: org.id,
                 module: current,
                 title: f.get("title").trim(),
                 detail: f.get("detail").trim(),
                 status: "Planned",
               });
-              setAdding(false);
+              if (saved) setAdding(false);
             }}
           >
             <p>Use fictional operational details only.</p>

@@ -21,3 +21,9 @@ Before real data: API/schema tests, authenticated permission matrices, anonymous
 ## Development validation record
 
 On 6 November 2026: lint passed; 5 model tests passed; production build passed; all 12 Chromium browser scenarios passed. After the tablet summary-grid adjustment, all 3 responsive keyboard/overflow scenarios passed again. `npm audit --audit-level=moderate` reported zero vulnerabilities at that time. Screenshots were inspected for the overview layout. These are local results, not proof that GitHub-hosted CI or a production deployment has run successfully.
+
+## Backend preparation coverage
+
+`npm test` discovers all `tests/*.test.js`, including the fictional adapter contract suite. Browser tests inject alternate adapters at the entry module to exercise loading, load retry, mutation failure and empty states without shipping fault controls in the app. The reset and drawer tests run at all three configured viewport sizes. No real accounts or Firebase calls are used. The future security suite is specified in [THREAT-MODEL.md](THREAT-MODEL.md); it has not been implemented or passed.
+
+CI uses GitHub’s Ubuntu runner preinstalled Chrome through `CHROMIUM_PATH=/usr/bin/google-chrome`, running the same Playwright Chromium projects without downloading a second browser or reinstalling system packages. Local runs continue to use `/usr/bin/chromium` when present or Playwright-managed Chromium otherwise.
