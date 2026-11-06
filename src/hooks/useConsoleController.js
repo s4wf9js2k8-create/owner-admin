@@ -20,7 +20,8 @@ export function useConsoleController(backend) {
     [ticketId, setTicketId] = useState("ticket-1"),
     [customerRole,setCustomerRole] = useState("Manager"),
     [customerRoles,setCustomerRoles] = useState(demoRoleDefaults),
-    [roleModules,setRoleModules] = useState(defaultRoleModules);
+    [roleModules,setRoleModules] = useState(defaultRoleModules),
+    [roleTeams,setRoleTeams] = useState({Administrator:"All teams",Manager:"All teams",Staff:"All teams",Viewer:"All teams"});
   const menuRef = useRef(null),
     menuButton = useRef(null);
   const active = orgs.find((o) => o.id === selected) || orgs[0],
@@ -84,6 +85,7 @@ export function useConsoleController(backend) {
       setCustomerRole("Manager");
       setCustomerRoles(demoRoleDefaults);
       setRoleModules(defaultRoleModules);
+      setRoleTeams({Administrator:"All teams",Manager:"All teams",Staff:"All teams",Viewer:"All teams"});
       setMessage("Fictional demo reset. All session changes cleared.");
     }
   };
@@ -122,6 +124,8 @@ export function useConsoleController(backend) {
     setCustomerRoles,
     roleModules,
     setRoleModules,
+    roleTeams,
+    setRoleTeams,
     confirm,
     setConfirm,
     flags,
