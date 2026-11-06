@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Panel, Empty, Modal, Status } from "./components";
 import { moduleInfo, moduleTypeLabel } from "./customerModules";
-import { Plus, Search, Download, CalendarDays, MapPin, Package, ClipboardCheck, AlertTriangle, UserRound, FileText, Wrench, BriefcaseBusiness, Clock3, CheckCircle2 } from "lucide-react";
+import { Plus, Search, Download, CalendarDays, Package, ClipboardCheck, AlertTriangle, UserRound, FileText, Wrench, BriefcaseBusiness, Clock3, CheckCircle2 } from "lucide-react";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const display = value => value === null || value === undefined || value === "" ? "—" : String(value);
