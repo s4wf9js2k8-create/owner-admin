@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useBackend } from "./useBackend";
 import { useDrawer } from "./useDrawer";
+import { demoRoleDefaults, defaultRoleModules } from "../customerWorkflows";
 export function useConsoleController(backend) {
   const { data, status, error, run, retry } = useBackend(backend);
   const { orgs, records, tickets, logs, plans, flags } = data;
@@ -16,7 +17,10 @@ export function useConsoleController(backend) {
     [customer, setCustomer] = useState(false),
     [customerPage, setCustomerPage] = useState("Dashboard"),
     [confirm, setConfirm] = useState(null),
-    [ticketId, setTicketId] = useState("ticket-1");
+    [ticketId, setTicketId] = useState("ticket-1"),
+    [customerRole,setCustomerRole] = useState("Manager"),
+    [customerRoles,setCustomerRoles] = useState(demoRoleDefaults),
+    [roleModules,setRoleModules] = useState(defaultRoleModules);
   const menuRef = useRef(null),
     menuButton = useRef(null);
   const active = orgs.find((o) => o.id === selected) || orgs[0],
@@ -77,6 +81,9 @@ export function useConsoleController(backend) {
       setTicketId("ticket-1");
       setQuery("");
       setStatusFilter("All");
+      setCustomerRole("Manager");
+      setCustomerRoles(demoRoleDefaults);
+      setRoleModules(defaultRoleModules);
       setMessage("Fictional demo reset. All session changes cleared.");
     }
   };
@@ -109,6 +116,12 @@ export function useConsoleController(backend) {
     setCustomer,
     customerPage,
     setCustomerPage,
+    customerRole,
+    setCustomerRole,
+    customerRoles,
+    setCustomerRoles,
+    roleModules,
+    setRoleModules,
     confirm,
     setConfirm,
     flags,
