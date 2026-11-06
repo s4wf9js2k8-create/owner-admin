@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { transaction, audit } from "./db.js";
+import { fileConcurrencyGate } from "./limits.js";
 import { hashPassword, verifyPassword, digest, token } from "./auth.js";
 import { detectType, storeFile, loadFile, removeFile } from "./files.js";
 const uuid = z.uuid();
@@ -80,6 +81,10 @@ export async function createApp({
   const app = express();
   app.disable("x-powered-by");
   app.use(helmet());
+  app.use((_req, res, next) => {
+    res.set("Cache-Control", "no-store");
+    next();
+  });
   app.use(
     rateLimit({
       windowMs: 60000,
@@ -113,6 +118,7 @@ export async function createApp({
     path: "/",
     maxAge: 12 * 3600000,
   };
+  const filesGate = fileConcurrencyGate();
   const dummyHash = await hashPassword(token());
   const wrap = (fn) => async (req, res, next) => {
     try {
@@ -121,6 +127,15 @@ export async function createApp({
       next(e);
     }
   };
+  const wrapFile = (fn) =>
+    wrap(async (req, res) => {
+      if (!req.fileLease.start()) return;
+      try {
+        await fn(req, res);
+      } finally {
+        req.fileLease.done();
+      }
+    });
   const authenticate = wrap(async (req, _res) => {
     const raw = (req.headers.cookie ?? "")
       .split(";")
@@ -149,11 +164,10 @@ export async function createApp({
         [req.actor.id],
       );
       if (!active.rowCount) throw error("UNAUTHENTICATED", 401);
-      const session = await db.query(
-        "SELECT token_hash FROM sessions WHERE token_hash=$1 AND expires_at>now() FOR SHARE",
-        [req.sessionHash],
-      );
-      if (!session.rowCount) throw error("UNAUTHENTICATED", 401);
+      const session = await db.query("SELECT lock_session($1) AS allowed", [
+        req.sessionHash,
+      ]);
+      if (!session.rows[0].allowed) throw error("UNAUTHENTICATED", 401);
       return fn(db);
     });
   const owner = async (db) => {
@@ -260,11 +274,12 @@ export async function createApp({
       const hash = await hashPassword(data.password);
       await transaction(pool, null, async (db) => {
         const found = await db.query(
-          "SELECT r.account_id FROM password_resets r JOIN accounts a ON a.id=r.account_id WHERE token_hash=$1 AND expires_at>now() AND a.status='active' FOR UPDATE OF r",
+          "SELECT lock_password_reset($1) AS account_id",
           [digest(data.token)],
         );
-        if (!found.rowCount) throw error("INVALID_INPUT");
+        if (!found.rows[0].account_id) throw error("INVALID_INPUT");
         const uid = found.rows[0].account_id;
+        await db.query("SELECT set_config('app.account_id',$1,true)", [uid]);
         await db.query("UPDATE accounts SET password_hash=$1 WHERE id=$2", [
           hash,
           uid,
@@ -324,10 +339,10 @@ export async function createApp({
     "/owner/accounts",
     wrap(async (req, res) => {
       const data = z.object({ email, password }).strict().parse(req.body);
-      const hash = await hashPassword(data.password);
       res.status(201).json(
         await tx(req, async (db) => {
           await owner(db);
+          const hash = await hashPassword(data.password);
           const row = requireRow(
             await db.query(
               "INSERT INTO accounts(id,email,password_hash) VALUES($1,$2,$3) RETURNING id,email,status",
@@ -934,8 +949,13 @@ export async function createApp({
   );
   app.post(
     "/companies/:cid/files",
+    filesGate,
+    (req, res, next) =>
+      tx(req, (db) => tenant(db, req.params.cid, true)).then(() => {
+        if (!res.destroyed) next();
+      }, next),
     express.raw({ type: "application/octet-stream", limit: maxFileBytes }),
-    wrap(async (req, res) => {
+    wrapFile(async (req, res) => {
       const name = z
         .string()
         .min(1)
@@ -1002,20 +1022,25 @@ export async function createApp({
   );
   app.get(
     "/companies/:cid/files/:id",
-    wrap(async (req, res) => {
+    filesGate,
+    wrapFile(async (req, res) => {
       const id = uuid.parse(req.params.id);
-      const row = await tx(req, async (db) => {
+      const { row, bytes } = await tx(req, async (db) => {
         await tenant(db, req.params.cid);
-        const result = requireRow(
+        const row = requireRow(
           await db.query("SELECT * FROM files WHERE company_id=$1 AND id=$2", [
             req.params.cid,
             id,
           ]),
         );
+        const bytes = await loadFile(storageRoot, id, {
+          size: Number(row.size_bytes),
+          sha256: row.sha256,
+          maxBytes: maxFileBytes,
+        });
         await log(db, req, req.params.cid, "file.download", id);
-        return result;
+        return { row, bytes };
       });
-      const bytes = await loadFile(storageRoot, id);
       res
         .set({
           "Content-Type": row.mime,

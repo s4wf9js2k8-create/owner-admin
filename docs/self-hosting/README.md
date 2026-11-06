@@ -78,3 +78,5 @@ All state-changing calls require exact Origin and X-CSRF-Protection: 1; no cross
 ## Operations, backups and storage
 
 See [operations and recovery](OPERATIONS.md), [API and security boundary](SECURITY.md) and [test evidence](TESTING.md). The server has not been deployed. A final threat review, independently tested recovery, MFA/recent authentication for operators, account provisioning/invitations, secure delivery, monitoring/alerts and a full frontend migration remain launch gates.
+
+Security follow-up: see the [issue #13 risk report](SECURITY-REVIEW-13.md). Apply migration 002 and re-run provisioning with API stopped; historical audits remain explicitly legacy. The follow-up is for review, not permission to deploy or auto-merge.

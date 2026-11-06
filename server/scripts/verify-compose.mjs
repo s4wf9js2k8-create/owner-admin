@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
-import { randomBytes } from "node:crypto";
-import { mkdtemp, rm } from "node:fs/promises";
+import { randomBytes, randomUUID, createHash } from "node:crypto";
+import { mkdtemp, rm, mkdir, readFile, writeFile } from "node:fs/promises";
+import { hashPassword } from "../src/auth.js";
 import { chromium } from "@playwright/test";
 import os from "node:os";
 import path from "node:path";
@@ -172,16 +173,124 @@ try {
   await page
     .getByRole("heading", { name: "Server storage", exact: true })
     .waitFor();
-  if (
-    !(await page
-      .getByText(
-        `Compose synthetic company: ${pdf.length} bytes used / 1073741824 bytes quota`,
-      )
-      .isVisible())
+  await page
+    .getByText(
+      `Compose synthetic company: ${pdf.length} bytes used / 1073741824 bytes quota`,
+    )
+    .waitFor({ state: "visible" });
+  // Rehearse an actual pre-hardening archive, not only a fresh schema upgrade.
+  docker(
+    "exec",
+    "-T",
+    "db",
+    "createdb",
+    "-U",
+    "channel_migrator",
+    "legacy_fixture",
+  );
+  const legacyId = randomUUID();
+  const oldSql = await readFile(
+    new URL("../migrations/001_foundation.sql", import.meta.url),
+    "utf8",
+  );
+  const oldHash = createHash("sha256").update(oldSql).digest("hex");
+  const passwordHash = await hashPassword(password);
+  const seed =
+    oldSql +
+    `\nCREATE TABLE schema_migrations(name text PRIMARY KEY,checksum text NOT NULL);
+  INSERT INTO schema_migrations VALUES('001_foundation.sql','${oldHash}');
+  INSERT INTO accounts(id,email,password_hash,platform_admin) VALUES('${legacyId}','legacy-compose@example.invalid','${passwordHash}',true);
+  INSERT INTO audit_events(actor_id,action,target) VALUES('${legacyId}','legacy.app_event','legacy');
+  GRANT SELECT,INSERT,DELETE ON audit_events TO channel_app;`;
+  execFileSync(
+    "docker",
+    [
+      "--host=unix:///var/run/docker.sock",
+      "compose",
+      "exec",
+      "-T",
+      "db",
+      "psql",
+      "-U",
+      "channel_migrator",
+      "-d",
+      "legacy_fixture",
+      "-v",
+      "ON_ERROR_STOP=1",
+    ],
+    { cwd: root, env, input: seed, stdio: ["pipe", "pipe", "pipe"] },
+  );
+  const legacyDir = path.join(dir, "legacy-set"),
+    empty = path.join(dir, "empty");
+  await mkdir(legacyDir);
+  await mkdir(empty);
+  const legacyDump = docker(
+    "exec",
+    "-T",
+    "db",
+    "pg_dump",
+    "-U",
+    "channel_migrator",
+    "-d",
+    "legacy_fixture",
+    "-Fc",
+  );
+  const legacyFiles = execFileSync("tar", ["-C", empty, "-cf", "-", "."]);
+  await writeFile(path.join(legacyDir, "database.dump"), legacyDump);
+  await writeFile(path.join(legacyDir, "uploads.tar"), legacyFiles);
+  await writeFile(
+    path.join(legacyDir, "SHA256SUMS"),
+    createHash("sha256").update(legacyDump).digest("hex") +
+      "  database.dump\n" +
+      createHash("sha256").update(legacyFiles).digest("hex") +
+      "  uploads.tar\n",
+  );
+  execFileSync("sh", ["server/scripts/restore.sh", legacyDir], {
+    cwd: root,
+    env: { ...env, CONFIRM_CHANNEL_RESTORE: "restore-this-channel-instance" },
+    stdio: "pipe",
+  });
+  cookie = null;
+  await call("POST", "/auth/login", {
+    email: "legacy-compose@example.invalid",
+    password,
+  });
+  await call("POST", "/owner/companies", {
+    name: "After legacy restore",
+    package: "Essential",
+  });
+  const provenance = docker(
+    "exec",
+    "-T",
+    "db",
+    "psql",
+    "-U",
+    "channel_migrator",
+    "-d",
+    "channel",
+    "-Atc",
+    "SELECT provenance FROM audit_events WHERE target='legacy'",
   )
-    throw Error("UI storage mismatch");
+    .toString()
+    .trim();
+  if (provenance !== "legacy") throw Error("Legacy audit provenance lost");
+  const acl = docker(
+    "exec",
+    "-T",
+    "db",
+    "psql",
+    "-U",
+    "channel_migrator",
+    "-d",
+    "channel",
+    "-Atc",
+    "SELECT has_table_privilege('channel_app','public.audit_events','INSERT')",
+  )
+    .toString()
+    .trim();
+  if (acl !== "f") throw Error("Legacy runtime audit ACL restored");
   console.log(
-    "Compose migration, health, bootstrap, tenant CRUD/upload, backup+restore, token revocation and real browser operator storage flow passed.",
+    "Compose bootstrap, tenant CRUD/upload, current and legacy backup restore, ACL reapplication, session revocation and real browser operator storage flow passed.",
   );
 } finally {
   await browser.close();

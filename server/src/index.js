@@ -2,6 +2,7 @@ import express from "express";
 import helmet from "helmet";
 import { createPool } from "./db.js";
 import { createApp } from "./app.js";
+import { assertRuntimeRole } from "./runtime.js";
 const {
   DATABASE_URL,
   STORAGE_ROOT = "/data/uploads",
@@ -11,14 +12,7 @@ const {
 if (!DATABASE_URL || !PUBLIC_ORIGIN)
   throw new Error("DATABASE_URL and PUBLIC_ORIGIN required");
 const pool = createPool(DATABASE_URL);
-// Refuse to run the HTTP API with a table owner, superuser or RLS bypass role.
-const role = await pool.query(
-  "SELECT r.rolsuper,r.rolbypassrls,EXISTS(SELECT 1 FROM pg_tables WHERE schemaname='public' AND tableowner=current_user) owns FROM pg_roles r WHERE rolname=current_user",
-);
-if (role.rows[0].rolsuper || role.rows[0].rolbypassrls || role.rows[0].owns)
-  throw new Error(
-    "API requires a non-owner, non-superuser NOBYPASSRLS runtime role",
-  );
+await assertRuntimeRole(pool);
 const app = await createApp({
   pool,
   storageRoot: STORAGE_ROOT,

@@ -35,15 +35,31 @@ export async function storeFile(root, id, buffer) {
   }
   return createHash("sha256").update(buffer).digest("hex");
 }
-export async function loadFile(root, id) {
+export async function loadFile(root, id, { size, sha256, maxBytes }) {
   const handle = await open(
     filePath(root, id),
     constants.O_RDONLY | constants.O_NOFOLLOW,
   );
   try {
     const info = await handle.stat();
-    if (!info.isFile()) throw new Error("Not a file");
-    return await handle.readFile();
+    if (!info.isFile() || info.size !== size || info.size > maxBytes)
+      throw new Error("Invalid stored file size");
+    // Read at most the authorized metadata size, even if a host process grows it.
+    const buffer = Buffer.alloc(size);
+    let offset = 0;
+    while (offset < size) {
+      const { bytesRead } = await handle.read(
+        buffer,
+        offset,
+        size - offset,
+        offset,
+      );
+      if (!bytesRead) throw new Error("Truncated stored file");
+      offset += bytesRead;
+    }
+    if (createHash("sha256").update(buffer).digest("hex") !== sha256)
+      throw new Error("Stored file integrity failure");
+    return buffer;
   } finally {
     await handle.close();
   }

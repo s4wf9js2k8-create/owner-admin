@@ -3,6 +3,7 @@ export function createPool(url) {
   return new pg.Pool({
     connectionString: url,
     max: 10,
+    options: "-c search_path=public,pg_catalog,pg_temp",
     statement_timeout: 10000,
     connectionTimeoutMillis: 5000,
   });
@@ -26,14 +27,27 @@ export async function transaction(pool, accountId, fn) {
 }
 export async function audit(
   db,
-  actor,
+  _actor,
   company,
   action,
   target,
   outcome = "success",
 ) {
-  await db.query(
-    "INSERT INTO audit_events(company_id,actor_id,action,target,outcome) VALUES($1,$2,$3,$4,$5)",
-    [company, actor, action, String(target), outcome],
-  );
+  // Mutations are audited by migration-owned row triggers, not caller claims.
+  if (action === "request.denied") {
+    await db.query("SELECT audit_denied_event($1,$2)", [
+      String(target),
+      outcome,
+    ]);
+  } else if (
+    ["records.list", "record.read", "files.list", "file.download"].includes(
+      action,
+    )
+  ) {
+    await db.query("SELECT audit_read_event($1,$2,$3)", [
+      company,
+      action,
+      String(target),
+    ]);
+  }
 }

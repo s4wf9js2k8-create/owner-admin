@@ -57,3 +57,7 @@ These checks establish behavior under local synthetic tests, not production read
 - `git diff --check`: passed.
 
 No live server, real customer information, EVLT, Firebase, paid provider or production deployment was used. The Windows host path was not executed. CI runs are separate evidence from these local results.
+
+## Security follow-up — issue #13
+
+See [the risk report](SECURITY-REVIEW-13.md). The follow-up passes 52 frontend/model tests, 18 server checks (15 PostgreSQL/API groups plus two file-budget and one backup-interruption regression), all 51 browser cases, lint/build, Docker startup and the real current/legacy backup restore rehearsal. `test:compose` now also restores an actual original-001 archive over the newer installation and verifies migration/ACL reapplication and legacy audit provenance. Runtime tests provision permissions through the same code as Compose, rather than duplicating broad test-only grants. Migration 001 stays unchanged; migration 002 adds hardening.
