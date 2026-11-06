@@ -64,18 +64,16 @@ test("customer modules are interactive and session records remain scoped", async
     .getByRole("button", { name: "Explore customer workspace" })
     .click();
   await navigate(page, "Volunteers");
-  await page.getByRole("button", { name: "Add sample record" }).click();
+  await page.getByRole("button", { name: "New directory" }).click();
   await page.getByLabel("Record title").fill("Sample isolated volunteer");
   await page
-    .getByLabel("Details", { exact: true })
+    .getByLabel("Description", { exact: true })
     .fill("Fictional welcome team");
-  await page.getByRole("button", { name: "Save sample record" }).click();
-  await page
-    .getByLabel("Progress for Sample isolated volunteer")
-    .selectOption("Complete");
-  await expect(
-    page.getByLabel("Progress for Sample isolated volunteer"),
-  ).toHaveValue("Complete");
+  await page.getByRole("button", { name: "Create sample record" }).click();
+  await page.getByRole("button", {name:"View Sample isolated volunteer"}).click();
+  await page.getByLabel("Record status").selectOption("Complete");
+  await expect(page.getByLabel("Record status")).toHaveValue("Complete");
+  await page.getByRole("button", {name:"Close dialog"}).click();
   await page
     .getByLabel("Example workspace", { exact: true })
     .selectOption("demo-charity");
@@ -88,7 +86,7 @@ test("customer modules are interactive and session records remain scoped", async
     .selectOption("demo-engineering");
   await navigate(page, "Work orders");
   await expect(
-    page.getByRole("row").filter({ hasText: "Replace pump seal" }),
+    page.getByText("Replace pump seal", { exact: true }),
   ).toBeVisible();
   await page
     .getByLabel("Example workspace", { exact: true })

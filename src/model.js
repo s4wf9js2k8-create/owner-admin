@@ -1,4 +1,25 @@
 export const modules = [
+  { name: "Tasks & projects", description: "Collaborative board, deadlines, checklists and task progress." },
+  { name: "Staff & volunteers", description: "A combined people and team directory." },
+  { name: "Attendance & timesheets", requires: ["Staff & volunteers"], description: "Attendance sessions and sample timesheet reviews." },
+  { name: "Shift rotas", requires: ["Staff & volunteers"], description: "Team shift plans and rota coverage." },
+  { name: "Leave and availability", requires: ["Staff & volunteers"], description: "Leave requests and sample availability." },
+  { name: "Assets & equipment", description: "Equipment condition and asset tracking." },
+  { name: "Maintenance & work orders", requires: ["Assets & equipment"], description: "Maintenance jobs, defects and work orders." },
+  { name: "Inspections & checklists", requires: ["Assets & equipment"], description: "Inspection findings and checklists." },
+  { name: "Documents & files", description: "Document catalogue and version references." },
+  { name: "Events & bookings", description: "Event plans, venues and activity bookings." },
+  { name: "Reports & analytics", description: "Operational charts and completion reporting." },
+  { name: "Inventory and stock", description: "Stock quantities and reorder thresholds." },
+  { name: "Customers / CRM", description: "Customer relationships and a prospect pipeline." },
+  { name: "Quotes and invoices", requires: ["Customers / CRM"], description: "Fictional commercial document register, no payments." },
+  { name: "Training and qualifications", requires: ["Staff & volunteers"], description: "Training records and renewal dates." },
+  { name: "Health & safety", description: "Hazards, corrective actions and risk tracking." },
+  { name: "Vehicle / fleet management", description: "Fleet records, servicing and vehicle locations." },
+  { name: "Forms and surveys", description: "Submitted forms and review states." },
+  { name: "Bookings and appointments", description: "Visits and appointment schedules." },
+  { name: "Donations and fundraising", description: "Fictional fundraising and campaign totals." },
+  { name: "Archives and collections", description: "Catalogue historic items and storage locations." },
   { name: "Volunteers", description: "Volunteer directory and availability." },
   {
     name: "Attendance & Hours",
@@ -49,6 +70,8 @@ export const sectors = {
       "Archives",
       "Daily operations",
       "Reporting",
+      "Tasks & projects", "Staff & volunteers", "Documents & files",
+      "Assets & equipment", "Inspections & checklists",
     ],
   },
   charity: {
@@ -62,6 +85,7 @@ export const sectors = {
       "Donations",
       "Tasks",
       "Reporting",
+      "Tasks & projects", "Staff & volunteers", "Leave and availability", "Documents & files",
     ],
   },
   engineering: {
@@ -76,6 +100,7 @@ export const sectors = {
       "Schedules",
       "Job records",
       "Reporting",
+      "Tasks & projects", "Staff & volunteers", "Assets & equipment", "Maintenance & work orders", "Health & safety", "Vehicle / fleet management",
     ],
   },
   visitor: {
@@ -89,6 +114,7 @@ export const sectors = {
       "Maintenance",
       "Daily operations",
       "Reporting",
+      "Tasks & projects", "Events & bookings", "Bookings and appointments", "Inventory and stock", "Documents & files",
     ],
   },
 };
@@ -157,6 +183,26 @@ export function updateRecord(records, orgId, id, patch) {
   );
 }
 const examples = {
+  "Tasks & projects": [["Review outstanding work", "Coordinate priority tasks"], ["Plan next improvement", "Prepare delivery milestones"]],
+  "Staff & volunteers": [["Sample coordinator A", "Team lead"], ["Sample colleague B", "Operations team"]],
+  "Attendance & timesheets": [["Morning workshop shift", "Sample 4-hour shift"], ["Afternoon volunteer support", "Sample 3-hour shift"]],
+  "Shift rotas": [["Morning team rota", "Front of house"], ["Weekend support rota", "Site operations"]],
+  "Leave and availability": [["Sample annual leave request", "Two days leave"], ["Sample volunteer unavailability", "Weekend request"]],
+  "Assets & equipment": [["Workshop compressor", "Equipment register"], ["Visitor radio set", "Portable equipment"]],
+  "Maintenance & work orders": [["Service workshop compressor", "Replace intake filter"], ["Repair site lighting", "Inspect wiring"]],
+  "Inspections & checklists": [["Workshop tool inspection", "Monthly equipment checks"], ["Site entrance inspection", "Daily safety checks"]],
+  "Documents & files": [["Health and safety policy", "Operations documentation"], ["Maintenance instruction", "Workshop handbook"]],
+  "Events & bookings": [["Public open day", "Sample weekend event"], ["Community workshop", "Group booking"]],
+  "Inventory and stock": [["Hi-vis safety vest", "PPE stock"], ["Workshop consumables", "Maintenance supplies"]],
+  "Customers / CRM": [["Example customer A", "Enquiry about planned works"], ["Example prospect B", "Request for quotation"]],
+  "Quotes and invoices": [["Draft quote Q-100", "Sample maintenance quotation"], ["Invoice INV-200", "Fictional example invoice"]],
+  "Training and qualifications": [["First aid training", "Sample certificate"], ["Site induction", "Example renewal"]],
+  "Health & safety": [["Uneven walkway", "Trip hazard identified"], ["Workshop storage", "Review access arrangements"]],
+  "Vehicle / fleet management": [["Site van F-01", "Operations vehicle"], ["Maintenance pickup F-02", "Engineering support"]],
+  "Forms and surveys": [["Visitor feedback", "Example survey submission"], ["Daily handover form", "Operational checklist"]],
+  "Bookings and appointments": [["Group tour reservation", "Example afternoon visit"], ["Equipment consultation", "Sample customer visit"]],
+  "Donations and fundraising": [["Sample collection box", "Illustrative donation"], ["Summer fundraiser", "Example campaign"]],
+  "Archives and collections": [["Historical photograph set", "Railway collection"], ["Original route timetable", "Reference archives"]],
   Volunteers: [
     ["Sample volunteer A", "Visitor welcome"],
     ["Sample volunteer B", "Collections team"],
@@ -222,6 +268,32 @@ const examples = {
     ["Sunday visitors", "206 sample visitors"],
   ],
 };
+const extras = {
+  "Tasks & projects": [
+    { owner: "Sample project lead", checklist: [{text:"Gather requirements",done:true},{text:"Confirm task owner",done:false},{text:"Review completion",done:false}], tags:"Planning", recurrence:"Weekly", comments:[] },
+    { owner: "Sample delivery team", checklist: [{text:"Agree milestones",done:false},{text:"Prepare materials",done:false}], tags:"Delivery", recurrence:"None", comments:[] },
+  ],
+  "Staff & volunteers": [{role:"Coordinator",team:"Operations",contact:"sample@example.invalid"},{role:"Assistant",team:"Visitor services",contact:"example@example.invalid"}],
+  "Assets & equipment": [{asset:"EQ-101",location:"Workshop",condition:"Good"},{asset:"EQ-102",location:"Main building",condition:"Monitor"}],
+  "Maintenance & work orders": [{asset:"EQ-101",fault:"Replace and test filter",severity:"Medium"},{asset:"EQ-102",fault:"Inspect and repair lighting",severity:"High"}],
+  "Inspections & checklists": [{asset:"Workshop",result:"Pending",inspector:"Sample inspector"},{asset:"Entrance",result:"Requires attention",inspector:"Sample supervisor"}],
+  "Attendance & timesheets": [{person:"Sample coordinator A",startTime:"2026-11-06T09:00",endTime:"2026-11-06T13:00",approval:"Pending"},{person:"Sample colleague B",startTime:"2026-11-06T13:00",endTime:"2026-11-06T16:00",approval:"Approved"}],
+  "Shift rotas": [{person:"Sample colleague B",startTime:"2026-11-10T09:00",endTime:"2026-11-10T13:00",location:"Office"},{person:"Sample coordinator A",startTime:"2026-11-11T10:00",endTime:"2026-11-11T17:00",location:"Site"}],
+  "Leave and availability": [{person:"Sample coordinator A",startDate:"2026-11-12",endDate:"2026-11-13",approval:"Pending"},{person:"Sample colleague B",startDate:"2026-11-20",endDate:"2026-11-22",approval:"Approved"}],
+  "Documents & files": [{folder:"Policies",version:"v1.1",documentType:"Policy"},{folder:"Technical",version:"v2",documentType:"Procedure"}],
+  "Events & bookings": [{location:"Main hall",startTime:"2026-11-14T10:00",capacity:"40"},{location:"Workshop",startTime:"2026-11-21T13:00",capacity:"20"}],
+  "Inventory and stock": [{sku:"PPE-001",quantity:"5",reorder:"10",location:"Stores"},{sku:"OPS-002",quantity:"42",reorder:"15",location:"Workshop"}],
+  "Customers / CRM": [{contact:"Sample contact A",stage:"Lead",company:"Example Co A"},{contact:"Sample contact B",stage:"Proposal",company:"Example Co B"}],
+  "Quotes and invoices": [{reference:"Q-100",amount:"240",paymentStatus:"Draft"},{reference:"INV-200",amount:"580",paymentStatus:"Sent (demo)"}],
+  "Training and qualifications": [{person:"Sample coordinator A",qualification:"First aid",expiry:"2027-06-15"},{person:"Sample colleague B",qualification:"Site induction",expiry:"2027-02-10"}],
+  "Health & safety": [{location:"Visitor path",severity:"Medium",action:"Mark and repair surface"},{location:"Workshop",severity:"High",action:"Secure shelving"}],
+  "Vehicle / fleet management": [{registration:"F-01",location:"Operations yard",serviceDue:"2027-01-10"},{registration:"F-02",location:"Service bay",serviceDue:"2026-12-15"}],
+  "Forms and surveys": [{formName:"Visitor feedback",submittedBy:"Sample visitor",approval:"Pending"},{formName:"Daily handover",submittedBy:"Sample team",approval:"Reviewed"}],
+  "Bookings and appointments": [{person:"Sample visitor A",startTime:"2026-11-16T11:00",location:"Reception"},{person:"Sample customer B",startTime:"2026-11-18T14:00",location:"Workshop"}],
+  "Donations and fundraising": [{campaign:"General fund",amount:"35",source:"Sample cash"},{campaign:"Summer appeal",amount:"150",source:"Sample event"}],
+  "Archives and collections": [{reference:"ARC-101",location:"Box A-02",category:"Photographs"},{reference:"ARC-102",location:"Shelf C-03",category:"Documents"}],
+};
+
 export function seedRecords(orgs) {
   return orgs.flatMap((o) =>
     o.modules
@@ -236,7 +308,8 @@ export function seedRecords(orgs) {
           status: i ? "In progress" : "Planned",
           priority: i ? "High" : "Normal",
           owner: i ? "Sample operations team" : "",
-          dueDate: i ? "2026-12-15" : "2026-12-10",
+          dueDate: i ? "2026-11-18" : "2026-11-10",
+          ...(extras[m]?.[i] || {}),
         })),
       ),
   );
