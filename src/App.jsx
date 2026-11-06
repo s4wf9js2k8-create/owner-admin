@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import CompanyOnboarding from "./CompanyOnboarding";
 import { ShieldAlert } from "lucide-react";
 import { createFictionalBackend } from "./backend/fictional";
 import { BackendState } from "./layout/BackendState";
@@ -16,6 +17,7 @@ import UsersPage from "./pages/UsersPage";
 import SupportPage from "./pages/SupportPage";
 import SettingsPage from "./pages/SettingsPage";
 export default function App({ backend: suppliedBackend }) {
+  const [onboarding, setOnboarding] = useState(false);
   const [demoBackend] = useState(() => createFictionalBackend());
   const backend = suppliedBackend || demoBackend;
   const controller = useConsoleController(backend);
@@ -39,6 +41,8 @@ export default function App({ backend: suppliedBackend }) {
     error,
     retry,
   } = controller;
+  if (onboarding)
+    return <CompanyOnboarding onClose={() => setOnboarding(false)} />;
   return (
     <div
       className="shell"
@@ -62,6 +66,9 @@ export default function App({ backend: suppliedBackend }) {
           </div>
           <div className="toolbar">
             <button onClick={reset}>Reset fictional demo</button>
+            <button onClick={() => setOnboarding(true)}>
+              Company onboarding simulation
+            </button>
             <small>Changes exist only in this tab and reset on refresh.</small>
           </div>
           <BackendState

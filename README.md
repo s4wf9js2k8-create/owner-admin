@@ -53,3 +53,5 @@ The existing business and sales documents are drafts, not product claims or pric
 Offline development: see the [offline backend foundation](docs/OFFLINE-BACKEND.md) for synthetic sessions, tenant-authorized resource operations, tests and future integration gates. The public demonstration remains on its fictional adapter; no live authentication or database is connected.
 
 [Dedicated Firebase preparation](docs/FIREBASE-PREPARATION.md) documents the offline-only interface, draft collections/Rules and environment inventory for a future independently approved Channel Systems project. It cannot connect to a live Firebase project.
+
+Try **Company onboarding simulation** for operator provisioning, Essential/Professional/Enterprise templates, client package/feature requests and explicit approval. See [the workflow and service reference](docs/COMPANY-ONBOARDING.md). All identities, companies and invitations remain fictional and disposable.

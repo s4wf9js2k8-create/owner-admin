@@ -81,6 +81,42 @@ export function createOfflineBackend({ now = () => Date.now() } = {}) {
       { orgId: "alpha", uid, role: uid, status: "active", version: 1 },
     ]),
   ]);
+  const packages = new Map([
+    [
+      "Essential",
+      { name: "Essential", modules: ["tasks"], monthly: null, version: 1 },
+    ],
+    [
+      "Professional",
+      {
+        name: "Professional",
+        modules: ["tasks", "reporting"],
+        monthly: null,
+        version: 1,
+      },
+    ],
+    [
+      "Enterprise",
+      {
+        name: "Enterprise",
+        modules: ["tasks", "reporting"],
+        monthly: null,
+        version: 1,
+      },
+    ],
+  ]);
+  for (const org of organisations.values())
+    Object.assign(org, {
+      package: "Essential",
+      color: "#28533a",
+      overrides: [],
+    });
+  const requests = new Map();
+  const validModules = (list) =>
+    Array.isArray(list) &&
+    list.every((m) => ["tasks", "reporting"].includes(m)) &&
+    new Set(list).size === list.length &&
+    (!list.includes("reporting") || list.includes("tasks"));
   const records = new Map();
   const sessions = new Map();
   const invites = new Map();
@@ -160,8 +196,207 @@ export function createOfflineBackend({ now = () => Date.now() } = {}) {
       if (!row || row.orgId !== org) fail("NOT_FOUND");
       return row;
     };
+    const owner = () => {
+      const actor = principal(token);
+      if (!actor.platformOwner) fail("FORBIDDEN");
+      return actor;
+    };
+    const company = (org) => {
+      const row = organisations.get(org);
+      if (!row) fail("NOT_FOUND");
+      return row;
+    };
     return {
       kind: "offline-memory",
+      packages: {
+        list: () =>
+          invoke(null, "packages.list", null, () => {
+            principal(token);
+            return [...packages.values()];
+          }),
+        update: (name, patch, version) =>
+          invoke(null, "packages.update", name, () => {
+            owner();
+            const row = packages.get(name);
+            if (!row) fail("NOT_FOUND");
+            fields(patch, ["modules", "monthly"]);
+            if (
+              ("modules" in patch && !validModules(patch.modules)) ||
+              ("monthly" in patch &&
+                patch.monthly !== null &&
+                (!Number.isInteger(patch.monthly) ||
+                  patch.monthly < 0 ||
+                  patch.monthly > 100000))
+            )
+              fail("INVALID_INPUT");
+            checkVersion(row, version);
+            Object.assign(row, copy(patch), { version: row.version + 1 });
+            // Template changes apply to future assignments only, never silently to existing tenants.
+            return changed(null, "packages.update", name, row);
+          }),
+      },
+      companies: {
+        list: () =>
+          invoke(null, "companies.list", null, () => {
+            owner();
+            return [...organisations.values()];
+          }),
+        create: (values) =>
+          invoke(null, "companies.create", null, () => {
+            owner();
+            fields(values, ["name", "package", "color"]);
+            if (
+              !text(values.name, 100) ||
+              !packages.has(values.package) ||
+              !/^#[0-9a-fA-F]{6}$/.test(values.color)
+            )
+              fail("INVALID_INPUT");
+            const row = {
+              id: crypto.randomUUID(),
+              name: values.name.trim(),
+              package: values.package,
+              color: values.color,
+              status: "active",
+              modules: copy(packages.get(values.package).modules),
+              features: { reporting: true },
+              overrides: [],
+              version: 1,
+            };
+            organisations.set(row.id, row);
+            return changed(row.id, "companies.create", row.id, row);
+          }),
+        update: (org, patch, version) =>
+          invoke(org, "companies.update", org, () => {
+            owner();
+            const row = company(org);
+            fields(patch, ["name", "package", "color", "status", "overrides"]);
+            if (
+              ("name" in patch && !text(patch.name, 100)) ||
+              ("package" in patch && !packages.has(patch.package)) ||
+              ("color" in patch && !/^#[0-9a-fA-F]{6}$/.test(patch.color)) ||
+              ("status" in patch &&
+                !["active", "suspended"].includes(patch.status)) ||
+              ("overrides" in patch &&
+                (!Array.isArray(patch.overrides) ||
+                  patch.overrides.some(
+                    (m) => !["tasks", "reporting"].includes(m),
+                  )))
+            )
+              fail("INVALID_INPUT");
+            const next = { ...row, ...copy(patch) };
+            if ("package" in patch || "overrides" in patch)
+              next.modules = [
+                ...new Set([
+                  ...packages.get(next.package).modules,
+                  ...next.overrides,
+                ]),
+              ];
+            if (!validModules(next.modules)) fail("INVALID_INPUT");
+            checkVersion(row, version);
+            Object.assign(row, next, { version: row.version + 1 });
+            return changed(org, "companies.update", org, row);
+          }),
+        inviteAdmin: (org, uid) =>
+          invoke(org, "companies.invite", uid, () => {
+            owner();
+            const row = company(org);
+            if (
+              row.status !== "active" ||
+              !accounts.has(uid) ||
+              memberships.has(`${org}/${uid}`)
+            )
+              fail("INVALID_INPUT");
+            const secret = crypto.randomUUID();
+            invites.set(secret, {
+              org,
+              uid,
+              role: "organisation-admin",
+              inviter: principal(token).id,
+              expires: now() + 3600000,
+            });
+            changed(org, "companies.invite", uid, {});
+            return { token: secret, mocked: true };
+          }),
+      },
+      workspace: {
+        get: (org) =>
+          invoke(org, "workspace.get", org, () => {
+            authorize(token, org, "read");
+            return company(org);
+          }),
+        requests: (org) =>
+          invoke(org, "requests.list", org, () => {
+            authorize(token, org, "read");
+            return [...requests.values()].filter((r) => r.orgId === org);
+          }),
+        request: (org, values) =>
+          invoke(org, "requests.create", org, () => {
+            const actor = authorize(token, org, "admin");
+            fields(values, ["package", "feature"]);
+            if (
+              Object.keys(values).length !== 1 ||
+              ("package" in values
+                ? !packages.has(values.package) ||
+                  values.package === company(org).package
+                : values.feature !== "reporting" ||
+                  company(org).modules.includes("reporting"))
+            )
+              fail("INVALID_INPUT");
+            if (
+              [...requests.values()].some(
+                (r) => r.orgId === org && r.status === "pending",
+              )
+            )
+              fail("CONFLICT");
+            const row = {
+              id: crypto.randomUUID(),
+              orgId: org,
+              ...copy(values),
+              uid: actor.id,
+              status: "pending",
+              version: 1,
+            };
+            requests.set(row.id, row);
+            return changed(org, "requests.create", row.id, row);
+          }),
+      },
+      approvals: {
+        list: () =>
+          invoke(null, "approvals.list", null, () => {
+            owner();
+            return [...requests.values()];
+          }),
+        decide: (id, decision, version, companyVersion) =>
+          invoke(null, "approvals.decide", id, () => {
+            owner();
+            const request = requests.get(id);
+            if (!request) fail("NOT_FOUND");
+            if (!["approved", "rejected"].includes(decision))
+              fail("INVALID_INPUT");
+            checkVersion(request, version);
+            if (request.status !== "pending") fail("CONFLICT");
+            const org = company(request.orgId);
+            checkVersion(org, companyVersion);
+            if (org.status !== "active") fail("FORBIDDEN");
+            if (decision === "approved") {
+              if (request.feature)
+                org.overrides = [
+                  ...new Set([...org.overrides, request.feature]),
+                ];
+              else org.package = request.package;
+              org.modules = [
+                ...new Set([
+                  ...packages.get(org.package).modules,
+                  ...org.overrides,
+                ]),
+              ];
+              org.version++;
+            }
+            request.status = decision;
+            request.version++;
+            return changed(org.id, "approvals.decide", id, request);
+          }),
+      },
       auth: {
         getSession: async () => ({ uid: principal(token).id, mocked: true }),
         logout: async () => {
@@ -314,8 +549,9 @@ export function createOfflineBackend({ now = () => Date.now() } = {}) {
             const { org, uid, role } = invite;
             const issuer = memberships.get(`${org}/${invite.inviter}`);
             if (
-              issuer?.status !== "active" ||
-              issuer.role !== "organisation-admin" ||
+              (accounts.get(invite.inviter)?.platformOwner !== true &&
+                (issuer?.status !== "active" ||
+                  issuer.role !== "organisation-admin")) ||
               accounts.get(invite.inviter)?.status !== "active"
             )
               fail("FORBIDDEN");

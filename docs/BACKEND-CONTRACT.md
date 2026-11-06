@@ -48,3 +48,7 @@ A separate [offline backend foundation](OFFLINE-BACKEND.md) now implements prote
 ## Firebase preparation interface (issue #8)
 
 [Firebase preparation](FIREBASE-PREPARATION.md) provides configurable, offline-only auth and record ports using an injected synthetic transport. It preserves the offline service's signatures while intentionally excluding unrestricted demo ports. No Firebase SDK or live connection exists; prototype Firestore Rules deny all direct client access.
+
+## Company onboarding service ports (issue #10)
+
+The offline service now adds operator-only companies, versioned package templates and request/approval ports. Tenant admins submit requests but cannot grant entitlements. See [company onboarding](COMPANY-ONBOARDING.md) for signatures, catalogue compatibility and limitations. Existing fictional adapter and Firebase preparation signatures are preserved.

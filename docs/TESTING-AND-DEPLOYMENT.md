@@ -41,3 +41,7 @@ Verified locally on 2026-11-06 for issue #6: lint passed; all 37 unit/model/poli
 ## Issue #8 Firebase preparation
 
 Verified locally on 2026-11-06: lint passed, all 45 unit/model/service/policy/preparation tests passed, production build passed, all 36 Chromium browser cases passed, and `git diff --check` passed. The production asset hashes match the pre-change demo build. The new Rules guard is static only; no Firebase SDK, official Rules compiler/emulator or deployed service was used. See [Firebase preparation](FIREBASE-PREPARATION.md) for the future validation gates. No Firebase deployment workflow/configuration was added.
+
+## Issue #10 company onboarding
+
+Verified locally on 2026-11-06: lint passed, all 50 unit/model/service/security/preparation tests passed, production build passed, all 45 Chromium browser cases passed across desktop/phone/tablet, and `git diff --check` passed. The new browser cases cover operator approval of package and feature requests and company provisioning/invitation/suspension/reactivation. No Firebase, Rules or deployment configuration changed. The [onboarding simulation](COMPANY-ONBOARDING.md) remains explicitly fictional and disposable; it makes no production security or billing claims.
