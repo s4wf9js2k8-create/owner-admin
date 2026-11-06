@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { visibleRecords } from "./model";
 import { isTaskModule } from "./customerModules";
 import CustomerTaskBoard from "./CustomerTaskBoard";
 import CustomerModulePage from "./CustomerModulePage";
