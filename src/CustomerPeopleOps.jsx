@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Empty, Modal, Status } from "./components";
-import { CalendarDays, Clock3, GraduationCap, Plus, Users, ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Clock3, Plus, ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
 import { moduleInfo, isTaskModule } from "./customerModules";
 
 const day=v=>v?.slice(0,10)||"";
@@ -29,7 +29,8 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
   const training=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="training");
   const actorNames=[...new Set([...people.map(p=>p.title),...list.map(r=>r.person)].filter(Boolean))].sort();
   const [clockPerson,setClockPerson]=useState("");
-  const active=list.find(r=>r.id===selected)||list.find(r=>r.id===focusId);
+  useEffect(()=>{if(focusId)setSelected(focusId);},[focusId]);
+  const active=list.find(r=>r.id===selected);
   const update=(r,patch)=>onUpdate(org.id,r.id,patch);
   const filtered=list.filter(r=>[r.title,r.person,r.team,r.role,r.detail,r.qualification].join(" ").toLowerCase().includes(query.toLowerCase()));
   const created=async e=>{
