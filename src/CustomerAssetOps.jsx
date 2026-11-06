@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Empty, Modal, Status } from "./components";
-import { AlertTriangle, ClipboardCheck, ClipboardList, Copy, Download, Package, Plus, Wrench } from "lucide-react";
+import { ClipboardCheck, Package, Plus, Wrench } from "lucide-react";
 import { firstModuleOfType, findAsset, relatedRecords } from "./customerWorkflows";
 import { moduleInfo } from "./customerModules";
 
@@ -10,7 +10,6 @@ const conditions=["Good","Monitor","Needs attention","Out of service"];
 const results=["Pending","Pass","Fail","Requires attention"];
 const states=["Planned","In progress","Complete"];
 const Severity=["Low","Medium","High","Critical"];
-const statusText=r=>r.result||r.condition||r.status;
 const assetId=r=>r.asset||r.reference||r.title;
 const summary=(label,value)=> <div className="metric-tile"><span>{label}</span><strong>{value}</strong></div>;
 export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNavigate,focusId,canCreate=true,canEdit=true,canApprove=true}) {
@@ -26,7 +25,6 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
   const assets=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="assets");
   const workOrders=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="maintenance");
   const inspections=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="inspections");
-  const stock=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="inventory");
   const filtered=rows.filter(r=>[r.title,r.detail,r.asset,r.sku,r.location,r.fault].join(" ").toLowerCase().includes(filter.toLowerCase()));
   const current=rows.find(r=>r.id===selected);
   useEffect(()=>{if(focusId)setSelected(focusId);},[focusId]);
@@ -50,9 +48,10 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
     const workModule=firstModuleOfType(org,"maintenance");
     if(!workModule){setError("Enable Maintenance & work orders first.");return;}
     const relatedAsset=findAsset(assets,source.assetRefId||source.asset);
+    if(kind==="inspection" && workOrders.some(w=>w.sourceInspectionId===source.id&&w.status!=="Complete")){setError("An open corrective work order already exists for this inspection.");return;}
     const title=kind==="inspection"?"Corrective action: "+source.title:"Service asset: "+source.title;
     const saved=await onAdd({orgId:org.id,module:workModule,title,detail:kind==="inspection"?"Created from failed inspection: "+source.title:"Maintenance requested from asset profile.",
-      asset:relatedAsset?.asset||source.asset||"",assetRefId:relatedAsset?.id||source.id,sourceInspectionId:kind==="inspection"?source.id:"",
+      asset:relatedAsset?.asset||source.asset||"",assetRefId:relatedAsset?.id||source.assetRefId||"",sourceInspectionId:kind==="inspection"?source.id:"",
       fault:kind==="inspection"?"Resolve findings from "+source.title:"Inspect and maintain equipment",severity:kind==="inspection"?"High":"Medium",
       status:"Planned",priority:kind==="inspection"?"High":"Normal",owner:"",dueDate:source.dueDate||today(),
       checklist:[{text:"Review scope and safety",done:false},{text:"Carry out corrective work",done:false},{text:"Record outcome",done:false}],
