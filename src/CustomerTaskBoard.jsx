@@ -160,6 +160,12 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
     <div className="customer-tools"><label className="search-field"><Search size={17}/><input aria-label="Search tasks" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search tasks, assignees, projects"/></label>
       <label>Priority<select aria-label="Filter tasks by priority" value={priority} onChange={e=>setPriority(e.target.value)}>{["All",...priorities].map(x=><option key={x}>{x}</option>)}</select></label>
       <label>Assigned to<select aria-label="Filter tasks by owner" value={owner} onChange={e=>setOwner(e.target.value)}>{["All","Unassigned",...owners].map(x=><option key={x}>{x}</option>)}</select></label></div>
+    <div className="saved-view-tools">
+      <label>Saved view<select aria-label="Choose saved task view" defaultValue="" onChange={e=>{const item=savedViews.find(v=>v.name===e.target.value);if(item){setPriority(item.priority);setOwner(item.owner);setQuery(item.query);setView(item.view);}}}><option value="">Current filters</option>{savedViews.map(item=><option key={item.name}>{item.name}</option>)}</select></label>
+      <input aria-label="Name task view" value={viewName} onChange={e=>setViewName(e.target.value)} maxLength={35} placeholder="Save these filters"/>
+      <button onClick={()=>{const name=viewName.trim();if(name){setSavedViews(old=>[...old.filter(i=>i.name!==name),{name,priority,owner,query,view}]);setViewName("");}}}>Save view</button>
+      <small>Views last until this demo is refreshed.</small>
+    </div>
     <div className="task-tabs" role="group" aria-label="Task views">{[["mine","My tasks",UserRound],["board","Board",LayoutGrid],["list","List",List],["projects","Projects",FolderKanban]].map(([id,name,Icon])=><button key={id} aria-pressed={view===id} className={view===id?"is-active":""} onClick={()=>setView(id)}><Icon size={16}/>{name}</button>)}</div>
     {notice&&<p className="module-disclaimer" role="status">{notice}</p>}
     {view==="mine"&&<div><div className="customer-page-intro"><div><h3>Assigned to {actor}</h3><p>Your active tasks, with direct access to their details and progress.</p></div><label className="task-show-complete"><input type="checkbox" checked={showMineComplete} onChange={e=>setShowMineComplete(e.target.checked)}/> Include completed</label></div>
