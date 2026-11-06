@@ -2,10 +2,10 @@ import React,{useState} from "react";
 import {Panel,Empty,Status} from "./components";
 import {Plus,ArrowUp,ArrowDown,ClipboardList,FileText,CheckCircle2} from "lucide-react";
 const types=["Short text","Long text","Number","Date","Yes / No"];
-const initial=[{id:"sample",title:"Daily site handover",detail:"Internal operations form",fields:[{id:"location",label:"Location",type:"Short text",required:true},{id:"safe",label:"Site left secure",type:"Yes / No",required:true}]}];
+export const initialFormTemplates=[{id:"sample",title:"Daily site handover",detail:"Internal operations form",fields:[{id:"location",label:"Location",type:"Short text",required:true},{id:"safe",label:"Site left secure",type:"Yes / No",required:true}]}];
 const today=()=>new Date().toISOString().slice(0,10);
-export default function CustomerFormsOps({org,module,records,onAdd,canCreate=true}) {
- const [templates,setTemplates]=useState(initial),[active,setActive]=useState("sample"),[tab,setTab]=useState("templates"),[notice,setNotice]=useState("");
+export default function CustomerFormsOps({org,module,records,onAdd,templates,setTemplates,canCreate=true}) {
+ const [active,setActive]=useState("sample"),[tab,setTab]=useState("templates"),[notice,setNotice]=useState("");
  const [name,setName]=useState(""),[desc,setDesc]=useState(""),[label,setLabel]=useState(""),[kind,setKind]=useState("Short text"),[required,setRequired]=useState(false);
  const template=templates.find(t=>t.id===active)||templates[0];
  const submissions=records.filter(r=>r.orgId===org.id&&r.module===module&&r.recordType==="form-response");
