@@ -234,6 +234,9 @@ export function seedRecords(orgs) {
           title,
           detail,
           status: i ? "In progress" : "Planned",
+          priority: i ? "High" : "Normal",
+          owner: i ? "Sample operations team" : "",
+          dueDate: i ? "2026-12-15" : "2026-12-10",
         })),
       ),
   );
