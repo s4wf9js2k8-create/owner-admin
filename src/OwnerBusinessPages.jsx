@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Panel, Empty, Status } from "./components";
-import { BarChart3, Building2, Megaphone, Plus, Server, ArrowRight, LifeBuoy, Palette, Lightbulb, Users, TrendingUp, ClipboardList, ShieldCheck, PackageCheck } from "lucide-react";
+import { Building2, Plus, Server, ArrowRight, Lightbulb } from "lucide-react";
 
 export const ownerSeed = {
   leads:[
