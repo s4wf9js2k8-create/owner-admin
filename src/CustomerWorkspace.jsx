@@ -1,6 +1,18 @@
 import React, { useState } from "react";
 import { visibleRecords } from "./model";
 import { Panel, Table, Empty, Modal } from "./components";
+const domainFields = {
+  "Attendance & Hours": [{key:"person",label:"Volunteer or staff member"},{key:"startTime",label:"Start time",type:"datetime-local"},{key:"endTime",label:"End time",type:"datetime-local"}],
+  Maintenance: [{key:"asset",label:"Asset or location"},{key:"fault",label:"Fault or work required"}],
+  "Work orders": [{key:"asset",label:"Asset reference"},{key:"fault",label:"Work instructions"}],
+  Inspections: [{key:"asset",label:"Asset reference"},{key:"result",label:"Inspection result",options:["Pending","Pass","Fail","Requires attention"]}],
+  Assets: [{key:"asset",label:"Asset identifier"},{key:"location",label:"Location"}],
+  Events: [{key:"location",label:"Venue"},{key:"startTime",label:"Start time",type:"datetime-local"}],
+  Schedules: [{key:"startTime",label:"Scheduled start",type:"datetime-local"},{key:"location",label:"Location"}],
+  "Visitor statistics": [{key:"count",label:"Visitor count",type:"number"}],
+  Donations: [{key:"amount",label:"Sample amount (£)",type:"number"}],
+};
+const formatField = (value) => value === undefined || value === null || value === "" ? "—" : String(value);
 export default function CustomerWorkspace({
   org,
   records,
@@ -29,9 +41,9 @@ export default function CustomerWorkspace({
   const filtered = rows.filter((r) => (statusFilter === "All" || r.status === statusFilter) && (priorityFilter === "All" || (r.priority || "Normal") === priorityFilter))
     .sort((a, b) => sortBy === "status" ? a.status.localeCompare(b.status) || a.title.localeCompare(b.title) : sortBy === "due" ? (a.dueDate || "9999").localeCompare(b.dueDate || "9999") : a.title.localeCompare(b.title));
   const moduleHelp = {
-    Tasks: "Track operational work through planning, delivery and completion. Assignment and due dates are not yet supported.",
-    Attendance: "View sample attendance records. Clock-in, approval and timesheet calculations are not yet implemented.",
-    Maintenance: "Track sample maintenance jobs. Asset registers, inspection sign-off and scheduled servicing are not yet implemented.",
+    Tasks: "Track assigned work, priorities, deadlines and progress in this fictional demonstration.",
+    "Attendance & Hours": "Capture sample start/end times and staff names. No live clock-in, payroll or approval workflow is implemented.",
+    Maintenance: "Record asset references and fault details. This demonstration does not provide certified inspection sign-off.",
     Documents: "Track sample document records. File versioning and approvals are not yet implemented.",
     Events: "Track sample events. Scheduling, staffing and capacity management are not yet implemented.",
   };
@@ -155,11 +167,12 @@ export default function CustomerWorkspace({
           </div>
           <p role="status">Showing {filtered.length} of {all.filter(r => r.module === current).length} records</p>
           {filtered.length ? (
-            <Table headings={["Record", "Details", "Owner", "Priority", "Due", "Progress"]}>
+            <Table headings={["Record", "Details", ...(domainFields[current] || []).map(f => f.label), "Owner", "Priority", "Due", "Progress"]}>
               {filtered.map((r) => (
                 <tr key={r.id}>
                   <th scope="row">{r.title}</th>
                   <td>{r.detail}</td>
+                  {(domainFields[current] || []).map(field => <td key={field.key}>{formatField(r[field.key])}</td>)}
                   <td><input aria-label={"Owner for " + r.title} defaultValue={r.owner || ""} key={r.id + "-owner"} maxLength={80} placeholder="Unassigned" onBlur={e => {if(e.target.value !== (r.owner || "")) onUpdate(org.id,r.id,{owner:e.target.value.trim()});}} /></td>
                   <td><select aria-label={"Priority for " + r.title} value={r.priority || "Normal"} onChange={e => onUpdate(org.id,r.id,{priority:e.target.value})}>{["Low","Normal","High","Urgent"].map(p => <option key={p}>{p}</option>)}</select></td>
                   <td><input type="date" aria-label={"Due date for " + r.title} value={r.dueDate || ""} onChange={e => onUpdate(org.id,r.id,{dueDate:e.target.value})} /></td>
@@ -207,6 +220,7 @@ export default function CustomerWorkspace({
                 owner: String(f.get("owner") || "").trim(),
                 priority: String(f.get("priority") || "Normal"),
                 dueDate: String(f.get("dueDate") || ""),
+                ...Object.fromEntries((domainFields[current] || []).map(field => [field.key, String(f.get(field.key) || "").trim()])),
               });
               if (saved) setAdding(false);
             }}
@@ -226,6 +240,7 @@ export default function CustomerWorkspace({
               Details
               <input name="detail" required maxLength={150} pattern=".*\S.*" />
             </label>
+            {(domainFields[current] || []).map(field => <label key={field.key}>{field.label}{field.options ? <select name={field.key}>{field.options.map(option => <option key={option}>{option}</option>)}</select> : <input name={field.key} type={field.type || "text"} min={field.type === "number" ? "0" : undefined} step={field.type === "number" ? "any" : undefined} maxLength={field.type ? undefined : 150} />}</label>)}
             <label>Assigned to <input name="owner" maxLength={80} placeholder="Team or person (optional)" /></label>
             <label>Priority <select name="priority">{["Low","Normal","High","Urgent"].map(p => <option key={p} value={p}>{p}</option>)}</select></label>
             <label>Due date <input name="dueDate" type="date" /></label>
