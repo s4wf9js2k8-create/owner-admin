@@ -4,7 +4,7 @@ async function nav(page,name){await page.getByRole("button",{name:"Open navigati
 test("event capacity, waitlist and check-in",async({page})=>{
  await enter(page);await nav(page,"Events & bookings");await page.getByRole("button",{name:"New event"}).click();
  await page.getByLabel("Event name").fill("Sample guided tour");await page.getByLabel("Starts").fill("2026-12-15T10:00");await page.getByLabel("Capacity").fill("2");await page.getByRole("button",{name:"Create event"}).click();
- await page.getByRole("button",{name:"Booking desk"}).click();await page.getByLabel("Choose event").selectOption({label:/Sample guided tour/});
+ await page.getByRole("button",{name:"Booking desk"}).click();const eventId=await page.getByLabel("Choose event").locator("option").filter({hasText:"Sample guided tour"}).getAttribute("value");await page.getByLabel("Choose event").selectOption(eventId);
  await page.getByLabel("Attendee or group").fill("Sample group one");await page.getByLabel("Places").fill("2");await page.getByRole("button",{name:"Reserve places"}).click();await expect(page.getByText("Booking confirmed in the demo.")).toBeVisible();
  await page.getByLabel("Attendee or group").fill("Sample group two");await page.getByLabel("Places").fill("1");await page.getByRole("button",{name:"Reserve places"}).click();await expect(page.getByText("Capacity exceeded; booking added to the waitlist.")).toBeVisible();
  await page.getByRole("button",{name:"Check-in"}).click();await page.getByLabel("Booking status for Sample group one").selectOption("Checked in");await expect(page.getByRole("row").filter({hasText:"Sample group one"})).toContainText("Checked in");
