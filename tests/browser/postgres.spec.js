@@ -86,7 +86,7 @@ test("operator storage dashboard requires server session and displays server usa
     page.getByRole("heading", { name: "Server Management", exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("cell", { name: "Synthetic Alpha" })).toBeVisible();
-  await expect(page.getByText("20.00 GiB")).toBeVisible();
+  await expect(page.getByText("20.00 GiB").first()).toBeVisible();
   await expect(page.getByText("Within quota")).toBeVisible();
   await page
     .getByRole("button", { name: "Sign out of server", exact: true })
