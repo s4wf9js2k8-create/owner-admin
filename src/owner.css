@@ -1,0 +1,49 @@
+/* Fictional Channel Systems owner-console additions. */
+.owner-business-shell{margin-top:2px;}
+.owner-business-shell .customer-page-intro{border-bottom:1px solid #dee8df;padding-bottom:16px;}
+.owner-business-shell .panel{border-radius:13px;margin-top:16px;}
+.owner-business-shell .metric-tile{border-radius:12px;box-shadow:0 3px 10px #00000007;}
+.owner-business-shell .owner-usage-bars{display:grid;gap:13px;margin-top:20px;}
+.owner-business-shell .owner-usage-row{display:grid;grid-template-columns:minmax(160px,1.3fr) minmax(160px,2fr) minmax(120px,1fr);align-items:center;gap:13px;}
+.owner-usage-row strong{font-size:12px;color:#385144;}
+.owner-usage-row span{font-size:11px;color:#77867b;}
+.owner-usage-row progress{width:100%;height:10px;accent-color:#33754f;}
+.owner-palettes{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:18px 0;}
+.owner-business-shell .owner-palettes button{width:36px;height:36px;padding:0;border-radius:50%;border:3px solid white;box-shadow:0 0 0 1px #cdd8ce;min-height:36px;margin:0;}
+.owner-business-shell .owner-palettes button:hover{box-shadow:0 0 0 3px #86ae91;}
+.owner-brand-preview{border:1px solid #dce7df;border-radius:14px;background:#f7faf8;overflow:hidden;margin-top:10px;}
+.owner-brand-preview>header{display:flex;align-items:center;gap:9px;color:white;background:var(--sample);padding:15px;}
+.owner-brand-preview>div{display:grid;justify-items:start;gap:9px;padding:20px;}
+.owner-brand-preview span{font-size:11px;color:#7a857c;}
+.owner-brand-preview strong{font-size:32px;color:var(--sample);}
+.owner-brand-preview small{font-size:11px;color:#78877c;}
+.owner-business-shell .owner-brand-preview button{background:var(--sample);border-color:var(--sample);color:white;}
+.owner-inline-form{display:flex;align-items:end;gap:12px;flex-wrap:wrap;}
+.owner-inline-form label{flex:1;min-width:165px;}
+.owner-inline-form button{margin:0 0 2px;}
+.owner-lead-pipeline{margin-top:18px;}
+.owner-lead-pipeline .pipeline-column{min-width:200px;}
+.owner-business-shell .pipeline-column .purpose-card{margin-bottom:12px;padding:14px;box-shadow:0 2px 7px #10241909;}
+.owner-business-shell .pipeline-column .purpose-card>h3{font-size:13px;color:#253f2e;margin:0;}
+.owner-business-shell .pipeline-column .purpose-card>small{font-size:11px;color:#708476;}
+.owner-business-shell .pipeline-column .purpose-card>p{margin:0;}
+.owner-business-shell .pipeline-column .purpose-card select{padding:9px;}
+.owner-request-row{display:flex;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid #e8eeea;}
+.owner-request-row>div{flex:1;min-width:0;}
+.owner-request-row strong{display:block;font-size:13px;color:#274534;}
+.owner-request-row small{display:block;font-size:11px;color:#758378;margin-top:4px;}
+.owner-request-row label{min-width:140px;font-size:11px;}
+.owner-business-shell .owner-request-row button{background:#ebf5ec;color:#285f3f;border-color:#dcebdd;border-radius:8px;}
+.owner-composer-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.owner-composer-actions button{min-height:42px;}
+.owner-announcement{border-bottom:1px solid #e2ebe4;padding:14px 0;}
+.owner-announcement small{color:#708477;font-size:11px;}
+.owner-announcement h3{font-size:14px;margin:6px 0;}
+.owner-announcement p{color:#4a6453;white-space:pre-wrap;}
+.owner-onboarding-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:22px 0;}
+.owner-onboarding-steps>div{border:1px solid #dce8df;background:white;border-radius:12px;padding:19px;}
+.owner-onboarding-steps strong{display:grid;place-items:center;width:37px;height:37px;border-radius:11px;background:#e7f2e8;color:#2e6d48;font-size:13px;}
+.owner-onboarding-steps h3{font-size:14px;margin:13px 0 6px;}
+.owner-onboarding-steps p{font-size:12px;margin:0;}
+@media(max-width:950px){.owner-onboarding-steps{grid-template-columns:repeat(2,minmax(0,1fr));}.owner-usage-row{grid-template-columns:minmax(140px,1fr) minmax(100px,1fr);}.owner-usage-row span{grid-column:1/-1;margin-top:-7px;}}
+@media(max-width:700px){.owner-onboarding-steps{grid-template-columns:1fr;}.owner-request-row{align-items:start;flex-wrap:wrap;}.owner-request-row>div{flex-basis:calc(100% - 60px);}.owner-request-row label{width:100%;}.owner-request-row>button{margin-left:auto;}.owner-inline-form label{min-width:100%;}.owner-inline-form button{width:100%;}.owner-usage-row{grid-template-columns:1fr;gap:5px;}.owner-usage-row span{grid-column:auto;margin-top:0;}}
