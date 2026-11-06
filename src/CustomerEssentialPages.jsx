@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Panel, Empty, Status } from "./components";
-import { AlertTriangle, ArrowRight, Bell, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, ClipboardList, LayoutDashboard, Plus, Search, ShieldCheck, Zap, Building2 } from "lucide-react";
-import { moduleInfo } from "./customerModules";
+import { AlertTriangle, ArrowRight, Bell, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, ClipboardList, LayoutDashboard, Plus, Search, ShieldCheck, Zap, Building2, Users } from "lucide-react";
+import { moduleInfo, isTaskModule } from "./customerModules";
+import { onSiteEntries, upcomingShifts, firstModuleOfType } from "./customerWorkflows";
 const today = () => new Date().toISOString().slice(0,10);
 const format = d => d ? new Date(d.slice(0,10)+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) : "Not scheduled";
 const priorityScore = p => ({Urgent:4,High:3,Normal:2,Low:1}[p]||2);
@@ -11,48 +12,53 @@ const upcoming = all => [...all].filter(r=>recordDate(r)).sort((a,b)=>recordDate
 const stat = (icon,label,value,caption) => <div className="metric-tile">{icon}<span>{label}</span><strong>{value}</strong><small>{caption}</small></div>;
 function dateName(date) {return date.toLocaleDateString("en-GB",{month:"long",year:"numeric"});}
 function recordTitle(record) {return record.title;}
-export function CustomerDashboard({org,records,onNavigate}) {
-  const all=records.filter(r=>r.orgId===org.id && org.modules.includes(r.module));
+const widgetNames={staff:"Staff on site",shifts:"Upcoming shifts",attention:"Work needing attention",progress:"Completion progress"};
+export function CustomerDashboard({org,records,onNavigate,prefs,setPrefs,actor}) {
+  const [customising,setCustomising]=useState(false);
+  const all=records.filter(r=>r.orgId===org.id&&org.modules.includes(r.module));
   const open=all.filter(r=>r.status!=="Complete");
   const overdue=open.filter(isLate);
-  const urgent=open.filter(r=>["High","Urgent"].includes(r.priority));
   const completed=all.filter(r=>r.status==="Complete");
   const ratio=all.length?Math.round(100*completed.length/all.length):0;
-  const attention=[...open].sort((a,b)=>Number(isLate(b))-Number(isLate(a)) || priorityScore(b.priority)-priorityScore(a.priority) || (a.dueDate||"9999").localeCompare(b.dueDate||"9999"));
-  const next=upcoming(open).slice(0,5);
+  const onSite=onSiteEntries(records,org);
+  const shifts=upcomingShifts(records,org).filter(r=>r.startTime?.slice(0,10)>=today()).slice(0,5);
+  const attendanceModule=firstModuleOfType(org,"timesheets");
+  const rotaModule=firstModuleOfType(org,"schedule");
+  const attention=[...open].filter(r=>isTaskModule(r.module)||["maintenance","inspections"].includes(moduleInfo(r.module).type))
+    .sort((a,b)=>Number(isLate(b))-Number(isLate(a))||priorityScore(b.priority)-priorityScore(a.priority)).slice(0,5);
+  const widgets=prefs.widgets||["staff","shifts","attention","progress"];
+  const show=name=>widgets.includes(name);
   return <div className="customer-home">
-    <div className="customer-welcome"><span className="eyebrow">YOUR ORGANISATION</span><h2>Good to see you.</h2><p>Here's a snapshot of work across {org.name}. These are sample operational records.</p>
-      <div className="welcome-actions"><button className="action-primary" onClick={()=>onNavigate("My work")}><ClipboardList size={17}/> Review my work</button><button className="action-secondary" onClick={()=>onNavigate("Calendar")}><CalendarDays size={17}/> Open calendar</button></div>
-    </div>
+    <div className="customer-welcome"><span className="eyebrow">YOUR OPERATIONS</span><h2>Welcome back{actor?", "+actor:""}.</h2><p>See who's on site, who's working next and where your team needs support.</p>
+      <div className="welcome-actions"><button className="action-primary" onClick={()=>onNavigate("My work")}><ClipboardList size={17}/> My work</button>
+      <button className="action-secondary" onClick={()=>onNavigate("Calendar")}><CalendarDays size={17}/> Team calendar</button></div></div>
     <div className="customer-metrics">
-      {stat(<ClipboardList size={19}/>,"Outstanding",open.length,"Across all active modules")}
-      {stat(<AlertTriangle size={19}/>,"Overdue",overdue.length,"Due before today")}
-      {stat(<Zap size={19}/>,"High priority",urgent.length,"High and urgent items")}
-      {stat(<CheckCircle2 size={19}/>,"Completed",ratio+"%","Of "+all.length+" records")}
+      {stat(<Users size={19}/>,"On site",onSite.length,"Open sample clock-ins")}
+      {stat(<CalendarDays size={19}/>,"Upcoming shifts",shifts.length,"Next scheduled entries")}
+      {stat(<AlertTriangle size={19}/>,"Needs attention",overdue.length,"Past due date")}
+      {stat(<CheckCircle2 size={19}/>,"Completion",ratio+"%","Across accessible records")}
     </div>
-    <div className="customer-dashboard-grid">
-      <Panel title="Needs your attention">
-        <div className="panel-helper">Work requiring action, sorted by urgency.</div>
-        {attention.length ? attention.slice(0,6).map(r=><div className="attention-row" key={r.id}>
-          <div className={"attention-icon "+(isLate(r)?"attention-late":"")}><ClipboardList size={17}/></div>
-          <div><h3>{recordTitle(r)}</h3><small>{r.module} · {r.owner||"Unassigned"} · {format(r.dueDate)}</small></div>
-          <button onClick={()=>onNavigate(r.module)} aria-label={"View "+r.title}><ArrowRight size={17}/></button>
-        </div>) : <Empty>Everything is completed.</Empty>}
-        <button className="text-action" onClick={()=>onNavigate("My work")}>Open full work queue <ArrowRight size={15}/></button>
-      </Panel>
-      <div className="customer-side-stack">
-        <Panel title="Coming up"><div className="panel-helper">Next scheduled sample activities</div>
-          {next.length ? next.map(r=><div className="upcoming-row" key={r.id}><span className="upcoming-date">{format(recordDate(r))}</span><div><strong>{r.title}</strong><small>{r.module}</small></div></div>) : <Empty>Nothing scheduled.</Empty>}
-          <button className="text-action" onClick={()=>onNavigate("Calendar")}>View calendar <ArrowRight size={15}/></button>
-        </Panel>
-        <Panel title="Completion progress"><div className="completion-layout"><strong>{ratio}%</strong><div><progress max={100} value={ratio} aria-label="Records completed"/><small>{completed.length} finished · {open.length} outstanding</small></div></div></Panel>
-      </div>
+    <div className="widget-control"><h3>Dashboard widgets</h3><button onClick={()=>setCustomising(v=>!v)}>{customising?"Finish customising":"Customise dashboard"}</button></div>
+    {customising&&<div className="widget-picker">{Object.entries(widgetNames).map(([id,label])=><label key={id}><input type="checkbox" checked={show(id)} onChange={e=>setPrefs({...prefs,widgets:e.target.checked?[...widgets,id]:widgets.filter(x=>x!==id)})}/>{label}</label>)}</div>}
+    <div className="operations-widgets">
+      {show("staff")&&<Panel title="Staff on site">
+        <p className="panel-helper">People with an open demo clock-in. This does not verify physical presence.</p>
+        {onSite.length?onSite.map(r=><div className="attention-row" key={r.id}><div className="attention-icon"><Users size={18}/></div><div><h3>{r.person||r.title}</h3><small>Clocked in at {r.startTime?.slice(11)||"Unknown"} · {r.module}</small></div><button aria-label={"Open attendance for "+(r.person||r.title)} onClick={()=>onNavigate(r.module,{recordId:r.id})}><ArrowRight size={16}/></button></div>):<Empty>No open clock-ins at present.</Empty>}
+        {attendanceModule&&<button className="text-action" onClick={()=>onNavigate(attendanceModule)}>Open attendance & timesheets <ArrowRight size={15}/></button>}
+      </Panel>}
+      {show("shifts")&&<Panel title="Upcoming shifts">
+        <p className="panel-helper">Sample upcoming assignments across enabled shift modules.</p>
+        {shifts.length?shifts.map(r=><div className="upcoming-row" key={r.id}><span className="upcoming-date">{format(r.startTime)}</span><div><strong>{r.person||r.title}</strong><small>{r.location||"Location not set"} · {r.startTime?.slice(11)||"Time not set"}</small></div><button onClick={()=>onNavigate(r.module,{recordId:r.id})}>Open</button></div>):<Empty>No upcoming shifts scheduled.</Empty>}
+        {rotaModule&&<button className="text-action" onClick={()=>onNavigate(rotaModule)}>Open weekly rota <ArrowRight size={15}/></button>}
+      </Panel>}
+      {show("attention")&&<Panel title="Work needing attention">
+        <p className="panel-helper">Outstanding tasks, maintenance and inspections.</p>
+        {attention.length?attention.map(r=><div className="attention-row" key={r.id}><div className={"attention-icon "+(isLate(r)?"attention-late":"")}><ClipboardList size={17}/></div><div><h3>{r.title}</h3><small>{r.module} · {r.owner||"Unassigned"} · {format(r.dueDate)}</small></div><button onClick={()=>onNavigate(isTaskModule(r.module)?"Tasks & projects":r.module,{recordId:r.id})} aria-label={"View "+r.title}><ArrowRight size={17}/></button></div>):<Empty>Nothing in the attention queue.</Empty>}
+        <button className="text-action" onClick={()=>onNavigate("My work")}>Open my work <ArrowRight size={15}/></button>
+      </Panel>}
+      {show("progress")&&<Panel title="Completion progress"><div className="completion-layout"><strong>{ratio}%</strong><div><progress max={100} value={ratio} aria-label="Records completed"/><small>{completed.length} complete · {open.length} outstanding</small></div></div></Panel>}
     </div>
-    <Panel title="Your modules"><p className="panel-helper">Choose an area to work in. Only modules enabled for this organisation are shown.</p>
-      <div className="module-shortcut-grid">{org.modules.map(name=><button key={name} className="module-shortcut" onClick={()=>onNavigate(name)}>
-        <span className="shortcut-icon"><LayoutDashboard size={18}/></span><span><strong>{name}</strong><small>{moduleInfo(name).subtitle}</small></span><ArrowRight size={15}/>
-      </button>)}</div>
-    </Panel>
+    <Panel title="Your enabled tools"><p className="panel-helper">Choose a distinct workflow. These shortcuts reflect the modules available to the simulated role.</p><div className="module-shortcut-grid">{org.modules.filter(m=>!isTaskModule(m)).concat(org.modules.some(isTaskModule)?["Tasks & projects"]:[]).map(name=><button key={name} className="module-shortcut" onClick={()=>onNavigate(name)}><span className="shortcut-icon"><LayoutDashboard size={18}/></span><span><strong>{name}</strong><small>{moduleInfo(name).subtitle}</small></span><ArrowRight size={15}/></button>)}</div></Panel>
   </div>;
 }
 export function CustomerMyWork({org,records,onNavigate,onUpdate}) {
