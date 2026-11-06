@@ -6,13 +6,15 @@ Initial architecture: React 18, React DOM, Lucide icons, Vite 6, GitHub Pages at
 
 ## Implemented demonstration
 
-- `src/main.jsx`: owner console, session state, navigation and owner workflows.
+- `src/main.jsx`: mount only; `src/App.jsx`, `src/pages/` and `src/layout/`: focused console views.
+- `src/hooks/`: controller, backend loading/subscription and drawer keyboard behavior.
+- `src/backend/`: explicit resource contracts and the fictional in-memory adapter.
 - `src/model.js`: sector presets, module catalogue, dependencies, fixture creation and scoped record helpers.
 - `src/components.jsx`: native modal forms, panels, table and status primitives.
 - `src/CustomerWorkspace.jsx`: one configurable customer application, generic records and summary report.
 - `src/style.css`: green header, dark drawer, compact panels, responsive tables and print layout.
 
-All state lives in React memory. There are no service calls or browser-storage persistence. Records include organisation ID, module, ID, title, detail and progress; IDs are generated with `crypto.randomUUID`. UI selectors filter by organisation and enabled modules. This is a correctness property of demo code, **not a security boundary**. Any visitor controls their browser.
+UI state lives in React memory and fictional resource state lives in the in-memory adapter. There are no service calls or browser-storage persistence. Records include organisation ID, module, ID, title, detail and progress; IDs are generated with `crypto.randomUUID`. UI selectors filter by organisation and enabled modules. This is a correctness property of demo code, **not a security boundary**. Any visitor controls their browser.
 
 Organisation configuration includes name, sector, colour, modules, administrator labels, plan, billing cycle, trial date, status and notes. A sector supplies defaults when creating an organisation; subsequent sector edits do not replace modules or records. Logo upload, menu reordering, field configuration and module-specific settings are pending.
 
@@ -53,3 +55,7 @@ A role alone is insufficient: check active organisation, active membership, reso
 Demo: create a fictional organisation → select sector → review modules/dependencies → set colour → assign sample roles → preview modules → create a sample record → review report and activity. Refresh clears all changes.
 
 Production gate: agree scope and processor responsibilities, establish isolated environments and MFA, test two unrelated tenants, configure minimal entitlements, invite nominated admin securely, rehearse export/restore/offboarding and complete security review before importing any actual information. Payment activation and real account creation require explicit approval. Backups, retention, deletion and incident procedures remain mandatory pending work in the security checklist.
+
+## Backend preparation (issue #2)
+
+See [adapter contracts](BACKEND-CONTRACT.md), [documentation-only Firebase design](FIREBASE-DESIGN.md), and [threat model and negative test plan](THREAT-MODEL.md). No live backend is implemented or connected.
