@@ -14,7 +14,7 @@ import {
 const universal = ["Dashboard","My work","Calendar","Notifications","Settings","Insights"];
 export default function CustomerWorkspace({
   org,records,onUpdate,onAdd,page,setPage,
-  customerRole,setCustomerRole,customerRoles,setCustomerRoles,roleModules,setRoleModules
+  customerRole,setCustomerRole,customerRoles,setCustomerRoles,roleModules,setRoleModules,roleTeams,setRoleTeams
 }) {
   const [readIds,setReadIds] = useState([]);
   const [prefs,setPrefs] = useState({
@@ -24,7 +24,13 @@ export default function CustomerWorkspace({
   const [createRequest,setCreateRequest]=useState(0);
   const [focus,setFocus]=useState(null);
   const visibleOrg={...org,modules:org.modules.filter(m=>moduleAllowed(customerRole,m,roleModules))};
-  const visibleRecords=scopedRecords(records,visibleOrg);
+  const people=scopedRecords(records,org).filter(r=>["Staff & volunteers","Volunteers","Staff"].includes(r.module));
+  const currentTeam=roleTeams[customerRole]||"All teams";
+  const visibleRecords=scopedRecords(records,visibleOrg).filter(r=>{
+    if(currentTeam==="All teams")return true;
+    const team=r.team||people.find(p=>p.title===r.owner||p.title===r.person)?.team||"";
+    return team===currentTeam;
+  });
   const choices=[...new Set([
     ...visibleRecords.filter(r=>isTaskModule(r.module)).map(r=>r.owner),
     ...visibleRecords.filter(r=>["Staff & volunteers","Volunteers","Staff"].includes(r.module)).map(r=>r.title)
@@ -54,7 +60,7 @@ export default function CustomerWorkspace({
   else if(current==="My work")content=<CustomerMyWork {...shared}/>;
   else if(current==="Calendar")content=<CustomerCalendar {...shared}/>;
   else if(current==="Notifications")content=<CustomerNotifications {...shared} readIds={readIds} setReadIds={setReadIds}/>;
-  else if(current==="Settings")content=<CustomerSettings org={visibleOrg} prefs={prefs} setPrefs={setPrefs} roles={customerRoles} setRoles={setCustomerRoles} roleModules={roleModules} setRoleModules={setRoleModules} customerRole={customerRole}/>;
+  else if(current==="Settings")content=<CustomerSettings org={visibleOrg} prefs={prefs} setPrefs={setPrefs} roles={customerRoles} setRoles={setCustomerRoles} roleModules={roleModules} setRoleModules={setRoleModules} roleTeams={roleTeams} setRoleTeams={setRoleTeams} customerRole={customerRole} canManage={(customerRoles[customerRole]||[]).includes("Manage")}/>;
   else if(current==="Insights"||current==="Reporting"||current==="Reports & analytics")content=<CustomerInsights {...shared}/>;
   else if(isTaskModule(current))content=<CustomerTaskBoard org={visibleOrg} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} actor={actor} canEdit={canEdit} canCreate={canCreate} canApprove={canApprove} createRequest={createRequest} focusId={focusId} onNavigate={navigate}/>;
   else if(["people","timesheets","schedule","leave","training"].includes(moduleInfo(current).type))content=<CustomerPeopleOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit} canApprove={canApprove}/>;
@@ -65,7 +71,7 @@ export default function CustomerWorkspace({
     <div className="customer-persona-row">
       <label>Simulated role<select aria-label="Simulated customer role" value={customerRole} onChange={e=>{setCustomerRole(e.target.value);setPage("Dashboard");}}>{Object.keys(customerRoles).map(name=><option key={name}>{name}</option>)}</select></label>
       <label>Working as<select aria-label="Sample team member" value={choices.includes(actor)?actor:(choices[0]||"Sample team member")} onChange={e=>setActor(e.target.value)}>{choices.length?choices.map(name=><option key={name}>{name}</option>):<option>Sample team member</option>}</select></label>
-      <small>Role and identity are simulated here. Server-side access rules are not active.</small>
+      <small>Role: {customerRole} · Team scope: {currentTeam}. This is a visual demo, not secure access control.</small>
     </div>
     <CustomerCommandBar org={visibleOrg} records={visibleRecords} onNavigate={navigate} canEdit={canCreate}/>
     <div className="heading customer-heading"><div><small>{org.name} · CUSTOMER WORKSPACE</small><h1>{current}</h1><p>Interactive temporary data. Changes reset when you refresh.</p></div></div>
