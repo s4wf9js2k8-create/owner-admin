@@ -9,11 +9,15 @@ export async function migrate(pool) {
     await db.query(
       "CREATE TABLE IF NOT EXISTS schema_migrations(name text PRIMARY KEY, checksum text NOT NULL)",
     );
-    for (const name of (
-      await readdir(new URL("../migrations/", import.meta.url))
-    )
+    const names = (await readdir(new URL("../migrations/", import.meta.url)))
       .filter((n) => n.endsWith(".sql"))
-      .sort()) {
+      .sort();
+    const applied = await db.query("SELECT name FROM schema_migrations");
+    if (applied.rows.some((row) => !names.includes(row.name)))
+      throw new Error(
+        "Unsupported migration history: use a matching reviewed release",
+      );
+    for (const name of names) {
       const sql = await readFile(
         new URL(`../migrations/${name}`, import.meta.url),
         "utf8",

@@ -2,14 +2,23 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { randomUUID, randomBytes } from "node:crypto";
-import { mkdtemp, readdir, readFile, rm, symlink } from "node:fs/promises";
+import {
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import request from "supertest";
 import { createPool, transaction } from "../src/db.js";
 import { migrate } from "../src/migrate.js";
+import { provisionRuntime } from "../src/provision.js";
 import { hashPassword, verifyPassword } from "../src/auth.js";
 import { createApp } from "../src/app.js";
+import { assertRuntimeRole } from "../src/runtime.js";
 const docker = (...args) =>
   execFileSync("docker", ["--host=unix:///var/run/docker.sock", ...args], {
     encoding: "utf8",
@@ -62,12 +71,7 @@ before(async () => {
   }
   await migrate(admin);
   await migrate(admin);
-  await admin.query(
-    `CREATE ROLE channel_app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS PASSWORD '${secret}'`,
-  );
-  await admin.query(
-    "GRANT USAGE ON SCHEMA public TO channel_app; GRANT SELECT,INSERT,UPDATE,DELETE ON accounts,sessions,password_resets,companies,memberships,records,files,upgrade_requests,access_grants,packages TO channel_app; GRANT SELECT,INSERT ON audit_events TO channel_app; GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO channel_app",
-  );
+  await provisionRuntime(admin, secret);
   appPool = createPool(
     `postgres://channel_app:${secret}@127.0.0.1:${port}/channel`,
   );
@@ -639,6 +643,16 @@ test("file signatures, sizes, quotas, ownership, traversal and storage dashboard
   );
   assert.equal((await agents.alice.get("/owner/storage")).status, 403);
   const target = path.join(root, "uploads", file.id);
+  await writeFile(target, Buffer.alloc(pdf.length, 65));
+  assert.equal(
+    (await agents.alice.get(`/companies/${alpha.id}/files/${file.id}`)).status,
+    503,
+  );
+  await writeFile(target, Buffer.alloc(2048, 65));
+  assert.equal(
+    (await agents.alice.get(`/companies/${alpha.id}/files/${file.id}`)).status,
+    503,
+  );
   await rm(target);
   await symlink("/etc/passwd", target);
   assert.equal(
@@ -712,7 +726,7 @@ test("account suspension, recovery, token single use and session revocation", as
 test("migrations, least privilege, immutable audits and real PostgreSQL backup restore", async () => {
   assert.equal(
     (await admin.query("SELECT * FROM schema_migrations")).rowCount,
-    1,
+    2,
   );
   const flags = (
     await appPool.query(
@@ -748,13 +762,19 @@ test("migrations, least privilege, immutable audits and real PostgreSQL backup r
     await readFile(path.join(restoredDirectory, uploaded.body.id)),
     pdf,
   );
-  const originalChecksum = (
-    await admin.query("SELECT checksum FROM schema_migrations LIMIT 1")
-  ).rows[0].checksum;
-  await admin.query("UPDATE schema_migrations SET checksum='tampered'");
+  const originalMigration = (
+    await admin.query(
+      "SELECT name,checksum FROM schema_migrations ORDER BY name LIMIT 1",
+    )
+  ).rows[0];
+  await admin.query(
+    "UPDATE schema_migrations SET checksum='tampered' WHERE name=$1",
+    [originalMigration.name],
+  );
   await assert.rejects(migrate(admin), /checksum mismatch/);
-  await admin.query("UPDATE schema_migrations SET checksum=$1", [
-    originalChecksum,
+  await admin.query("UPDATE schema_migrations SET checksum=$1 WHERE name=$2", [
+    originalMigration.checksum,
+    originalMigration.name,
   ]);
   const dump = execFileSync("docker", [
     "--host=unix:///var/run/docker.sock",
@@ -820,7 +840,7 @@ test("migrations, least privilege, immutable audits and real PostgreSQL backup r
       "-Atc",
       "SELECT count(*) FROM schema_migrations",
     ).trim(),
-    "1",
+    "2",
   );
 });
 
@@ -857,4 +877,325 @@ test("expired sessions and grants fail, and concurrent uploads cannot exceed a t
       .send(data);
   const results = await Promise.all([upload(), upload()]);
   assert.deepEqual(results.map((r) => r.status).sort(), [201, 409]);
+});
+
+test("runtime cannot forge audit rows; successful direct SQL mutations are trigger-audited atomically", async () => {
+  for (const statement of [
+    "INSERT INTO audit_events(actor_id,company_id,action,target) VALUES($1,$2,'company.create','forged')",
+    "UPDATE audit_events SET actor_id=$1 WHERE company_id=$2",
+    "DELETE FROM audit_events WHERE actor_id=$1 AND company_id=$2",
+  ])
+    await assert.rejects(
+      transaction(appPool, ids.alice, (db) =>
+        db.query(statement, [ids.alice, beta.id]),
+      ),
+      { code: "42501" },
+    );
+  await assert.rejects(
+    transaction(appPool, ids.alice, (db) =>
+      db.query("SELECT audit_read_event($1,'company.create','forged')", [
+        alpha.id,
+      ]),
+    ),
+    { code: "42501" },
+  );
+  await assert.rejects(
+    transaction(appPool, ids.alice, (db) =>
+      db.query("SELECT audit_read_event($1,'records.list','tasks')", [beta.id]),
+    ),
+    { code: "42501" },
+  );
+  const id = randomUUID();
+  await transaction(appPool, ids.bob, (db) =>
+    db.query(
+      "INSERT INTO records(id,company_id,module,title,created_by) VALUES($1,$2,'tasks','Trigger audit',$3)",
+      [id, beta.id, ids.bob],
+    ),
+  );
+  const events = await admin.query(
+    "SELECT * FROM audit_events WHERE target=$1 AND action='record.create'",
+    [id],
+  );
+  assert.equal(events.rowCount, 1);
+  assert.equal(events.rows[0].actor_id, ids.bob);
+  assert.equal(events.rows[0].company_id, beta.id);
+  const rolledBack = randomUUID();
+  await assert.rejects(
+    transaction(appPool, ids.bob, async (db) => {
+      await db.query(
+        "INSERT INTO records(id,company_id,module,title,created_by) VALUES($1,$2,'tasks','Rollback audit',$3)",
+        [rolledBack, beta.id, ids.bob],
+      );
+      throw Error("rollback");
+    }),
+    /rollback/,
+  );
+  assert.equal(
+    (
+      await admin.query("SELECT 1 FROM audit_events WHERE target=$1", [
+        rolledBack,
+      ])
+    ).rowCount,
+    0,
+  );
+});
+
+test("function EXECUTE ACLs, default privileges, search paths and identity guards are explicit", async () => {
+  await admin.query(`CREATE ROLE channel_observer LOGIN PASSWORD '${secret}'`);
+  const observer = createPool(
+    appPool.options.connectionString.replace(
+      "channel_app:",
+      "channel_observer:",
+    ),
+  );
+  try {
+    for (const statement of [
+      "SELECT storage_total()",
+      "SELECT subject()",
+      "SELECT audit_denied_event('GET /companies','FORBIDDEN')",
+    ])
+      await assert.rejects(observer.query(statement), { code: "42501" });
+  } finally {
+    await observer.end();
+  }
+  const helpers = await admin.query(
+    "SELECT proname,proconfig FROM pg_proc JOIN pg_namespace n ON n.oid=pronamespace WHERE n.nspname='public' AND prosecdef",
+  );
+  for (const helper of helpers.rows)
+    assert(
+      helper.proconfig.some(
+        (v) => v === "search_path=pg_catalog, public, pg_temp",
+      ),
+      helper.proname,
+    );
+  await admin.query(
+    "CREATE FUNCTION future_acl_probe() RETURNS integer LANGUAGE sql AS $$ SELECT 1 $$",
+  );
+  await assert.rejects(appPool.query("SELECT future_acl_probe()"), {
+    code: "42501",
+  });
+  for (const statement of [
+    "UPDATE accounts SET platform_admin=true WHERE id=$1",
+    "DELETE FROM accounts WHERE id=$1",
+    "UPDATE accounts SET password_hash='forged' WHERE id=$1",
+  ])
+    await assert.rejects(
+      transaction(appPool, ids.alice, (db) => db.query(statement, [ids.owner])),
+      { code: "42501" },
+    );
+  await assert.rejects(
+    transaction(appPool, ids.alice, (db) =>
+      db.query(
+        "UPDATE memberships SET role='viewer',version=version+1 WHERE company_id=$1 AND account_id=$2",
+        [alpha.id, ids.alice],
+      ),
+    ),
+    { code: "42501" },
+  );
+  await assert.rejects(
+    transaction(appPool, ids.owner, (db) =>
+      db.query(
+        "INSERT INTO access_grants VALUES($1,$2,$3,'Forged support account',now()+interval '5 minutes',$4)",
+        [randomUUID(), beta.id, ids.alice, ids.owner],
+      ),
+    ),
+    { code: "42501" },
+  );
+  await transaction(appPool, ids.owner, async () => {});
+  assert.equal(
+    (await appPool.query("SELECT subject() AS uid")).rows[0].uid,
+    null,
+  );
+  await assert.rejects(appPool.query("SET ROLE postgres"), { code: "42501" });
+});
+
+test("HTTPS cookie configuration, proxy-header spoofing, origin/CSRF checks and brute-force cap", async () => {
+  await assert.rejects(
+    createApp({
+      pool: appPool,
+      storageRoot: path.join(root, "uploads"),
+      recoveryRoot: path.join(root, "recovery"),
+      origin: "https://remote.example.invalid",
+      secureCookies: false,
+    }),
+    /loopback/,
+  );
+  const secureApp = await createApp({
+    pool: appPool,
+    storageRoot: path.join(root, "uploads"),
+    recoveryRoot: path.join(root, "recovery"),
+    origin: "https://operator.example.invalid",
+    secureCookies: true,
+  });
+  const result = await request(secureApp)
+    .post("/auth/login")
+    .set("origin", "https://operator.example.invalid")
+    .set("x-csrf-protection", "1")
+    .set("x-forwarded-proto", "https")
+    .send({ email: "owner@example.invalid", password: secret });
+  assert.equal(result.status, 200);
+  assert.equal(result.headers["cache-control"], "no-store");
+  const cookie = result.headers["set-cookie"][0];
+  assert.match(cookie, /^__Host-channel_session=/);
+  assert.match(cookie, /; Secure/);
+  assert.match(cookie, /; HttpOnly/);
+  assert.match(cookie, /; SameSite=Strict/);
+  assert(!cookie.includes("Domain="));
+  assert.equal(
+    (
+      await request(secureApp)
+        .post("/auth/login")
+        .set("origin", "https://evil.example.invalid")
+        .set("x-csrf-protection", "1")
+        .send({ email: "owner@example.invalid", password: secret })
+    ).status,
+    403,
+  );
+  assert.equal(
+    (
+      await request(secureApp)
+        .post("/auth/login")
+        .set("origin", "https://operator.example.invalid")
+        .send({ email: "owner@example.invalid", password: secret })
+    ).status,
+    403,
+  );
+  const attempts = [];
+  for (let i = 0; i < 21; i++)
+    attempts.push(
+      await request(secureApp)
+        .post("/auth/login")
+        .set("origin", "https://operator.example.invalid")
+        .set("x-csrf-protection", "1")
+        .set("x-forwarded-for", `192.0.2.${i}`)
+        .send({ email: "missing@example.invalid", password: "wrong" }),
+    );
+  assert(attempts.some((r) => r.status === 429));
+  assert(attempts.every((r) => [401, 429].includes(r.status)));
+});
+
+test("old foundation database upgrades preserve legacy audit provenance and revoke old ACLs", async () => {
+  const { createHash } = await import("node:crypto");
+  await admin.query("CREATE DATABASE upgrade_check");
+  const upgradePool = createPool(
+    admin.options.connectionString.replace("/channel", "/upgrade_check"),
+  );
+  const upgradeRuntimeUrl = new URL(appPool.options.connectionString);
+  upgradeRuntimeUrl.pathname = "/upgrade_check";
+  const upgradeRuntime = createPool(upgradeRuntimeUrl.href);
+  try {
+    const oldSql = await readFile(
+      new URL("../migrations/001_foundation.sql", import.meta.url),
+      "utf8",
+    );
+    await upgradePool.query(oldSql);
+    await upgradePool.query(
+      "CREATE TABLE schema_migrations(name text PRIMARY KEY,checksum text NOT NULL)",
+    );
+    await upgradePool.query("INSERT INTO schema_migrations VALUES($1,$2)", [
+      "001_foundation.sql",
+      createHash("sha256").update(oldSql).digest("hex"),
+    ]);
+    await upgradePool.query(
+      "INSERT INTO accounts(id,email,password_hash,platform_admin) VALUES($1,'legacy@example.invalid',$2,true)",
+      [ids.owner, await hashPassword(secret)],
+    );
+    await upgradePool.query(
+      "INSERT INTO audit_events(actor_id,action,target) VALUES($1,'legacy.app_event','legacy')",
+      [ids.owner],
+    );
+    await upgradePool.query(
+      "GRANT SELECT,INSERT,DELETE ON audit_events TO channel_app",
+    );
+    await migrate(upgradePool);
+    await provisionRuntime(upgradePool, secret);
+    assert.equal(
+      (
+        await upgradePool.query(
+          "SELECT provenance FROM audit_events WHERE target='legacy'",
+        )
+      ).rows[0].provenance,
+      "legacy",
+    );
+    await assert.rejects(
+      upgradeRuntime.query(
+        "INSERT INTO audit_events(actor_id,action,target) VALUES($1,'forged','forged')",
+        [ids.owner],
+      ),
+      { code: "42501" },
+    );
+    const account = randomUUID();
+    await transaction(upgradeRuntime, ids.owner, (db) =>
+      db.query(
+        "INSERT INTO accounts(id,email,password_hash) VALUES($1,'new@example.invalid',$2)",
+        [account, "synthetic-hash-not-for-login"],
+      ),
+    );
+    const audited = (
+      await upgradePool.query("SELECT * FROM audit_events WHERE target=$1", [
+        account,
+      ])
+    ).rows[0];
+    assert.equal(audited.provenance, "database");
+    assert.equal(audited.action, "account.create");
+    assert.equal(audited.actor_id, ids.owner);
+    await upgradePool.query(
+      "INSERT INTO schema_migrations VALUES('999_unknown.sql','synthetic')",
+    );
+    await assert.rejects(migrate(upgradePool), /Unsupported migration history/);
+  } finally {
+    await upgradeRuntime.end();
+    await upgradePool.end();
+  }
+});
+
+test("HTTP role/identity claims cannot replace the verified session and audit payloads omit secrets", async () => {
+  const forged = await agents.bob
+    .post("/owner/access-grants")
+    .set("origin", origin)
+    .set("x-csrf-protection", "1")
+    .set("x-account-id", ids.owner)
+    .set("x-role", "platform-owner")
+    .send({
+      company_id: alpha.id,
+      reason: "Forged owner header claim",
+      minutes: 5,
+    });
+  assert.equal(forged.status, 403);
+  const body = await mutate(
+    agents.bob,
+    "post",
+    `/companies/${beta.id}/records`,
+    { module: "tasks", title: "Forged actor", actor_id: ids.owner },
+  );
+  assert.equal(body.status, 400);
+  const guessedCookie = await request(app)
+    .get("/companies")
+    .set("cookie", `channel_session=${randomBytes(32).toString("base64url")}`)
+    .set("x-account-id", ids.owner);
+  assert.equal(guessedCookie.status, 401);
+  const audits = JSON.stringify(
+    (await admin.query("SELECT * FROM audit_events")).rows,
+  );
+  assert(!audits.includes(secret));
+  assert(!audits.includes("%PDF-"));
+  assert(!audits.includes("Trigger audit"));
+});
+
+test("API startup refuses alternate logins, privileged owners and inherited role capabilities", async () => {
+  await assertRuntimeRole(appPool);
+  await assert.rejects(assertRuntimeRole(admin), /channel_app/);
+  await admin.query("CREATE ROLE channel_extra NOLOGIN");
+  await admin.query("GRANT channel_extra TO channel_app");
+  try {
+    await assert.rejects(assertRuntimeRole(appPool), /role memberships/);
+    await assert.rejects(provisionRuntime(admin, secret), /role memberships/);
+  } finally {
+    await admin.query("REVOKE channel_extra FROM channel_app");
+  }
+  await assertRuntimeRole(appPool);
+  assert.equal(
+    (await appPool.query("SHOW search_path")).rows[0].search_path,
+    "public,pg_catalog,pg_temp",
+  );
 });
