@@ -12,7 +12,6 @@ export default function CustomerEventsOps({org,module,records,onAdd,onUpdate,can
  const forEvent=e=>bookings.filter(b=>b.eventId===e.id);
  const admitted=e=>forEvent(e).filter(b=>b.bookingStatus==="Confirmed"||b.bookingStatus==="Checked in");
  const used=e=>admitted(e).reduce((n,b)=>n+Math.max(1,Number(b.guests)||1),0);
- const booked=e=>forEvent(e).reduce((n,b)=>n+Math.max(1,Number(b.guests)||1),0);
  const update=(r,patch)=>onUpdate(org.id,r.id,patch);
  const addEvent=async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.currentTarget));if(!f.title.trim()||!f.startTime)return;
  const saved=await onAdd({orgId:org.id,module,recordType:"event",title:f.title.trim(),detail:f.detail||"",startTime:f.startTime,location:f.location||"",capacity:Math.max(1,Number(f.capacity)||1),owner:f.owner||"",status:"Planned",createdAt:new Date().toISOString()});if(saved){setForm(false);setNotice("Event added to the shared calendar.");setSelected(saved.id);}};
