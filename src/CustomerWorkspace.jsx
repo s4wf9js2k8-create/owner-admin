@@ -39,6 +39,7 @@ export default function CustomerWorkspace({
   const canEdit=(customerRoles[customerRole]||demoRoleDefaults[customerRole]||[]).includes("Edit");
   const canCreate=(customerRoles[customerRole]||demoRoleDefaults[customerRole]||[]).includes("Create");
   const canApprove=(customerRoles[customerRole]||demoRoleDefaults[customerRole]||[]).includes("Approve");
+  const canExport=(customerRoles[customerRole]||demoRoleDefaults[customerRole]||[]).includes("Export");
   const validPage = universal.includes(page) || visibleOrg.modules.includes(page) ||
     page==="Tasks & projects" && visibleOrg.modules.some(isTaskModule);
   const current=validPage?page:"Dashboard";
@@ -65,7 +66,7 @@ export default function CustomerWorkspace({
   else if(isTaskModule(current))content=<CustomerTaskBoard org={visibleOrg} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} actor={actor} canEdit={canEdit} canCreate={canCreate} canApprove={canApprove} createRequest={createRequest} focusId={focusId} onNavigate={navigate}/>;
   else if(["people","timesheets","schedule","leave","training"].includes(moduleInfo(current).type))content=<CustomerPeopleOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit} canApprove={canApprove}/>;
   else if(["assets","maintenance","inspections","inventory"].includes(moduleInfo(current).type))content=<CustomerAssetOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit} canApprove={canApprove}/>;
-  else content=<CustomerModulePage key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canEdit={canEdit} canCreate={canCreate} canApprove={canApprove}/>;
+  else content=<CustomerModulePage key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canEdit={canEdit} canCreate={canCreate} canApprove={canApprove} canExport={canExport}/>;
   return <div className={"customer-shell "+(prefs.compact?"customer-compact":"")}>
     <div className="customer-context"><span>{org.name}</span><span>Fictional customer demo</span><span>{visibleOrg.modules.length} accessible modules</span></div>
     <div className="customer-persona-row">
