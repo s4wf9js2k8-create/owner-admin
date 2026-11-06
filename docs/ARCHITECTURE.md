@@ -59,3 +59,7 @@ Production gate: agree scope and processor responsibilities, establish isolated 
 ## Backend preparation (issue #2)
 
 See [adapter contracts](BACKEND-CONTRACT.md), [documentation-only Firebase design](FIREBASE-DESIGN.md), and [threat model and negative test plan](THREAT-MODEL.md). No live backend is implemented or connected.
+
+## Offline foundation (issue #6)
+
+[OFFLINE-BACKEND.md](OFFLINE-BACKEND.md) documents the separately instantiated, disposable service behind protected-style resource ports. It models current-state authorization and synthetic sessions without changing the public dashboard, and provides a migration boundary for a separately approved Firebase or PostgreSQL implementation. No live service is connected.

@@ -49,3 +49,5 @@ The generic record workflow demonstrates reusable infrastructure, not finished a
 - [Commercial discovery and pricing hypotheses](docs/BUSINESS-PLAN.md)
 
 The existing business and sales documents are drafts, not product claims or pricing commitments.
+
+Offline development: see the [offline backend foundation](docs/OFFLINE-BACKEND.md) for synthetic sessions, tenant-authorized resource operations, tests and future integration gates. The public demonstration remains on its fictional adapter; no live authentication or database is connected.

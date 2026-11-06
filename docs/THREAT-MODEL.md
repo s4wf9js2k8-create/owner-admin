@@ -45,3 +45,7 @@ Residual risks today: every fictional fixture is public, browser activity can be
 ## Offline proof of concept (issue #4)
 
 The [pure synthetic policy suite](../proof-of-concepts/tenant-authorization/README.md) now implements 14 named policy cases for the record boundary: A/B reads/writes/lists, forged org/module/record IDs and roles, revoked membership, disabled modules, unauthenticated/suspended access, role limits, default deny and field validation. These are JavaScript model checks, **not negative Firestore Rules tests**. The Rules, real Auth, privileged API/IAM, concurrency, audit, recovery and rollout gates above remain unverified. See [TENANCY-DECISION.md](TENANCY-DECISION.md) for sourced architecture tradeoffs and the current recommendation to keep EVLT independent.
+
+## Offline service coverage (issue #6)
+
+The [offline foundation](OFFLINE-BACKEND.md) adds executable service-level negative tests for tenant scope across resource ports, role escalation, revocation, modules, stale writes, invitations and audit behavior. This advances the earlier pure policy model to disposable resource operations. It does not verify HTTP authentication, Rules/RLS, IAM, durable audit, distributed races or production deployment. The existing production launch gates remain required.
