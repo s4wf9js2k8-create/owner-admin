@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Empty, Modal, Status } from "./components";
 import { moduleInfo, moduleTypeLabel } from "./customerModules";
 import { Plus, Search, Download, CalendarDays, Package, ClipboardCheck, AlertTriangle, UserRound, FileText, Wrench, BriefcaseBusiness, Clock3, CheckCircle2 } from "lucide-react";
@@ -33,7 +33,7 @@ const fmtValue = (field, record) => {
   return display(value);
 };
 function Kpi({label,value,sub,icon:Icon}) {return <div className="metric-tile"><span>{Icon && <Icon size={18}/>} {label}</span><strong>{value}</strong><small>{sub}</small></div>}
-export default function CustomerModulePage({org,module,records,onAdd,onUpdate}) {
+export default function CustomerModulePage({org,module,records,onAdd,onUpdate,focusId,canEdit=true,canCreate=true,canExport=true}) {
   const spec = moduleInfo(module);
   const [query,setQuery] = useState("");
   const [filter,setFilter] = useState("All");
@@ -41,6 +41,7 @@ export default function CustomerModulePage({org,module,records,onAdd,onUpdate}) 
   const [creating,setCreating] = useState(false);
   const [sort,setSort] = useState("title");
   const [error,setError] = useState("");
+  useEffect(()=>{if(focusId)setSelected(focusId);},[focusId]);
   const rows = useMemo(()=>records.filter(r=>r.orgId===org.id && r.module===module),[org.id,module,records]);
   const found = useMemo(()=>rows.filter(r=>[r.title,r.detail,r.owner,...spec.fields.map(f=>String(r[f[0]]||""))].join(" ").toLowerCase().includes(query.toLowerCase())
     && (filter==="All" || r.status===filter)).sort((a,b)=>sort==="due"?(a.dueDate||"9999").localeCompare(b.dueDate||"9999"):sort==="priority" ? ["Urgent","High","Normal","Low"].indexOf(a.priority||"Normal")-["Urgent","High","Normal","Low"].indexOf(b.priority||"Normal"):a.title.localeCompare(b.title)),[rows,query,filter,sort,spec]);
@@ -90,10 +91,10 @@ export default function CustomerModulePage({org,module,records,onAdd,onUpdate}) 
       <div><small>Priority</small><strong>{r.priority||"Normal"}</strong></div>
       <div><small>Due</small><strong>{fmtDate(r.dueDate)}</strong></div>
     </div>
-    <div className="form-pair"><label>Progress<select aria-label="Record status" value={r.status||"Planned"} onChange={e=>update(r,{status:e.target.value})}>{["Planned","In progress","Complete"].map(x=><option key={x}>{x}</option>)}</select></label>
-    <label>Priority<select aria-label="Record priority" value={r.priority||"Normal"} onChange={e=>update(r,{priority:e.target.value})}>{["Low","Normal","High","Urgent"].map(x=><option key={x}>{x}</option>)}</select></label></div>
-    <label>Next deadline<input aria-label="Record due date" type="date" value={r.dueDate||""} onChange={e=>update(r,{dueDate:e.target.value})}/></label>
-    {spec.fields.filter(field=>Array.isArray(field[2])).map(field=><label key={field[0]}>{field[1]}<select value={r[field[0]]||field[2][0]} onChange={e=>update(r,{[field[0]]:e.target.value})}>{field[2].map(x=><option key={x}>{x}</option>)}</select></label>)}
+    <div className="form-pair"><label>Progress<select aria-label="Record status" disabled={!canEdit} value={r.status||"Planned"} onChange={e=>update(r,{status:e.target.value})}>{["Planned","In progress","Complete"].map(x=><option key={x}>{x}</option>)}</select></label>
+    <label>Priority<select aria-label="Record priority" disabled={!canEdit} value={r.priority||"Normal"} onChange={e=>update(r,{priority:e.target.value})}>{["Low","Normal","High","Urgent"].map(x=><option key={x}>{x}</option>)}</select></label></div>
+    <label>Next deadline<input aria-label="Record due date" disabled={!canEdit} type="date" value={r.dueDate||""} onChange={e=>update(r,{dueDate:e.target.value})}/></label>
+    {spec.fields.filter(field=>Array.isArray(field[2])).map(field=><label key={field[0]}>{field[1]}<select disabled={!canEdit} value={r[field[0]]||field[2][0]} onChange={e=>update(r,{[field[0]]:e.target.value})}>{field[2].map(x=><option key={x}>{x}</option>)}</select></label>)}
     <p className="muted">Changes in this demonstration are local to the browser session. This is not a legally valid approval, signature, payroll or accounting record.</p>
   </div>;
   const rowAction = r => <button type="button" onClick={()=>setSelected(r.id)} aria-label={"View "+r.title}>View details</button>;
@@ -125,13 +126,13 @@ export default function CustomerModulePage({org,module,records,onAdd,onUpdate}) 
   };
   return <div className="purpose-module">
     <div className="customer-page-intro"><div><span className="eyebrow">{moduleTypeLabel[spec.type].toUpperCase()}</span><h2>{spec.title}</h2><p>{spec.subtitle}</p></div>
-      {spec.type!=="reporting" && <button type="button" className="action-primary" onClick={()=>setCreating(true)}><Plus size={17}/> New {moduleTypeLabel[spec.type].toLowerCase().replace(/s$/,"")}</button>}</div>
+      {spec.type!=="reporting" && canCreate && <button type="button" className="action-primary" onClick={()=>setCreating(true)}><Plus size={17}/> New {moduleTypeLabel[spec.type].toLowerCase().replace(/s$/,"")}</button>}</div>
     <div className="customer-metrics">{metrics.map(([label,value,sub],i)=><Kpi key={label} label={label} value={value} sub={sub} icon={[Package,Clock3,CheckCircle2][i]}/>)}</div>
     <div className="customer-tools">
       <label className="search-field"><Search size={17}/><input aria-label={"Search "+module} value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search this module"/></label>
       <label>Status<select aria-label="Filter module status" value={filter} onChange={e=>setFilter(e.target.value)}>{["All","Planned","In progress","Complete"].map(x=><option key={x}>{x}</option>)}</select></label>
       <label>Sort<select aria-label="Sort module records" value={sort} onChange={e=>setSort(e.target.value)}><option value="title">Name</option><option value="due">Due date</option><option value="priority">Priority</option></select></label>
-      <button type="button" className="action-secondary" onClick={()=>exportRows(module,found,spec.fields)}><Download size={16}/> Export CSV</button>
+      {canExport&&<button type="button" className="action-secondary" onClick={()=>exportRows(module,found,spec.fields)}><Download size={16}/> Export CSV</button>}
     </div>
     <p className="muted" role="status">Showing {found.length} of {rows.length} records · Fictional demo data</p>
     {renderType()}

@@ -1,5 +1,6 @@
 import React from "react";
-import { moduleInfo } from "../customerModules";
+import { moduleInfo, isTaskModule } from "../customerModules";
+import { moduleAllowed } from "../customerWorkflows";
 import {
   LayoutDashboard,
   Building2,
@@ -50,6 +51,28 @@ const pages = [
   ["Settings", Settings],
 ];
 const iconFor = name => ({people:Users,timesheets:Clock3,assets:Package,maintenance:Wrench,inspections:ClipboardCheck,documents:FileText,schedule:CalendarDays,events:CalendarDays,bookings:CalendarDays,donations:HeartHandshake,fleet:CarFront,archives:Folder,projects:ClipboardList,reporting:ChartNoAxesCombined,training:UserRound}[moduleInfo(name).type] || Blocks);
+
+const peopleTypes = new Set(["people","timesheets","schedule","leave","training"]);
+const operationsTypes = new Set(["projects","assets","maintenance","inspections","safety","fleet","inventory","operations"]);
+const customerGroups = (org, role, roleModules) => {
+  const enabled=org.modules.filter(m=>moduleAllowed(role,m,roleModules));
+  const modules=enabled.filter(m=>!isTaskModule(m));
+  if(enabled.some(isTaskModule)) modules.unshift("Tasks & projects");
+  const by = types => modules.filter(m=>types.has(moduleInfo(m).type)).map(m=>[m,iconFor(m)]);
+  const grouped = new Set([...peopleTypes,...operationsTypes]);
+  return [
+    ["WORKSPACE",[["Dashboard",LayoutDashboard],["My work",ClipboardList],["Calendar",CalendarDays],["Notifications",Bell]]],
+    ["TEAM",by(peopleTypes)],
+    ["WORK & EQUIPMENT",by(operationsTypes)],
+    ["BUSINESS & RESOURCES",modules.filter(m=>!grouped.has(moduleInfo(m).type)).map(m=>[m,iconFor(m)])],
+    ["ACCOUNT",[["Settings",Settings]]]
+  ].filter(([,items])=>items.length);
+};
+const ownerGroups = [
+  ["OWNER CONSOLE",pages.slice(0,8)],
+  ["BUSINESS OPERATIONS",pages.slice(8,-1)],
+  ["ACCOUNT",[pages[pages.length-1]]]
+];
 export default function Navigation({ controller }) {
   const {
     menuButton,
@@ -64,6 +87,8 @@ export default function Navigation({ controller }) {
     page,
     setCustomerPage,
     navigate,
+    customerRole,
+    roleModules,
   } = controller;
   return (
     <>
@@ -111,31 +136,24 @@ export default function Navigation({ controller }) {
       >
         <div className="brand">{customer ? active.name : "Owner Admin"}</div>
         <div className="sub">
-          {customer ? "Customer workspace" : "Platform management"}
+          {customer ? customerRole+" · Demo workspace" : "Platform management"}
         </div>
         <nav aria-label="Main navigation">
-          {(customer
-            ? [["Dashboard", LayoutDashboard], ["My work", ClipboardList], ["Calendar", CalendarDays], ["Notifications", Bell], ["Settings", Settings], ...active.modules.map((n) => [n, iconFor(n)])]
-            : pages
-          ).map(([name, Icon]) => (
-            <button
-              key={name}
-              aria-current={
-                (customer ? customerPage : page) === name ? "page" : undefined
-              }
-              className={
-                (customer ? customerPage : page) === name ? "selected" : ""
-              }
-              onClick={() => {
-                if (customer) {
-                  setCustomerPage(name);
-                  setMenuOpen(false);
-                } else navigate(name);
-              }}
-            >
-              <Icon size={18} />
-              {name}
-            </button>
+          {(customer ? customerGroups(active,customerRole,roleModules) : ownerGroups).map(([group,items])=>(
+            <React.Fragment key={group}>
+              <div className="nav-section-label">{group}</div>
+              {items.map(([name, Icon])=>(
+                <button
+                  key={name}
+                  aria-current={(customer?customerPage:page)===name?"page":undefined}
+                  className={(customer?customerPage:page)===name?"selected":""}
+                  onClick={()=>{
+                    if(customer){setCustomerPage(name);setMenuOpen(false);}
+                    else navigate(name);
+                  }}
+                ><Icon size={18}/>{name}</button>
+              ))}
+            </React.Fragment>
           ))}
         </nav>
         <div className="foot">

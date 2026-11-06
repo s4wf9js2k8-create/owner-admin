@@ -70,7 +70,7 @@ export const sectors = {
       "Archives",
       "Daily operations",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Documents & files",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Documents & files",
       "Assets & equipment", "Inspections & checklists",
     ],
   },
@@ -85,7 +85,7 @@ export const sectors = {
       "Donations",
       "Tasks",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Leave and availability", "Documents & files",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Leave and availability", "Documents & files",
     ],
   },
   engineering: {
@@ -100,7 +100,7 @@ export const sectors = {
       "Schedules",
       "Job records",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Assets & equipment", "Maintenance & work orders", "Health & safety", "Vehicle / fleet management",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Assets & equipment", "Maintenance & work orders", "Health & safety", "Vehicle / fleet management",
     ],
   },
   visitor: {
@@ -114,7 +114,7 @@ export const sectors = {
       "Maintenance",
       "Daily operations",
       "Reporting",
-      "Tasks & projects", "Events & bookings", "Bookings and appointments", "Inventory and stock", "Documents & files",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Events & bookings", "Bookings and appointments", "Inventory and stock", "Documents & files",
     ],
   },
 };
@@ -269,6 +269,7 @@ const examples = {
   ],
 };
 const extras = {
+  "Attendance & Hours": [{person:"Sample volunteer A",startTime:"2026-11-06T09:00",endTime:"",approval:"Pending"},{person:"Sample volunteer B",startTime:"2026-11-06T13:00",endTime:"2026-11-06T16:00",approval:"Approved"}],
   "Tasks & projects": [
     { owner: "Sample project lead", checklist: [{text:"Gather requirements",done:true},{text:"Confirm task owner",done:false},{text:"Review completion",done:false}], tags:"Planning", recurrence:"Weekly", comments:[] },
     { owner: "Sample delivery team", checklist: [{text:"Agree milestones",done:false},{text:"Prepare materials",done:false}], tags:"Delivery", recurrence:"None", comments:[] },
@@ -277,7 +278,7 @@ const extras = {
   "Assets & equipment": [{asset:"EQ-101",location:"Workshop",condition:"Good"},{asset:"EQ-102",location:"Main building",condition:"Monitor"}],
   "Maintenance & work orders": [{asset:"EQ-101",fault:"Replace and test filter",severity:"Medium"},{asset:"EQ-102",fault:"Inspect and repair lighting",severity:"High"}],
   "Inspections & checklists": [{asset:"Workshop",result:"Pending",inspector:"Sample inspector"},{asset:"Entrance",result:"Requires attention",inspector:"Sample supervisor"}],
-  "Attendance & timesheets": [{person:"Sample coordinator A",startTime:"2026-11-06T09:00",endTime:"2026-11-06T13:00",approval:"Pending"},{person:"Sample colleague B",startTime:"2026-11-06T13:00",endTime:"2026-11-06T16:00",approval:"Approved"}],
+  "Attendance & timesheets": [{person:"Sample coordinator A",startTime:"2026-11-06T09:00",endTime:"",approval:"Pending"},{person:"Sample colleague B",startTime:"2026-11-06T13:00",endTime:"2026-11-06T16:00",approval:"Approved"}],
   "Shift rotas": [{person:"Sample colleague B",startTime:"2026-11-10T09:00",endTime:"2026-11-10T13:00",location:"Office"},{person:"Sample coordinator A",startTime:"2026-11-11T10:00",endTime:"2026-11-11T17:00",location:"Site"}],
   "Leave and availability": [{person:"Sample coordinator A",startDate:"2026-11-12",endDate:"2026-11-13",approval:"Pending"},{person:"Sample colleague B",startDate:"2026-11-20",endDate:"2026-11-22",approval:"Approved"}],
   "Documents & files": [{folder:"Policies",version:"v1.1",documentType:"Policy"},{folder:"Technical",version:"v2",documentType:"Procedure"}],
@@ -295,24 +296,22 @@ const extras = {
 };
 
 export function seedRecords(orgs) {
-  return orgs.flatMap((o) =>
-    o.modules
-      .filter((m) => m !== "Reporting")
-      .flatMap((m) =>
-        (examples[m] || []).map(([title, detail], i) => ({
-          id: `${o.id}-${m}-${i}`,
-          orgId: o.id,
-          module: m,
-          title,
-          detail,
-          status: i ? "In progress" : "Planned",
-          priority: i ? "High" : "Normal",
-          owner: i ? "Sample operations team" : "",
-          dueDate: i ? "2026-11-18" : "2026-11-10",
-          ...(extras[m]?.[i] || {}),
-        })),
-      ),
-  );
+  return orgs.flatMap(o=>[
+    ...o.modules.filter(m=>m!=="Reporting").flatMap(m=>(examples[m]||[]).map(([title,detail],i)=>({
+      id:o.id+"-"+m+"-"+i,orgId:o.id,module:m,title,detail,
+      status:i?"In progress":"Planned",priority:i?"High":"Normal",
+      owner:i?"Sample operations team":"",dueDate:i?"2026-11-18":"2026-11-10",
+      ...(extras[m]?.[i]||{}),
+      ...(m==="Tasks & projects"?{recordType:"task",projectId:o.id+"-sample-project"}:{})
+    }))),
+    ...(o.modules.includes("Tasks & projects")?[{
+      id:o.id+"-sample-project",orgId:o.id,module:"Tasks & projects",recordType:"project",
+      title:"Site improvement programme",detail:"Example programme bringing sample site improvements together.",
+      owner:"Sample project lead",members:"Sample delivery team, Sample project lead",status:"In progress",
+      dueDate:"2026-12-20",budget:3500,risk:"Medium",
+      milestones:[{text:"Scope agreed",done:true},{text:"Work scheduled",done:false},{text:"Final review",done:false}]
+    }]:[])
+  ]);
 }
 export function visibleRecords(records, org, module, query = "") {
   return records.filter(

@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useBackend } from "./useBackend";
 import { useDrawer } from "./useDrawer";
+import { demoRoleDefaults, defaultRoleModules } from "../customerWorkflows";
 export function useConsoleController(backend) {
   const { data, status, error, run, retry } = useBackend(backend);
   const { orgs, records, tickets, logs, plans, flags } = data;
@@ -16,7 +17,11 @@ export function useConsoleController(backend) {
     [customer, setCustomer] = useState(false),
     [customerPage, setCustomerPage] = useState("Dashboard"),
     [confirm, setConfirm] = useState(null),
-    [ticketId, setTicketId] = useState("ticket-1");
+    [ticketId, setTicketId] = useState("ticket-1"),
+    [customerRole,setCustomerRole] = useState("Administrator"),
+    [customerRoles,setCustomerRoles] = useState(demoRoleDefaults),
+    [roleModules,setRoleModules] = useState(defaultRoleModules),
+    [roleTeams,setRoleTeams] = useState({Administrator:"All teams",Manager:"All teams",Staff:"All teams",Viewer:"All teams"});
   const menuRef = useRef(null),
     menuButton = useRef(null);
   const active = orgs.find((o) => o.id === selected) || orgs[0],
@@ -77,6 +82,10 @@ export function useConsoleController(backend) {
       setTicketId("ticket-1");
       setQuery("");
       setStatusFilter("All");
+      setCustomerRole("Administrator");
+      setCustomerRoles(demoRoleDefaults);
+      setRoleModules(defaultRoleModules);
+      setRoleTeams({Administrator:"All teams",Manager:"All teams",Staff:"All teams",Viewer:"All teams"});
       setMessage("Fictional demo reset. All session changes cleared.");
     }
   };
@@ -109,6 +118,14 @@ export function useConsoleController(backend) {
     setCustomer,
     customerPage,
     setCustomerPage,
+    customerRole,
+    setCustomerRole,
+    customerRoles,
+    setCustomerRoles,
+    roleModules,
+    setRoleModules,
+    roleTeams,
+    setRoleTeams,
     confirm,
     setConfirm,
     flags,

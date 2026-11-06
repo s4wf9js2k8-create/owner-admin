@@ -59,12 +59,13 @@ test("customer universal pages provide work inbox, notifications and editable de
 test("different customer modules use purpose-built presentation",async ({page})=>{
   await openCustomer(page);
   await navigate(page,"Assets & equipment");
-  await expect(page.locator(".purpose-card").first()).toBeVisible();
+  await expect(page.locator(".asset-profile-card").first()).toBeVisible();
   await navigate(page,"Inspections & checklists");
-  await expect(page.locator(".work-order").first()).toBeVisible();
+  await expect(page.locator(".inspection-row").first()).toBeVisible();
   await navigate(page,"Staff & volunteers");
-  await expect(page.locator(".purpose-card").first()).toBeVisible();
+  await expect(page.locator(".people-profile").first()).toBeVisible();
   await navigate(page,"Tasks & projects");
+  await page.getByRole("button",{name:"Board",exact:true}).click();
   await expect(page.locator(".kanban-column")).toHaveCount(3);
   await page.getByRole("button",{name:"List",exact:true}).click();
   await expect(page.getByRole("table")).toBeVisible();
