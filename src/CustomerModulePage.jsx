@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Panel, Empty, Modal, Status } from "./components";
+import { Empty, Modal, Status } from "./components";
 import { moduleInfo, moduleTypeLabel } from "./customerModules";
 import { Plus, Search, Download, CalendarDays, Package, ClipboardCheck, AlertTriangle, UserRound, FileText, Wrench, BriefcaseBusiness, Clock3, CheckCircle2 } from "lucide-react";
 
@@ -9,7 +9,7 @@ const fmtDate = date => date ? new Date(date.slice(0,10)+"T12:00:00").toLocaleDa
 const fieldValue = (record,field) => record[field[0]] ?? "";
 const csvSafe = value => {
   const raw = String(value ?? "");
-  const safe = /^[\s]*[=+@\-]/.test(raw) ? "'" + raw : raw;
+  const safe = /^[\s]*[=+@-]/.test(raw) ? "'" + raw : raw;
   return '"' + safe.replaceAll('"','""') + '"';
 };
 function exportRows(module, rows, fields) {
