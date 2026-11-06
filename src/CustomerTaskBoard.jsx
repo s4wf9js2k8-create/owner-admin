@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Panel, Empty, Modal, Status } from "./components";
 import { ArrowRight, CalendarDays, CheckCircle2, ClipboardList, Clock3, Flag, FolderKanban, LayoutGrid, List, Plus, Repeat2, Search, UserRound } from "lucide-react";
-import { isTask, isProject, nextRecurrenceDate, firstModuleOfType, taskModuleFor } from "./customerWorkflows";
+import { isTask, isProject, nextRecurrenceDate, taskModuleFor } from "./customerWorkflows";
 
 const statuses=["Planned","In progress","Complete"];
 const priorities=["Low","Normal","High","Urgent"];
