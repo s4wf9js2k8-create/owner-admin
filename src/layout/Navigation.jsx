@@ -1,4 +1,5 @@
 import React from "react";
+import { moduleInfo } from "../customerModules";
 import {
   LayoutDashboard,
   Building2,
@@ -10,9 +11,25 @@ import {
   Settings,
   Menu,
   X,
+  Clock3,
   CalendarDays,
   ClipboardList,
   ChartNoAxesCombined,
+  Bell,
+  UserRound,
+  Wrench,
+  Package,
+  ClipboardCheck,
+  FileText,
+  HeartHandshake,
+  CarFront,
+  Folder,
+  Palette,
+  Lightbulb,
+  Target,
+  Megaphone,
+  Server,
+  UserPlus,
 } from "lucide-react";
 const pages = [
   ["Overview", LayoutDashboard],
@@ -24,7 +41,15 @@ const pages = [
   ["Support", LifeBuoy],
   ["Activity Logs", ScrollText],
   ["Settings", Settings],
+  ["Onboarding", UserPlus],
+  ["Branding Templates", Palette],
+  ["Client Insights", ChartNoAxesCombined],
+  ["Feature Requests", Lightbulb],
+  ["Sales Leads", Target],
+  ["Announcements", Megaphone],
+  ["Infrastructure", Server],
 ];
+const iconFor = name => ({people:Users,timesheets:Clock3,assets:Package,maintenance:Wrench,inspections:ClipboardCheck,documents:FileText,schedule:CalendarDays,events:CalendarDays,bookings:CalendarDays,donations:HeartHandshake,fleet:CarFront,archives:Folder,projects:ClipboardList,reporting:ChartNoAxesCombined,training:UserRound}[moduleInfo(name).type] || Blocks);
 export default function Navigation({ controller }) {
   const {
     menuButton,
@@ -90,7 +115,7 @@ export default function Navigation({ controller }) {
         </div>
         <nav aria-label="Main navigation">
           {(customer
-            ? [["Dashboard", LayoutDashboard], ["My work", ClipboardList], ["Calendar", CalendarDays], ["Insights", ChartNoAxesCombined], ...active.modules.map((n) => [n, LayoutDashboard])]
+            ? [["Dashboard", LayoutDashboard], ["My work", ClipboardList], ["Calendar", CalendarDays], ["Notifications", Bell], ["Settings", Settings], ...active.modules.map((n) => [n, iconFor(n)])]
             : pages
           ).map(([name, Icon]) => (
             <button
