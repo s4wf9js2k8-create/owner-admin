@@ -71,7 +71,7 @@ test("operator storage dashboard requires server session and displays server usa
     .getByRole("button", { name: "Private server workspace", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Server storage", exact: true }),
+    page.getByRole("heading", { name: "Server Management", exact: true }),
   ).toHaveCount(0);
   await page
     .getByLabel("Email", { exact: true })
@@ -83,15 +83,15 @@ test("operator storage dashboard requires server session and displays server usa
     .getByRole("button", { name: "Sign in to private server", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Server storage", exact: true }),
+    page.getByRole("heading", { name: "Server Management", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("Synthetic Alpha: 512 bytes used / 1048576 bytes quota"),
-  ).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Synthetic Alpha" })).toBeVisible();
+  await expect(page.getByText("20.00 GiB")).toBeVisible();
+  await expect(page.getByText("Within quota")).toBeVisible();
   await page
     .getByRole("button", { name: "Sign out of server", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Server storage", exact: true }),
+    page.getByRole("heading", { name: "Server Management", exact: true }),
   ).toHaveCount(0);
 });
