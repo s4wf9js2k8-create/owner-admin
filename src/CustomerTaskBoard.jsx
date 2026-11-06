@@ -79,7 +79,7 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
       tags:String(f.tags||"").trim(),estimateHours:Number(f.estimateHours)||0,approval:"Not requested",
       checklist:String(f.checklist||"").split("\n").map(x=>x.trim()).filter(Boolean).map(text=>({text,done:false})),
       workLogs:[],comments:[],attachments:[],createdAt:new Date().toISOString()});
-    if(saved){setCreating(false);setView("mine");}
+    if(saved){setCreating(false);setView("board");}
   };
   const createProject=async e=>{
     e.preventDefault();
