@@ -35,3 +35,5 @@ Run `npm run test:policy` (or `node --test tests/tenant-policy.test.js`) with No
 ## Issue #6 offline foundation
 
 The disposable [offline service](OFFLINE-BACKEND.md) is covered by `tests/offline.test.js` (automatically included in `npm test`) and `tests/browser/offline.spec.js` (all three Chromium viewport projects). It is never mounted in the public demonstration or included in its production import graph. Branch CI validates it without deploying; the existing Pages workflow still deploys only main or explicit workflow dispatch. No workflow is changed by this implementation.
+
+Verified locally on 2026-11-06 for issue #6: lint passed; all 37 unit/model/policy/service tests passed; production build passed; all 33 Chromium browser cases passed across desktop, phone and tablet; `git diff --check` passed. These results cover the offline model and fictional demo, not live Firebase/PostgreSQL or production authentication.
