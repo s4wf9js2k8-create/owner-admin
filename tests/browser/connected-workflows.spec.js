@@ -32,7 +32,7 @@ test("failed inspection creates a corrective work order linked to its source",as
   await go(page,"Inspections & checklists");
   await page.getByRole("button",{name:"New inspection"}).click();
   await page.getByRole("textbox",{name:"Record title"}).fill("Sample ladder check");
-  await page.getByLabel("Asset",{exact:true}).selectOption({label:"EQ-101"});
+  await page.getByRole("dialog").locator("select[name=assetRefId]").selectOption({label:"EQ-101"});
   await page.getByRole("button",{name:"Save sample inspection"}).click();
   await page.locator(".inspection-row").filter({hasText:"Sample ladder check"}).getByRole("button",{name:"Inspect"}).click();
   await page.getByLabel("Inspection result").selectOption("Fail");
@@ -72,7 +72,7 @@ test("dashboard reflects clock-in and clock-out from attendance module",async ({
   await open.locator("article").filter({hasText:"Sample volunteer B"}).getByRole("button",{name:"Clock out"}).click();
   await go(page,"Dashboard");
   await expect(page.getByRole("heading",{name:"Staff on site"})).toBeVisible();
-  await expect(page.getByText("Sample volunteer A",{exact:true}).first()).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Sample volunteer A",exact:true})).toBeVisible();
 });
 
 test("projects group tasks, and pending approvals block completion",async ({page})=>{
@@ -85,7 +85,7 @@ test("projects group tasks, and pending approvals block completion",async ({page
   await page.getByRole("button",{name:"Create project"}).click();
   await page.getByRole("button",{name:"New task"}).click();
   await page.getByLabel("Task title").fill("Sample project task");
-  await page.getByLabel("Project",{exact:true}).selectOption({label:"Sample station project"});
+  await page.getByRole("dialog").locator("select[name=projectId]").selectOption({label:"Sample station project"});
   await page.getByRole("button",{name:"Create task"}).click();
   await page.getByRole("button",{name:"Sample project task",exact:true}).click();
   await page.getByRole("button",{name:"Request manager approval"}).click();
