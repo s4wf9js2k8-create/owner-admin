@@ -12,5 +12,5 @@ test("event capacity, waitlist and check-in",async({page})=>{
 test("form builder creates fields and stores responses",async({page})=>{
  await enter(page);await nav(page,"Forms and surveys");await page.getByRole("button",{name:"Form builder"}).click();await page.getByLabel("Question or label").fill("Visitor rating");await page.getByLabel("Answer type").selectOption("Number");await page.getByRole("button",{name:"Add field"}).click();
  await page.getByRole("button",{name:"Complete form"}).click();await page.getByLabel("Location").fill("Reception");await page.getByLabel("Site left secure").selectOption("Yes");await page.getByLabel("Visitor rating").fill("5");await page.getByRole("button",{name:"Submit response"}).click();
- await expect(page.getByText("Form response submitted in this demo.")).toBeVisible();await page.getByText("Daily site handover submission").click();await expect(page.getByText("Visitor rating")).toBeVisible();
+ await expect(page.getByText("Form response submitted in this demo.")).toBeVisible();await page.locator(".form-response summary").first().click();await expect(page.getByText("Visitor rating")).toBeVisible();
 });
