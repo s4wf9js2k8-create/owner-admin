@@ -71,7 +71,7 @@ export const sectors = {
       "Daily operations",
       "Reporting",
       "Tasks & projects", "Staff & volunteers", "Shift rotas", "Documents & files",
-      "Assets & equipment", "Inspections & checklists",
+      "Assets & equipment", "Inspections & checklists", "Forms and surveys",
     ],
   },
   charity: {
@@ -114,7 +114,7 @@ export const sectors = {
       "Maintenance",
       "Daily operations",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Events & bookings", "Bookings and appointments", "Inventory and stock", "Documents & files",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Events & bookings", "Bookings and appointments", "Inventory and stock", "Documents & files", "Forms and surveys",
     ],
   },
 };
