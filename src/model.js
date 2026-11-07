@@ -71,7 +71,7 @@ export const sectors = {
       "Daily operations",
       "Reporting",
       "Tasks & projects", "Staff & volunteers", "Shift rotas", "Documents & files",
-      "Assets & equipment", "Inspections & checklists", "Forms and surveys", "Training and qualifications",
+      "Assets & equipment", "Inspections & checklists", "Forms and surveys", "Training and qualifications", "Leave and availability",
     ],
   },
   charity: {
@@ -100,7 +100,7 @@ export const sectors = {
       "Schedules",
       "Job records",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Assets & equipment", "Maintenance & work orders", "Health & safety", "Vehicle / fleet management", "Training and qualifications", "Customers / CRM", "Quotes and invoices", "Documents & files",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Assets & equipment", "Maintenance & work orders", "Health & safety", "Vehicle / fleet management", "Training and qualifications", "Leave and availability", "Customers / CRM", "Quotes and invoices", "Documents & files",
     ],
   },
   visitor: {
@@ -114,7 +114,7 @@ export const sectors = {
       "Maintenance",
       "Daily operations",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Events & bookings", "Bookings and appointments", "Inventory and stock", "Documents & files", "Forms and surveys",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Events & bookings", "Bookings and appointments", "Inventory and stock", "Documents & files", "Forms and surveys", "Training and qualifications", "Leave and availability",
     ],
   },
 };
