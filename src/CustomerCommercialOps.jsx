@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from "react";
-import {Empty,Modal,Status} from "./components";
-import {Plus,Building2,FileText,HandCoins,Mail,Phone,CalendarDays,BriefcaseBusiness,CheckCircle2,Printer} from "lucide-react";
+import {Empty,Modal} from "./components";
+import {Plus,Building2,FileText,HandCoins,CalendarDays,BriefcaseBusiness,CheckCircle2,Printer} from "lucide-react";
 import {moduleInfo} from "./customerModules";
 import {StaffSelect,CustomerSelect,teamMembers} from "./LinkedSelectors";
 const stages=["Lead","Qualified","Proposal","Customer"];
