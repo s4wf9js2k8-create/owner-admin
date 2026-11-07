@@ -53,3 +53,10 @@ test("safety and driver roles require their respective competence",()=>{
  assert.equal(validateAssignee(records,orgId,"Blair Inspector",{kind:"safety"}).eligible,true);
  assert.equal(validateAssignee(records,orgId,"Blair Inspector",{kind:"fleet"}).eligible,false);
 });
+
+test("pending or rejected qualifications cannot unlock maintenance assignment",()=>{
+ const pending=records.map(r=>r.id==="qa"?{...r,approval:"Pending"}:r);
+ const rejected=records.map(r=>r.id==="qa"?{...r,approval:"Rejected"}:r);
+ assert.equal(validateAssignee(pending,orgId,"Alex Engineer",criteria).eligible,false);
+ assert.equal(validateAssignee(rejected,orgId,"Alex Engineer",criteria).eligible,false);
+});
