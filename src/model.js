@@ -71,7 +71,7 @@ export const sectors = {
       "Daily operations",
       "Reporting",
       "Tasks & projects", "Staff & volunteers", "Shift rotas", "Documents & files",
-      "Assets & equipment", "Inspections & checklists", "Forms and surveys",
+      "Assets & equipment", "Inspections & checklists", "Forms and surveys", "Training and qualifications", "Leave and availability",
     ],
   },
   charity: {
@@ -85,7 +85,7 @@ export const sectors = {
       "Donations",
       "Tasks",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Leave and availability", "Documents & files", "Donations and fundraising", "Forms and surveys",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Leave and availability", "Training and qualifications", "Documents & files", "Donations and fundraising", "Forms and surveys",
     ],
   },
   engineering: {
@@ -100,7 +100,7 @@ export const sectors = {
       "Schedules",
       "Job records",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Assets & equipment", "Maintenance & work orders", "Health & safety", "Vehicle / fleet management", "Customers / CRM", "Quotes and invoices", "Documents & files",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Assets & equipment", "Maintenance & work orders", "Health & safety", "Vehicle / fleet management", "Training and qualifications", "Leave and availability", "Customers / CRM", "Quotes and invoices", "Documents & files",
     ],
   },
   visitor: {
@@ -114,7 +114,7 @@ export const sectors = {
       "Maintenance",
       "Daily operations",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Events & bookings", "Bookings and appointments", "Inventory and stock", "Documents & files", "Forms and surveys",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Events & bookings", "Bookings and appointments", "Inventory and stock", "Documents & files", "Forms and surveys", "Training and qualifications", "Leave and availability",
     ],
   },
 };
@@ -287,7 +287,7 @@ const extras = {
   "Inventory and stock": [{sku:"PPE-001",quantity:"5",reorder:"10",location:"Stores"},{sku:"OPS-002",quantity:"42",reorder:"15",location:"Workshop"}],
   "Customers / CRM": [{contact:"Sample contact A",stage:"Lead",company:"Example Co A"},{contact:"Sample contact B",stage:"Proposal",company:"Example Co B"}],
   "Quotes and invoices": [{reference:"Q-100",amount:"240",paymentStatus:"Draft"},{reference:"INV-200",amount:"580",paymentStatus:"Sent (demo)"}],
-  "Training and qualifications": [{person:"Sample coordinator A",qualification:"First aid",expiry:"2027-06-15"},{person:"Sample colleague B",qualification:"Site induction",expiry:"2027-02-10"}],
+  "Training and qualifications": [{person:"Sample coordinator A",qualification:"Maintenance engineering",expiry:"2028-06-15",approval:"Approved"},{person:"Sample colleague B",qualification:"Safety inspection",expiry:"2028-02-10",approval:"Approved"}],
   "Health & safety": [{location:"Visitor path",severity:"Medium",action:"Mark and repair surface"},{location:"Workshop",severity:"High",action:"Secure shelving"}],
   "Vehicle / fleet management": [{registration:"F-01",location:"Operations yard",serviceDue:"2027-01-10"},{registration:"F-02",location:"Service bay",serviceDue:"2026-12-15"}],
   "Forms and surveys": [{formName:"Visitor feedback",submittedBy:"Sample visitor",approval:"Pending"},{formName:"Daily handover",submittedBy:"Sample team",approval:"Reviewed"}],

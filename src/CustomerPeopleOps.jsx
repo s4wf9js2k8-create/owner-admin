@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Empty, Modal, Status } from "./components";
 import { Clock3, Plus, ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
 import { moduleInfo, isTaskModule } from "./customerModules";
+import {QualifiedStaffSelect} from "./LinkedSelectors";
+import {validateAssignee} from "./staffEligibility";
 
 const day=v=>v?.slice(0,10)||"";
 const today=()=>new Date().toISOString().slice(0,10);
@@ -21,6 +23,8 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
   const [selected,setSelected]=useState(null),[creating,setCreating]=useState(false);
   const [query,setQuery]=useState(""),[error,setError]=useState("");
   const [week,setWeek]=useState(weekStart(today()));
+  const [shiftStart,setShiftStart]=useState("");
+  const [shiftEnd,setShiftEnd]=useState("");
   const list=records.filter(r=>r.orgId===org.id&&r.module===module);
   const people=records.filter(r=>r.orgId===org.id&&peopleType(r.module));
   const rotas=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="schedule");
@@ -40,8 +44,12 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
     if(!title){setError("Enter a name or title.");return;}
     if(!shiftEndValid(values.startTime,values.endTime)){setError("End must come after start.");return;}
     if(values.startDate&&values.endDate&&values.endDate<values.startDate){setError("Leave end date must not be before its start.");return;}
+    if(type==="schedule"){
+      const result=validateAssignee(records,org.id,values.person,{kind:"schedule",date:values.startTime,startTime:values.startTime,endTime:values.endTime});
+      if(!values.person||!result.eligible){setError("Shift assignment rejected: "+(result.reasons||["Select a team member"]).join("; "));return;}
+    }
     const saved=await onAdd({orgId:org.id,module,title,detail:String(values.detail||"").trim(),status:"Planned",
-      person:String(values.person||"").trim(),role:String(values.role||"").trim(),team:String(values.team||"").trim(),
+      person:String(values.person||"").trim(),personId:people.find(p=>p.title===values.person)?.id||"",role:String(values.role||"").trim(),team:String(values.team||"").trim(),
       contact:String(values.contact||"").trim(),startTime:values.startTime||"",endTime:values.endTime||"",
       startDate:values.startDate||"",endDate:values.endDate||"",location:values.location||"",
       qualification:values.qualification||"",expiry:values.expiry||"",approval:"Pending",swapRequested:false});
@@ -140,8 +148,8 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
   const form=()=> <Modal title={type==="people"?"Add sample person":type==="schedule"?"Add sample shift":type==="timesheets"?"Add manual time entry":type==="leave"?"Request sample leave":"Record sample training"} onClose={()=>setCreating(false)}><form className="customer-form" onSubmit={created}>
     {error&&<p role="alert">{error}</p>}
     {type==="people"?<><label>Name<input name="title" maxLength={100} required autoFocus/></label><label>Role<input name="role" maxLength={80}/></label><label>Team<input name="team" maxLength={80}/></label><label>Sample contact<input name="contact" maxLength={100}/></label><label>Profile notes<textarea name="detail" maxLength={200}/></label></>:
-      <><label>Person<select name="person" required><option value="">Select team member</option>{actorNames.map(x=><option key={x}>{x}</option>)}</select></label>
-        {["timesheets","schedule"].includes(type)&&<><label>Start<input name="startTime" type="datetime-local" required/></label><label>End<input name="endTime" type="datetime-local"/></label></>}
+      <>{type==="schedule"?<QualifiedStaffSelect records={records} orgId={org.id} kind="schedule" label="Person" name="person" required startTime={shiftStart} endTime={shiftEnd} date={shiftStart}/>:<label>Person<select name="person" required><option value="">Select team member</option>{actorNames.map(x=><option key={x}>{x}</option>)}</select></label>}{""}
+        {["timesheets","schedule"].includes(type)&&<><label>Start<input name="startTime" type="datetime-local" required {...(type==="schedule"?{value:shiftStart,onChange:e=>setShiftStart(e.target.value)}:{})}/></label><label>End<input name="endTime" type="datetime-local" {...(type==="schedule"?{value:shiftEnd,onChange:e=>setShiftEnd(e.target.value)}:{})}/></label></>}
         {type==="schedule"&&<label>Location<input name="location" maxLength={80}/></label>}
         {type==="leave"&&<><label>First day<input name="startDate" type="date" required/></label><label>Last day<input name="endDate" type="date" required/></label></>}
         {type==="training"&&<><label>Qualification<input name="qualification" maxLength={120} required/></label><label>Expiry<input name="expiry" type="date"/></label></>}

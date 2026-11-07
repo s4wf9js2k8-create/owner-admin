@@ -143,3 +143,13 @@
  .inventory-table{padding:2px;}
 }
 @media print{.command-console,.customer-persona-row,.widget-control,.widget-picker,.task-tabs,.people-clock,.people-search{display:none!important;}.job-board{grid-auto-flow:row;grid-template-columns:repeat(3,1fr);overflow:visible;}}
+
+/* Eligibility-first staff assignment: transparent reasons and safe mobile layout. */
+.qualified-staff-picker{display:grid;gap:6px;min-width:0;}
+.qualified-staff-picker>label{margin:0;}
+.qualified-staff-picker>small{font-size:11px;line-height:1.4;color:#63816c;}
+.qualified-staff-picker>p[role="alert"]{margin:3px 0;padding:10px 12px;color:#8b3d29;background:#fff1e8;border-radius:9px;font-size:12px;}
+.qualified-staff-picker details{font-size:12px;color:#425b48;background:#f4f8f4;border:1px solid #dce7df;border-radius:9px;padding:10px;}
+.qualified-staff-picker details summary{cursor:pointer;font-weight:700;color:#345f42;}
+.qualified-staff-picker details ul{margin:11px 0 0;padding-left:18px;line-height:1.65;}
+.qualified-staff-picker details li+li{margin-top:5px;}
