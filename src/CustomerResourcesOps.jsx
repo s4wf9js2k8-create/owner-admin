@@ -1,12 +1,11 @@
-import React,{useEffect,useMemo,useState} from "react";
+import React,{useEffect,useState} from "react";
 import {Empty,Modal,Status} from "./components";
-import {BookOpen,FolderOpen,Plus,FileClock,CarFront,ShieldAlert,MapPin,CalendarClock,ClipboardCheck,AlertTriangle,ArrowRight,ClipboardList} from "lucide-react";
+import {BookOpen,FolderOpen,Plus,CarFront,MapPin,CalendarClock} from "lucide-react";
 import {moduleInfo} from "./customerModules";
 import {StaffSelect,teamMembers,CustomerSelect} from "./LinkedSelectors";
 import {firstModuleOfType} from "./customerWorkflows";
 const day=()=>new Date().toISOString().slice(0,10);
 const fmt=d=>d?new Date(d.slice(0,10)+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"Not set";
-const money=n=>"£"+Number(n||0).toLocaleString("en-GB",{maximumFractionDigits:2});
 const types={documents:"DOCUMENT CONTROL",archives:"COLLECTION CATALOGUE",fleet:"FLEET OPERATIONS",safety:"SAFETY MANAGEMENT",bookings:"APPOINTMENT PLANNER",operations:"DAILY OPERATIONS",visitors:"VISITOR INSIGHTS"};
 const stages=["Planned","In progress","Complete"];
 export default function CustomerResourcesOps({org,module,records,onAdd,onUpdate,onNavigate,focusId,canCreate=true,canEdit=true}){
