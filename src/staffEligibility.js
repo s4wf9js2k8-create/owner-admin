@@ -1,4 +1,4 @@
-import { moduleInfo } from "./customerModules";
+import { moduleInfo } from "./customerModules.js";
 
 const typeOf = record => moduleInfo(record.module).type;
 const datePart = value => String(value || "").slice(0,10);
