@@ -12,7 +12,7 @@ test("maintenance assignment excludes unqualified staff and explains why",async(
  await openEngineering(page);await navigate(page,"Maintenance & work orders");
  await page.getByRole("button",{name:"Raise work order"}).click();
  const picker=page.getByRole("dialog").getByLabel("Assigned engineer");
- await expect(picker.locator("option")).toContainText(["Choose eligible staff","Sample coordinator A · Coordinator (Operations)"]);
+ await expect(picker.locator("option")).toContainText(["Choose eligible staff","Sample coordinator A · Operations"]);
  await expect(picker.locator("option").filter({hasText:"Sample colleague B"})).toHaveCount(0);
  await page.getByRole("dialog").getByText("Why are", {exact:false}).click();
  await expect(page.getByRole("dialog")).toContainText("No recorded maintenance / engineering qualification");
@@ -22,7 +22,7 @@ test("maintenance assignment excludes unqualified staff and explains why",async(
  await expect(page.locator(".job-board-card").filter({hasText:"Check motor bearings"})).toContainText("Sample coordinator A");
 });
 test("inspection assignment includes inspection-trained staff",async({page})=>{
- await openEngineering(page);await navigate(page,"Inspections & checklists");
+ await openEngineering(page);await navigate(page,"Inspections");
  await page.getByRole("button",{name:"New inspection"}).click();
  await expect(page.getByRole("dialog").getByLabel("Inspector").locator("option").filter({hasText:"Sample colleague B"})).toHaveCount(1);
 });
