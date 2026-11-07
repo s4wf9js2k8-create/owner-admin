@@ -22,7 +22,7 @@ export function availabilityAssessment(person, records, orgId, {kind="maintenanc
  if(["inactive","suspended","left","former","terminated"].includes(status))reasons.push("Inactive staff profile");
  const matching=required ? qualifications.filter(q=>[q.qualification,q.title,q.detail].some(v=>required.terms.some(term=>normal(v).includes(term)))) : qualifications;
  if(required&&!matching.length)reasons.push("No recorded "+required.label.toLowerCase()+" qualification");
- else if(required&&!matching.some(q=>(!q.expiry||datePart(q.expiry)>=day)&&!["revoked","failed","expired"].includes(normal(q.status))&&q.approval!=="Rejected"))reasons.push("Qualification expired or not valid on "+day);
+ else if(required&&!matching.some(q=>(!q.expiry||datePart(q.expiry)>=day)&&!["revoked","failed","expired"].includes(normal(q.status))&&q.approval==="Approved"))reasons.push("Qualification expired, unapproved, or not valid on "+day);
  const leave=related.filter(r=>typeOf(r)==="leave" && (r.personId===person.id || (!r.personId&&normal(r.person)===normal(person.title))) && r.approval==="Approved" && datePart(r.startDate)<=day && datePart(r.endDate)>=day);
  if(leave.length)reasons.push("Approved leave on "+day);
  const unavailable=related.filter(r=>typeOf(r)==="leave"&&(r.personId===person.id||(!r.personId&&normal(r.person)===normal(person.title)))&&["Unavailable","Unavailability"].includes(r.requestType||r.availabilityStatus)&&datePart(r.startDate)<=day&&datePart(r.endDate)>=day);
