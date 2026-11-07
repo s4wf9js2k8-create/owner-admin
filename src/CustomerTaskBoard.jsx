@@ -27,6 +27,9 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
   const [savedViews,setSavedViews]=useState([]);
   const [viewName,setViewName]=useState("");
   const [showMineComplete,setShowMineComplete]=useState(false);
+  const [newTaskDate,setNewTaskDate]=useState("");
+  const [newTaskAsset,setNewTaskAsset]=useState("");
+  const [newProjectDate,setNewProjectDate]=useState("");
   useEffect(()=>{if(createRequest>0)setCreating(true);},[createRequest]);
   useEffect(()=>{if(focusId)setSelected(focusId);},[focusId]);
 
@@ -182,19 +185,19 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
     {view==="projects"&&<div className="project-cards">{projects.length?projects.map(p=>{const items=tasks.filter(t=>t.projectId===p.id),done=items.filter(t=>t.status==="Complete").length;return <article className="project-card" key={p.id}><small className="eyebrow">PROJECT · {p.risk||"Low"} RISK</small><h3>{p.title}</h3><p>{p.detail||"No summary yet."}</p><div className="project-card-meta"><span>Lead: {p.owner||"Unassigned"}</span><span>Due: {dateOf(p.dueDate)}</span><span>Budget: £{Number(p.budget||0).toLocaleString("en-GB")}</span></div><progress value={done} max={Math.max(items.length,1)}/><small>{done} of {items.length} tasks complete</small><button onClick={()=>setSelected(p.id)}>Open project</button></article>}):<Empty>No projects yet. Create one to group tasks and milestones.</Empty>}</div>}
     {creating&&<Modal title="Create a sample task" onClose={()=>setCreating(false)}><form className="customer-form" onSubmit={createTask}><p>Fictional data only. Nothing is sent outside this tab.</p>
       <label>Task title<input name="title" maxLength={100} required autoFocus/></label><label>Description<textarea name="detail" maxLength={500}/></label>
-      <div className="form-pair"><QualifiedStaffSelect records={records} orgId={org.id} kind="tasks" label="Assign to" name="owner" value={staff.some(p=>p.title===actor)?actor:""}/><label>Due date<input type="date" name="dueDate"/></label></div>
+      <div className="form-pair"><QualifiedStaffSelect records={records} orgId={org.id} kind={newTaskAsset?"maintenance":"tasks"} date={newTaskDate} label="Assign to" name="owner" value={staff.some(p=>p.title===actor)?actor:""}/><label>Due date<input type="date" name="dueDate" value={newTaskDate} onChange={e=>setNewTaskDate(e.target.value)}/></label></div>
       <div className="form-pair"><label>Priority<select name="priority" defaultValue="Normal">{priorities.map(x=><option key={x}>{x}</option>)}</select></label><label>Status<select name="status">{statuses.map(x=><option key={x}>{x}</option>)}</select></label></div>
       <label>Project<select name="projectId"><option value="">No project</option>{projects.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></label>
       <label>Depends on task<select name="dependsOnId"><option value="">None</option>{tasks.map(t=><option key={t.id} value={t.id}>{t.title}</option>)}</select></label>
-      <label>Linked asset<select name="assetRefId"><option value="">No asset</option>{assets.map(a=><option key={a.id} value={a.id}>{a.asset||a.title}</option>)}</select></label>
+      <label>Linked asset<select name="assetRefId" value={newTaskAsset} onChange={e=>setNewTaskAsset(e.target.value)}><option value="">No asset</option>{assets.map(a=><option key={a.id} value={a.id}>{a.asset||a.title}</option>)}</select></label>
       <div className="form-pair"><label>Repeat<select name="recurrence">{repeats.map(x=><option key={x}>{x}</option>)}</select></label><label>Recurring behaviour<select name="recurringMode">{repeatModes.map(x=><option key={x}>{x}</option>)}</select></label></div>
       <label>Estimated hours<input type="number" name="estimateHours" min="0" max="10000" step=".25"/></label>
       <label>Tags<input name="tags" maxLength={80}/></label><label>Checklist items (one per line)<textarea name="checklist" maxLength={1000}/></label>
       <button type="submit" className="action-primary">Create task</button></form></Modal>}
     {creatingProject&&<Modal title="Create sample project" onClose={()=>setCreatingProject(false)}><form className="customer-form" onSubmit={createProject}><label>Project name<input name="title" required maxLength={100} autoFocus/></label>
-      <label>Project summary<textarea name="detail" maxLength={500}/></label><QualifiedStaffSelect records={records} orgId={org.id} kind="projects" label="Project lead" name="owner" value={staff.some(p=>p.title===actor)?actor:""}/>
+      <label>Project summary<textarea name="detail" maxLength={500}/></label><QualifiedStaffSelect records={records} orgId={org.id} kind="projects" date={newProjectDate} label="Project lead" name="owner" value={staff.some(p=>p.title===actor)?actor:""}/>
       <label>Team members<input name="members" maxLength={160} placeholder="Sample engineering team"/></label>
-      <div className="form-pair"><label>Budget (£, fictional)<input name="budget" type="number" min="0" step=".01"/></label><label>Target date<input name="dueDate" type="date"/></label></div>
+      <div className="form-pair"><label>Budget (£, fictional)<input name="budget" type="number" min="0" step=".01"/></label><label>Target date<input name="dueDate" type="date" value={newProjectDate} onChange={e=>setNewProjectDate(e.target.value)}/></label></div>
       <label>Project risk<select name="risk">{["Low","Medium","High","Critical"].map(x=><option key={x}>{x}</option>)}</select></label>
       <label>Milestones (one per line)<textarea name="milestones" maxLength={1000}/></label>
       <button className="action-primary" type="submit">Create project</button></form></Modal>}
