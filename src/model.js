@@ -85,7 +85,7 @@ export const sectors = {
       "Donations",
       "Tasks",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Leave and availability", "Documents & files",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Leave and availability", "Documents & files", "Donations and fundraising", "Forms and surveys",
     ],
   },
   engineering: {
@@ -100,7 +100,7 @@ export const sectors = {
       "Schedules",
       "Job records",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Assets & equipment", "Maintenance & work orders", "Health & safety", "Vehicle / fleet management",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Assets & equipment", "Maintenance & work orders", "Health & safety", "Vehicle / fleet management", "Customers / CRM", "Quotes and invoices", "Documents & files",
     ],
   },
   visitor: {
@@ -269,6 +269,7 @@ const examples = {
   ],
 };
 const extras = {
+  "Visitor statistics": [{date:"2026-11-01",count:184},{date:"2026-11-02",count:206}],
   "Attendance & Hours": [{person:"Sample volunteer A",startTime:"2026-11-06T09:00",endTime:"",approval:"Pending"},{person:"Sample volunteer B",startTime:"2026-11-06T13:00",endTime:"2026-11-06T16:00",approval:"Approved"}],
   "Tasks & projects": [
     { owner: "Sample project lead", checklist: [{text:"Gather requirements",done:true},{text:"Confirm task owner",done:false},{text:"Review completion",done:false}], tags:"Planning", recurrence:"Weekly", comments:[] },

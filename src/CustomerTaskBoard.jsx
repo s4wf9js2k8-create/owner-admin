@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Panel, Empty, Modal, Status } from "./components";
 import { ArrowRight, CalendarDays, CheckCircle2, ClipboardList, Clock3, Flag, FolderKanban, LayoutGrid, List, Plus, Repeat2, Search, UserRound } from "lucide-react";
 import { isTask, isProject, nextRecurrenceDate, taskModuleFor } from "./customerWorkflows";
+import {StaffSelect,teamMembers} from "./LinkedSelectors";
 
 const statuses=["Planned","In progress","Complete"];
 const priorities=["Low","Normal","High","Urgent"];
@@ -29,6 +30,7 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
   useEffect(()=>{if(focusId)setSelected(focusId);},[focusId]);
 
   const scoped=useMemo(()=>records.filter(r=>r.orgId===org.id && org.modules.includes(r.module)),[records,org]);
+  const staff=teamMembers(records,org.id);
   const tasks=scoped.filter(isTask);
   const projects=scoped.filter(isProject);
   const assets=scoped.filter(r=>["Assets & equipment","Assets"].includes(r.module));
@@ -74,7 +76,7 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
     if(!title){setNotice("Please provide a task name.");return;}
     const saved=await onAdd({orgId:org.id,module:taskModuleFor(org),recordType:"task",title,
       detail:String(f.detail||"").trim(),status:f.status||"Planned",owner:String(f.owner||"").trim(),
-      priority:f.priority||"Normal",dueDate:f.dueDate||"",projectId:f.projectId||"",dependsOnId:f.dependsOnId||"",
+      priority:f.priority||"Normal",dueDate:f.dueDate||"",personId:staff.find(p=>p.title===f.owner)?.id||"",projectId:f.projectId||"",dependsOnId:f.dependsOnId||"",
       assetRefId:f.assetRefId||"",recurrence:f.recurrence||"None",recurringMode:f.recurringMode||"After completion",
       tags:String(f.tags||"").trim(),estimateHours:Number(f.estimateHours)||0,approval:"Not requested",
       checklist:String(f.checklist||"").split("\n").map(x=>x.trim()).filter(Boolean).map(text=>({text,done:false})),
@@ -85,7 +87,7 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
     e.preventDefault();
     const f=Object.fromEntries(new FormData(e.currentTarget));
     const saved=await onAdd({orgId:org.id,module:taskModuleFor(org),recordType:"project",title:String(f.title||"").trim(),
-      detail:String(f.detail||"").trim(),owner:String(f.owner||"").trim(),members:String(f.members||"").trim(),
+      detail:String(f.detail||"").trim(),owner:String(f.owner||"").trim(),leadId:staff.find(p=>p.title===f.owner)?.id||"",members:String(f.members||"").trim(),
       budget:Number(f.budget)||0,risk:f.risk||"Low",dueDate:f.dueDate||"",status:"Planned",
       milestones:String(f.milestones||"").split("\n").map(x=>x.trim()).filter(Boolean).map(text=>({text,done:false})),
       createdAt:new Date().toISOString()});
@@ -108,7 +110,7 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
     <h3>{t.title}</h3><p>{t.detail||"No description yet."}</p>
     <div className="form-pair"><label>Status<select aria-label="Task status" disabled={!canEdit} value={t.status} onChange={e=>changeStatus(t,e.target.value)}>{statuses.map(x=><option key={x}>{x}</option>)}</select></label>
       <label>Priority<select aria-label="Task priority" disabled={!canEdit} value={t.priority||"Normal"} onChange={e=>update(t,{priority:e.target.value})}>{priorities.map(x=><option key={x}>{x}</option>)}</select></label></div>
-    <div className="form-pair"><label>Assigned to<input aria-label="Task owner" key={t.id+"-owner"} disabled={!canEdit} defaultValue={t.owner||""} onBlur={e=>{if(e.target.value.trim()!==(t.owner||""))update(t,{owner:e.target.value.trim()});}}/></label>
+    <div className="form-pair"><StaffSelect people={staff} label="Assigned to" name="owner" value={t.owner||""} disabled={!canEdit} onChange={e=>update(t,{owner:e.target.value,personId:staff.find(p=>p.title===e.target.value)?.id||""})}/>
       <label>Deadline<input type="date" aria-label="Task deadline" disabled={!canEdit} value={t.dueDate||""} onChange={e=>update(t,{dueDate:e.target.value})}/></label></div>
     <label>Project<select aria-label="Linked project" disabled={!canEdit} value={t.projectId||""} onChange={e=>update(t,{projectId:e.target.value})}><option value="">No project</option>{projects.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></label>
     <label>Depends on<select aria-label="Task dependency" disabled={!canEdit} value={t.dependsOnId||""} onChange={e=>update(t,{dependsOnId:e.target.value})}><option value="">No dependency</option>{tasks.filter(x=>x.id!==t.id).map(x=><option key={x.id} value={x.id}>{x.title}</option>)}</select></label>
@@ -175,7 +177,7 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
     {view==="projects"&&<div className="project-cards">{projects.length?projects.map(p=>{const items=tasks.filter(t=>t.projectId===p.id),done=items.filter(t=>t.status==="Complete").length;return <article className="project-card" key={p.id}><small className="eyebrow">PROJECT · {p.risk||"Low"} RISK</small><h3>{p.title}</h3><p>{p.detail||"No summary yet."}</p><div className="project-card-meta"><span>Lead: {p.owner||"Unassigned"}</span><span>Due: {dateOf(p.dueDate)}</span><span>Budget: £{Number(p.budget||0).toLocaleString("en-GB")}</span></div><progress value={done} max={Math.max(items.length,1)}/><small>{done} of {items.length} tasks complete</small><button onClick={()=>setSelected(p.id)}>Open project</button></article>}):<Empty>No projects yet. Create one to group tasks and milestones.</Empty>}</div>}
     {creating&&<Modal title="Create a sample task" onClose={()=>setCreating(false)}><form className="customer-form" onSubmit={createTask}><p>Fictional data only. Nothing is sent outside this tab.</p>
       <label>Task title<input name="title" maxLength={100} required autoFocus/></label><label>Description<textarea name="detail" maxLength={500}/></label>
-      <div className="form-pair"><label>Assign to<input name="owner" defaultValue={actor} maxLength={80}/></label><label>Due date<input type="date" name="dueDate"/></label></div>
+      <div className="form-pair"><StaffSelect people={staff} label="Assign to" name="owner" value={staff.some(p=>p.title===actor)?actor:""}/><label>Due date<input type="date" name="dueDate"/></label></div>
       <div className="form-pair"><label>Priority<select name="priority" defaultValue="Normal">{priorities.map(x=><option key={x}>{x}</option>)}</select></label><label>Status<select name="status">{statuses.map(x=><option key={x}>{x}</option>)}</select></label></div>
       <label>Project<select name="projectId"><option value="">No project</option>{projects.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></label>
       <label>Depends on task<select name="dependsOnId"><option value="">None</option>{tasks.map(t=><option key={t.id} value={t.id}>{t.title}</option>)}</select></label>
@@ -185,7 +187,7 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
       <label>Tags<input name="tags" maxLength={80}/></label><label>Checklist items (one per line)<textarea name="checklist" maxLength={1000}/></label>
       <button type="submit" className="action-primary">Create task</button></form></Modal>}
     {creatingProject&&<Modal title="Create sample project" onClose={()=>setCreatingProject(false)}><form className="customer-form" onSubmit={createProject}><label>Project name<input name="title" required maxLength={100} autoFocus/></label>
-      <label>Project summary<textarea name="detail" maxLength={500}/></label><label>Project lead<input name="owner" defaultValue={actor} maxLength={80}/></label>
+      <label>Project summary<textarea name="detail" maxLength={500}/></label><StaffSelect people={staff} label="Project lead" name="owner" value={staff.some(p=>p.title===actor)?actor:""}/>
       <label>Team members<input name="members" maxLength={160} placeholder="Sample engineering team"/></label>
       <div className="form-pair"><label>Budget (£, fictional)<input name="budget" type="number" min="0" step=".01"/></label><label>Target date<input name="dueDate" type="date"/></label></div>
       <label>Project risk<select name="risk">{["Low","Medium","High","Critical"].map(x=><option key={x}>{x}</option>)}</select></label>

@@ -93,7 +93,7 @@ test("customer modules are interactive and session records remain scoped", async
     .selectOption("demo-visitor");
   await navigate(page, "Visitor statistics");
   await expect(
-    page.getByText("184 sample visitors", { exact: true }),
+    page.locator(".visitor-bars").getByText("184", { exact: true }),
   ).toBeVisible();
 });
 test("module dependencies, package confirmations and support history", async ({

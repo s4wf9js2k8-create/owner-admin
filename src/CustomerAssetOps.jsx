@@ -3,6 +3,7 @@ import { Empty, Modal, Status } from "./components";
 import { ClipboardCheck, Package, Plus, Wrench } from "lucide-react";
 import { firstModuleOfType, findAsset, relatedRecords } from "./customerWorkflows";
 import { moduleInfo } from "./customerModules";
+import { StaffSelect, teamMembers } from "./LinkedSelectors";
 
 const fmtDate=v=>v?new Date(v.slice(0,10)+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"Not set";
 const today=()=>new Date().toISOString().slice(0,10);
@@ -22,6 +23,7 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
   const [scanned,setScanned]=useState("");
   const [targetOrder,setTargetOrder]=useState("");
   const rows=records.filter(r=>r.orgId===org.id&&r.module===module);
+  const staff=teamMembers(records,org.id);
   const assets=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="assets");
   const workOrders=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="maintenance");
   const inspections=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="inspections");
@@ -34,8 +36,8 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
     const raw=Object.fromEntries(new FormData(e.currentTarget));
     const title=String(raw.title||"").trim();
     if(!title){setError("Enter a title.");return;}
-    const fields={orgId:org.id,module,title,detail:String(raw.detail||"").trim(),status:"Planned",owner:String(raw.owner||"").trim(),
-      dueDate:raw.dueDate||"",asset:raw.asset||"",assetRefId:raw.assetRefId||"",
+    const fields={orgId:org.id,module,title,detail:String(raw.detail||"").trim(),status:"Planned",owner:String(raw.owner||"").trim(),engineerId:staff.find(p=>p.title===raw.owner)?.id||"",custodianId:staff.find(p=>p.title===raw.custodian)?.id||"",inspectorId:staff.find(p=>p.title===raw.inspector)?.id||"",
+      dueDate:raw.dueDate||"",asset:raw.asset||(assets.find(a=>a.id===raw.assetRefId)?.asset||""),assetRefId:raw.assetRefId||"",
       location:raw.location||"",condition:raw.condition||"Good",custodian:raw.custodian||"",warrantyUntil:raw.warrantyUntil||"",
       fault:raw.fault||"",severity:raw.severity||"Medium",result:raw.result||"Pending",inspector:raw.inspector||"",
       sku:raw.sku||"",quantity:raw.quantity||"0",reorder:raw.reorder||"0",
@@ -89,13 +91,13 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
   const details=r=><div className="asset-detail-content"><h3>{r.title}</h3><p>{r.detail||r.fault}</p>
     {type==="assets"&&<><div className="detail-data-grid"><div><small>Asset ID</small><strong>{assetId(r)}</strong></div><div><small>Location</small><strong>{r.location||"—"}</strong></div><div><small>Custodian</small><strong>{r.custodian||"Not assigned"}</strong></div><div><small>Warranty until</small><strong>{fmtDate(r.warrantyUntil)}</strong></div></div>
       <label>Condition<select aria-label="Asset condition" disabled={!canEdit} value={r.condition||"Good"} onChange={e=>update(r,{condition:e.target.value})}>{conditions.map(x=><option key={x}>{x}</option>)}</select></label>
-      {canEdit&&<div className="form-pair"><label>Location<input aria-label="Asset location" value={r.location||""} onChange={e=>update(r,{location:e.target.value})}/></label><label>Custodian<input aria-label="Asset custodian" value={r.custodian||""} onChange={e=>update(r,{custodian:e.target.value})}/></label></div>}
+      {canEdit&&<div className="form-pair"><label>Location<input aria-label="Asset location" value={r.location||""} onChange={e=>update(r,{location:e.target.value})}/></label><StaffSelect people={staff} label="Asset custodian" name="custodian" value={r.custodian||""} onChange={e=>update(r,{custodian:e.target.value,custodianId:staff.find(p=>p.title===e.target.value)?.id||""})}/></div>}
       <h3>Related work & inspections</h3>{related(r).map(x=><div className="ticket" key={x.id}><span>{x.title} · {x.module}</span><button onClick={()=>onNavigate(x.module,{recordId:x.id})}>Open</button></div>)}
       {canCreate&&firstModuleOfType(org,"maintenance")&&<button className="action-primary" onClick={()=>startWorkOrder(r,"asset")}><Wrench size={15}/> Create work order for this asset</button>}
       <p className="module-disclaimer">Asset reference: {r.id}. This can be used to connect demo records; external camera QR scanning is not yet implemented.</p></>}
     {type==="maintenance"&&<><div className="detail-data-grid"><div><small>Asset</small><strong>{r.asset||"Not linked"}</strong></div><div><small>Severity</small><strong>{r.severity||"Medium"}</strong></div><div><small>Engineer</small><strong>{r.owner||"Unassigned"}</strong></div><div><small>Due</small><strong>{fmtDate(r.dueDate)}</strong></div></div>
       <label>Job status<select aria-label="Work order status" disabled={!canEdit} value={r.status||"Planned"} onChange={e=>update(r,{status:e.target.value})}>{states.map(x=><option key={x}>{x}</option>)}</select></label>
-      <label>Assigned engineer<input aria-label="Assigned engineer" disabled={!canEdit} value={r.owner||""} onChange={e=>update(r,{owner:e.target.value})}/></label>
+      <StaffSelect people={staff} name="engineer" label="Assigned engineer" disabled={!canEdit} value={r.owner||""} onChange={e=>update(r,{owner:e.target.value,engineerId:staff.find(p=>p.title===e.target.value)?.id||""})}/>
       {r.assetRefId&&<button onClick={()=>{const a=assets.find(a=>a.id===r.assetRefId);if(a)onNavigate(a.module,{recordId:a.id});}}>Open linked asset</button>}
       {r.sourceInspectionId&&<button onClick={()=>{const i=inspections.find(i=>i.id===r.sourceInspectionId);if(i)onNavigate(i.module,{recordId:i.id});}}>Open source inspection</button>}
       <h3>Job checklist</h3>{(r.checklist||[]).map((item,i)=><label key={i} className="task-check"><input type="checkbox" disabled={!canEdit} checked={Boolean(item.done)} onChange={e=>update(r,{checklist:r.checklist.map((x,j)=>j===i?{...x,done:e.target.checked}:x)})}/>{item.text}</label>)}
@@ -133,9 +135,9 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
       <form className="customer-form" onSubmit={create}>{error&&<p role="alert">{error}</p>}
         <label>Record title<input name="title" required maxLength={100} autoFocus/></label>
         <label>Description<textarea name="detail" maxLength={400}/></label>
-        {type==="assets"&&<><label>Asset reference<input name="asset" maxLength={60} placeholder="EQ-103"/></label><label>Location<input name="location" maxLength={80}/></label><label>Custodian<input name="custodian" maxLength={80}/></label><label>Warranty until<input type="date" name="warrantyUntil"/></label><label>Condition<select name="condition">{conditions.map(x=><option key={x}>{x}</option>)}</select></label></>}
+        {type==="assets"&&<><label>Asset reference<input name="asset" maxLength={60} placeholder="EQ-103"/></label><label>Location<input name="location" maxLength={80}/></label><StaffSelect people={staff} label="Custodian" name="custodian"/><label>Warranty until<input type="date" name="warrantyUntil"/></label><label>Condition<select name="condition">{conditions.map(x=><option key={x}>{x}</option>)}</select></label></>}
         {["maintenance","inspections"].includes(type)&&<><label>Asset<select name="assetRefId" onChange={e=>setTargetAsset(e.target.value)}><option value="">Unlinked / general</option>{assets.map(a=><option key={a.id} value={a.id}>{assetId(a)}</option>)}</select></label>
-          {type==="maintenance"?<><label>Work required<textarea name="fault" maxLength={350}/></label><label>Severity<select name="severity">{Severity.map(x=><option key={x}>{x}</option>)}</select></label></>:<><label>Inspector<input name="inspector" maxLength={80}/></label><label>Result<select name="result">{results.map(x=><option key={x}>{x}</option>)}</select></label></>}
+          {type==="maintenance"?<><StaffSelect people={staff} label="Assigned engineer" name="owner"/><label>Work required<textarea name="fault" maxLength={350}/></label><label>Severity<select name="severity">{Severity.map(x=><option key={x}>{x}</option>)}</select></label></>:<><StaffSelect people={staff} label="Inspector" name="inspector"/><label>Result<select name="result">{results.map(x=><option key={x}>{x}</option>)}</select></label></>}
           <label>Checklist steps (one per line)<textarea name="checklist" maxLength={1000}/></label><label>Due date<input type="date" name="dueDate"/></label></>}
         {type==="inventory"&&<><label>SKU<input name="sku" required maxLength={40}/></label><label>Opening quantity<input name="quantity" type="number" min="0" step="1" required/></label><label>Reorder threshold<input name="reorder" type="number" min="0" step="1"/></label><label>Store location<input name="location" maxLength={80}/></label></>}
         <button className="action-primary" type="submit">Save sample {type==="assets"?"asset":type==="maintenance"?"work order":type==="inspections"?"inspection":"item"}</button></form></Modal>}
