@@ -85,7 +85,7 @@ export const sectors = {
       "Donations",
       "Tasks",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Leave and availability", "Documents & files",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Leave and availability", "Documents & files", "Donations and fundraising", "Forms and surveys",
     ],
   },
   engineering: {
@@ -100,7 +100,7 @@ export const sectors = {
       "Schedules",
       "Job records",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Assets & equipment", "Maintenance & work orders", "Health & safety", "Vehicle / fleet management",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Assets & equipment", "Maintenance & work orders", "Health & safety", "Vehicle / fleet management", "Customers / CRM", "Quotes and invoices", "Documents & files",
     ],
   },
   visitor: {
