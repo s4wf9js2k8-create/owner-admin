@@ -75,6 +75,8 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
     const f=Object.fromEntries(new FormData(e.currentTarget));
     const title=String(f.title||"").trim();
     if(!title){setNotice("Please provide a task name.");return;}
+    const taskEligibility=validateAssignee(records,org.id,f.owner,{kind:f.assetRefId?"maintenance":"tasks",date:f.dueDate});
+    if(!taskEligibility.eligible){setNotice("Assignment rejected: "+taskEligibility.reasons.join("; "));return;}
     const saved=await onAdd({orgId:org.id,module:taskModuleFor(org),recordType:"task",title,
       detail:String(f.detail||"").trim(),status:f.status||"Planned",owner:String(f.owner||"").trim(),
       priority:f.priority||"Normal",dueDate:f.dueDate||"",personId:staff.find(p=>p.title===f.owner)?.id||"",projectId:f.projectId||"",dependsOnId:f.dependsOnId||"",
@@ -87,6 +89,8 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
   const createProject=async e=>{
     e.preventDefault();
     const f=Object.fromEntries(new FormData(e.currentTarget));
+    const leadEligibility=validateAssignee(records,org.id,f.owner,{kind:"projects",date:f.dueDate});
+    if(!leadEligibility.eligible){setNotice("Project lead is not available: "+leadEligibility.reasons.join("; "));return;}
     const saved=await onAdd({orgId:org.id,module:taskModuleFor(org),recordType:"project",title:String(f.title||"").trim(),
       detail:String(f.detail||"").trim(),owner:String(f.owner||"").trim(),leadId:staff.find(p=>p.title===f.owner)?.id||"",members:String(f.members||"").trim(),
       budget:Number(f.budget)||0,risk:f.risk||"Low",dueDate:f.dueDate||"",status:"Planned",
