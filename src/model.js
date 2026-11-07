@@ -269,6 +269,7 @@ const examples = {
   ],
 };
 const extras = {
+  "Visitor statistics": [{date:"2026-11-01",count:184},{date:"2026-11-02",count:206}],
   "Attendance & Hours": [{person:"Sample volunteer A",startTime:"2026-11-06T09:00",endTime:"",approval:"Pending"},{person:"Sample volunteer B",startTime:"2026-11-06T13:00",endTime:"2026-11-06T16:00",approval:"Approved"}],
   "Tasks & projects": [
     { owner: "Sample project lead", checklist: [{text:"Gather requirements",done:true},{text:"Confirm task owner",done:false},{text:"Review completion",done:false}], tags:"Planning", recurrence:"Weekly", comments:[] },
