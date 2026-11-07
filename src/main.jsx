@@ -5,4 +5,5 @@ import "./style.css";
 import "./customer.css";
 import "./owner.css";
 import "./customer-connected.css";
+import "./operational-pages.css";
 createRoot(document.getElementById("root")).render(<App />);
