@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { isTaskModule, moduleInfo } from "./customerModules";
+import FinancialWorkspace from "./FinancialWorkspace";
 import DailyOperations from "./DailyOperations";
 import OperationalDashboard from "./OperationalDashboard";
 import CustomerPeopleOps from "./CustomerPeopleOps";
@@ -75,6 +76,7 @@ export default function CustomerWorkspace({
   else if(["people","timesheets","schedule","leave","training"].includes(moduleInfo(current).type))content=<CustomerPeopleOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit} canApprove={canApprove} createRequest={createRequest}/>;
   else if(moduleInfo(current).type==="operations")content=<DailyOperations key={current} {...shared} module={current} onAdd={safeAdd} canCreate={canCreate} canApprove={canApprove}/>;
   else if(["documents","archives","fleet","safety","bookings","operations","visitors"].includes(moduleInfo(current).type))content=<CustomerResourcesOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit}/>;
+  else if(moduleInfo(current).type==="finance")content=<FinancialWorkspace key={current} {...shared} module={current} onAdd={safeAdd} canCreate={canCreate} canApprove={canApprove} focusId={focusId}/>;
   else if(["crm","finance","donations"].includes(moduleInfo(current).type))content=<CustomerCommercialOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit}/>;
   else if(moduleInfo(current).type==="forms")content=<CustomerFormsOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} canCreate={canCreate} templates={formTemplates} setTemplates={setFormTemplates}/>;
   else if(moduleInfo(current).type==="events")content=<CustomerEventsOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} canCreate={canCreate} canEdit={canEdit}/>;
