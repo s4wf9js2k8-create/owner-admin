@@ -4,6 +4,8 @@ import { ClipboardCheck, Package, Plus, Wrench } from "lucide-react";
 import { firstModuleOfType, findAsset, relatedRecords } from "./customerWorkflows";
 import { moduleInfo } from "./customerModules";
 import { StaffSelect, QualifiedStaffSelect, teamMembers } from "./LinkedSelectors";
+import InspectionTemplates from "./InspectionTemplates";
+import InspectionRun from "./InspectionRun";
 import {validateAssignee} from "./staffEligibility";
 
 const fmtDate=v=>v?new Date(v.slice(0,10)+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"Not set";
@@ -18,6 +20,8 @@ const assetId=r=>r.asset||r.reference||r.title;
 const summary=(label,value)=> <div className="metric-tile"><span>{label}</span><strong>{value}</strong></div>;
 export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNavigate,focusId,canCreate=true,canEdit=true,canApprove=true,createRequest=0}) {
   const type=moduleInfo(module).type;
+  const [inspectionFilter,setInspectionFilter]=useState("All");
+  const [templateChoice,setTemplateChoice]=useState("");
   const [profileTab,setProfileTab]=useState("Equipment");
   const [busy,setBusy]=useState(false);
   useEffect(()=>{if(createRequest)setCreating(true);},[createRequest]);
@@ -29,11 +33,12 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
   const [targetAsset,setTargetAsset]=useState("");
   const [scanned,setScanned]=useState("");
   const [targetOrder,setTargetOrder]=useState("");
-  const rows=records.filter(r=>r.orgId===org.id&&r.module===module);
+  const templates=records.filter(r=>r.orgId===org.id&&r.module===module&&r.recordType==="inspection-template");
+  const rows=records.filter(r=>r.orgId===org.id&&r.module===module&&r.recordType!=="inspection-template");
   const staff=teamMembers(records,org.id);
   const assets=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="assets");
   const workOrders=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="maintenance");
-  const inspections=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="inspections");
+  const inspections=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="inspections"&&r.recordType!=="inspection-template");
   const filtered=rows.filter(r=>[r.title,r.detail,r.asset,r.sku,r.location,r.fault].join(" ").toLowerCase().includes(filter.toLowerCase()));
   const current=rows.find(r=>r.id===selected);
   useEffect(()=>{if(focusId)setSelected(focusId);},[focusId]);
@@ -48,8 +53,10 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
       const assessment=validateAssignee(records,org.id,name,{kind:type,date:raw.dueDate});
       if(name&&!assessment.eligible){setError("Staff member is not eligible: "+assessment.reasons.join("; "));return;}
     }
+    if(type==="inspections"&&templateChoice&&(!raw.assetRefId&&!raw.location?.trim()||!raw.inspector||!raw.dueDate)){setError("Templated inspections require an asset or location, an eligible inspector and a due date.");return;}
     const fields={orgId:org.id,module,title,detail:String(raw.detail||"").trim(),status:"Planned",owner:String(raw.owner||"").trim(),engineerId:staff.find(p=>p.title===raw.owner)?.id||"",custodianId:staff.find(p=>p.title===raw.custodian)?.id||"",inspectorId:staff.find(p=>p.title===raw.inspector)?.id||"",
       dueDate:raw.dueDate||"",asset:raw.asset||(assets.find(a=>a.id===raw.assetRefId)?.asset||""),assetRefId:raw.assetRefId||"",
+      templateId:templateChoice,templateName:templates.find(t=>t.id===templateChoice)?.title||"",inspectionQuestions:templates.find(t=>t.id===templateChoice)?.questions||[],approval:"Pending",responses:{},
       location:raw.location||"",condition:raw.condition||"Good",custodian:raw.custodian||"",warrantyUntil:raw.warrantyUntil||"",
       fault:raw.fault||"",severity:raw.severity||"Medium",result:raw.result||"Pending",inspector:raw.inspector||"",
       sku:raw.sku||"",quantity:raw.quantity||"0",reorder:raw.reorder||"0",
@@ -88,7 +95,9 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
   </div>;
   const inspectionView=()=> <div><div className="customer-page-intro"><div><span className="eyebrow">INSPECTION CONTROL</span><h2>Inspections & checklists</h2><p>Scheduled checks, results and corrective maintenance actions.</p></div>{canCreate&&<button className="action-primary" onClick={()=>setCreating(true)}><Plus size={16}/> New inspection</button>}</div>
     <div className="customer-metrics">{summary("Inspections",rows.length)}{summary("Passed",rows.filter(r=>r.result==="Pass").length)}{summary("Attention required",rows.filter(r=>["Fail","Requires attention"].includes(r.result)).length)}</div>
-    <div className="inspection-list">{filtered.map(r=><article key={r.id} className="inspection-row"><div className="inspection-emblem"><ClipboardCheck size={20}/></div><div><h3>{r.title}</h3><p>{r.asset||"General check"} · {r.inspector||"Unassigned"} · Due {fmtDate(r.dueDate)}</p><Status>{r.result||"Pending"}</Status></div><div className="quick-actions"><button onClick={()=>setSelected(r.id)}>Inspect</button>{canCreate&&["Fail","Requires attention"].includes(r.result)&&<button onClick={()=>startWorkOrder(r,"inspection")}>Create corrective work order</button>}</div></article>)}</div>
+    <InspectionTemplates org={org} module={module} templates={templates} onAdd={onAdd} canCreate={canCreate&&canApprove}/>
+    <div className="inspection-filters" role="group" aria-label="Inspection schedule filters">{["All","Upcoming","Overdue","Completed","Failed","Awaiting approval"].map(label=><button key={label} aria-pressed={inspectionFilter===label} onClick={()=>setInspectionFilter(label)}>{label}</button>)}</div>
+    <div className="inspection-list">{filtered.filter(r=>inspectionFilter==="All"||inspectionFilter==="Upcoming"&&r.status!=="Complete"&&r.dueDate>=today()||inspectionFilter==="Overdue"&&r.status!=="Complete"&&r.dueDate&&r.dueDate<today()||inspectionFilter==="Completed"&&r.status==="Complete"||inspectionFilter==="Failed"&&["Fail","Requires attention"].includes(r.result)||inspectionFilter==="Awaiting approval"&&r.submittedAt&&r.approval!=="Approved").map(r=><article key={r.id} className="inspection-row"><div className="inspection-emblem"><ClipboardCheck size={20}/></div><div><h3>{r.title}</h3><p>{r.asset||"General check"} · {r.inspector||"Unassigned"} · Due {fmtDate(r.dueDate)}</p><Status>{r.result||"Pending"}</Status></div><div className="quick-actions"><button onClick={()=>setSelected(r.id)}>Inspect</button>{canCreate&&["Fail","Requires attention"].includes(r.result)&&<button onClick={()=>startWorkOrder(r,"inspection")}>Create corrective work order</button>}</div></article>)}</div>
     {error&&<p role="alert">{error}</p>}
   </div>;
   const inventoryView=()=> {
@@ -122,11 +131,12 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
       {error&&<p role="alert">{error}</p>}
       <h3>Work history</h3>{(r.history||[]).length?(r.history||[]).map((h,i)=><p className="task-note" key={i}>{new Date(h.at).toLocaleString("en-GB")} · {h.text}</p>):<p>No changes recorded in this demo session.</p>}
       <h3>Supervisor review</h3><label>Review status<select disabled={!canApprove} value={r.review||"Pending"} onChange={e=>update(r,{review:e.target.value})}>{["Pending","Approved","Requires changes"].map(x=><option key={x}>{x}</option>)}</select></label></>}
-    {type==="inspections"&&<><QualifiedStaffSelect records={records} orgId={org.id} kind="inspections" date={r.dueDate} excludedRecordId={r.id} label="Inspector" name="inspector" value={r.inspector||""} disabled={!canEdit} onChange={e=>{const name=e.target.value;const result=validateAssignee(records,org.id,name,{kind:"inspections",date:r.dueDate,excludedRecordId:r.id});if(result.eligible)update(r,{inspector:name,inspectorId:staff.find(p=>p.title===name)?.id||""});}}/><label>Inspection result<select aria-label="Inspection result" disabled={!canEdit} value={r.result||"Pending"} onChange={e=>update(r,{result:e.target.value,status:e.target.value==="Pass"?"Complete":"In progress"})}>{results.map(x=><option key={x}>{x}</option>)}</select></label>
-      <h3>Inspection steps</h3>{(r.checklist||[]).map((item,i)=><label className="task-check" key={i}><input type="checkbox" disabled={!canEdit} checked={Boolean(item.done)} onChange={e=>update(r,{checklist:r.checklist.map((x,j)=>i===j?{...x,done:e.target.checked}:x)})}/>{item.text}</label>)}
+    {type==="inspections"&&<><QualifiedStaffSelect records={records} orgId={org.id} kind="inspections" date={r.dueDate} excludedRecordId={r.id} label="Inspector" name="inspector" value={r.inspector||""} disabled={!canEdit} onChange={e=>{const name=e.target.value;const result=validateAssignee(records,org.id,name,{kind:"inspections",date:r.dueDate,excludedRecordId:r.id});if(result.eligible)update(r,{inspector:name,inspectorId:staff.find(p=>p.title===name)?.id||""});}}/><label>Inspection result<select aria-label="Inspection result" disabled={!canEdit||Boolean(r.inspectionQuestions?.length)} value={r.result||"Pending"} onChange={e=>update(r,{result:e.target.value,status:e.target.value==="Pass"?"Complete":"In progress"})}>{results.map(x=><option key={x}>{x}</option>)}</select></label>
+      {r.inspectionQuestions?.length>0&&<InspectionRun key={r.id+Boolean(r.submittedAt)} record={r} records={records} orgId={org.id} onUpdate={onUpdate} canEdit={canEdit} canApprove={canApprove}/>}
+      {!r.inspectionQuestions?.length&&<><h3>Inspection steps</h3>{(r.checklist||[]).map((item,i)=><label className="task-check" key={i}><input type="checkbox" disabled={!canEdit} checked={Boolean(item.done)} onChange={e=>update(r,{checklist:r.checklist.map((x,j)=>i===j?{...x,done:e.target.checked}:x)})}/>{item.text}</label>)}
       {canEdit&&<form onSubmit={e=>{e.preventDefault();const value=new FormData(e.currentTarget).get("step").trim();if(value){update(r,{checklist:[...(r.checklist||[]),{text:value,done:false}]});e.currentTarget.reset();}}}><label>Add inspection check<input name="step" required maxLength={120}/></label><button>Add check</button></form>}
-      <label>Findings<textarea aria-label="Inspection findings" disabled={!canEdit} value={r.findings||""} onChange={e=>update(r,{findings:e.target.value})}/></label>
-      <h3>Corrective actions</h3>{workOrders.filter(x=>x.sourceInspectionId===r.id).map(x=><div className="ticket" key={x.id}><span>{x.title} · {x.status}</span><button onClick={()=>onNavigate(x.module,{recordId:x.id})}>Open job</button></div>)}
+      <label>Findings<textarea aria-label="Inspection findings" disabled={!canEdit||Boolean(r.inspectionQuestions?.length)} value={r.findings||""} onChange={e=>update(r,{findings:e.target.value})}/></label>
+      </>}<h3>Corrective actions</h3>{workOrders.filter(x=>x.sourceInspectionId===r.id).map(x=><div className="ticket" key={x.id}><span>{x.title} · {x.status}</span><button onClick={()=>onNavigate(x.module,{recordId:x.id})}>Open job</button></div>)}
       {canCreate&&["Fail","Requires attention"].includes(r.result)&&<button className="action-primary" onClick={()=>startWorkOrder(r,"inspection")}>Create corrective work order</button>}
       {error&&<p role="alert">{error}</p>}</>}
     {type==="inventory"&&<><p>Available: <strong>{r.quantity||0} units</strong> · Reorder at {r.reorder||0}</p>
@@ -152,6 +162,7 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
         <label>Record title<input name="title" required maxLength={100} autoFocus/></label>
         <label>Description<textarea name="detail" maxLength={400}/></label>
         {type==="assets"&&<><label>Asset reference<input name="asset" maxLength={60} placeholder="EQ-103"/></label><label>Location<input name="location" maxLength={80}/></label><StaffSelect people={staff} label="Custodian" name="custodian"/><label>Warranty until<input type="date" name="warrantyUntil"/></label><label>Condition<select name="condition">{conditions.map(x=><option key={x}>{x}</option>)}</select></label></>}
+        {type==="inspections"&&<><label>Inspection template<select aria-label="Inspection template" value={templateChoice} onChange={e=>setTemplateChoice(e.target.value)}><option value="">Legacy general checklist</option>{templates.map(t=><option key={t.id} value={t.id}>{t.title}</option>)}</select></label><label>Inspection location (if no asset)<select name="location"><option value="">Choose recorded location</option>{[...new Set(records.filter(x=>x.orgId===org.id).map(x=>x.location).filter(Boolean))].map(location=><option key={location}>{location}</option>)}</select></label></>}
         {["maintenance","inspections"].includes(type)&&<><label>Asset<select name="assetRefId" onChange={e=>setTargetAsset(e.target.value)}><option value="">Unlinked / general</option>{assets.map(a=><option key={a.id} value={a.id}>{assetId(a)}</option>)}</select></label>
           {type==="maintenance"?<><QualifiedStaffSelect records={records} orgId={org.id} kind="maintenance" date={assignmentDate} label="Assigned engineer" name="owner"/><label>Work required<textarea name="fault" maxLength={350}/></label><label>Severity<select name="severity">{Severity.map(x=><option key={x}>{x}</option>)}</select></label></>:<><QualifiedStaffSelect records={records} orgId={org.id} kind="inspections" date={assignmentDate} label="Inspector" name="inspector"/><label>Result<select name="result">{results.map(x=><option key={x}>{x}</option>)}</select></label></>}
           <label>Checklist steps (one per line)<textarea name="checklist" maxLength={1000}/></label><label>Due date<input type="date" name="dueDate" value={assignmentDate} onChange={e=>setAssignmentDate(e.target.value)}/></label></>}

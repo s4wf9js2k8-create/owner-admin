@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { isTaskModule, moduleInfo } from "./customerModules";
+import DailyOperations from "./DailyOperations";
 import OperationalDashboard from "./OperationalDashboard";
 import CustomerPeopleOps from "./CustomerPeopleOps";
 import CustomerAssetOps from "./CustomerAssetOps";
@@ -72,6 +73,7 @@ export default function CustomerWorkspace({
   else if(current==="Insights"||current==="Reporting"||current==="Reports & analytics")content=<CustomerInsights {...shared}/>;
   else if(isTaskModule(current))content=<CustomerTaskBoard org={visibleOrg} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} actor={actor} canEdit={canEdit} canCreate={canCreate} canApprove={canApprove} createRequest={createRequest} focusId={focusId} onNavigate={navigate}/>;
   else if(["people","timesheets","schedule","leave","training"].includes(moduleInfo(current).type))content=<CustomerPeopleOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit} canApprove={canApprove} createRequest={createRequest}/>;
+  else if(moduleInfo(current).type==="operations")content=<DailyOperations key={current} {...shared} module={current} onAdd={safeAdd} canCreate={canCreate} canApprove={canApprove}/>;
   else if(["documents","archives","fleet","safety","bookings","operations","visitors"].includes(moduleInfo(current).type))content=<CustomerResourcesOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit}/>;
   else if(["crm","finance","donations"].includes(moduleInfo(current).type))content=<CustomerCommercialOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit}/>;
   else if(moduleInfo(current).type==="forms")content=<CustomerFormsOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} canCreate={canCreate} templates={formTemplates} setTemplates={setFormTemplates}/>;
