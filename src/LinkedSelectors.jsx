@@ -24,7 +24,7 @@ export function AssetSelect({assets,name="assetRefId",value="",onChange,label="A
  </select></label>;
 }
 export function CustomerSelect({customers,name="customerId",value="",onChange,label="Customer",required=false}){
- return <label>{label}<select name={name} {...(onChange?{value,onChange}:{defaultValue:value})} required={required}><option value="">Choose customer</option>
+ return <label>{label}<select name={name} aria-label={label} {...(onChange?{value,onChange}:{defaultValue:value})} required={required}><option value="">Choose customer</option>
  {customers.map(c=><option key={c.id} value={c.id}>{c.company||c.title}</option>)}
  </select></label>;
 }

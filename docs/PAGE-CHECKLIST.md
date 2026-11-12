@@ -20,6 +20,19 @@ Updated 12 November 2026. A checked batch item means that specific interaction i
 
 **Next module: Fleet Management**, then Inventory and CRM. Stage 3 is not complete.
 
+## Stage 4 financial batch
+
+- [x] Quotations: draft builder, calculations, CRM links, approval/sent/accepted/rejected/expired states, editing, duplication and printable previews.
+- [x] Invoices: accepted-quote conversion, draft/issued/cancelled states, partial fictional payments, outstanding balances, basic credit notes and CRM financial history.
+- [ ] Financial extensions: product/service catalogue, contact-ID registry, advanced tax rules, refunds and branding/address configuration.
+- [ ] Events and Bookings — next Stage 4 batch: calendar, linked eligible staff/equipment, CRM reservations and resource/capacity checks.
+- [ ] Appointments — scheduling views, rescheduling, outcomes, follow-up tasks and CRM history.
+- [ ] Documents — local files, stable record links and profile access.
+- [ ] Business-record Archives — archive/restore eligible records without losing their links. Existing historical collection catalogue remains distinct.
+- [ ] Forms — publish/archive lifecycle, conditional sections and associated-record responses.
+
+Stage 4 is not complete. The earlier Stage 3 Fleet/Inventory/CRM gaps above remain outstanding.
+
 ## Still unfinished against the complete specification
 
 - [ ] Dashboard: richer display preferences and record-level permissions.
@@ -37,7 +50,7 @@ Updated 12 November 2026. A checked batch item means that specific interaction i
 - [ ] Health & safety — risk scoring, reviews and linked corrective workflow.
 - [ ] Fleet — insurance, service history and driver fixtures.
 - [ ] CRM — complete linked job, appointment and document tabs.
-- [ ] Quotes/invoices — discounts, VAT rules and transition validation.
+- [ ] Quotes/invoices — advanced financial extensions noted above; the core financial document workflow is implemented.
 - [ ] Events/bookings — calendar, ticket categories, eligible staff/equipment.
 - [ ] Appointments/resources — shared resource registry and conflict prevention.
 - [ ] Documents — actual browser-local files, previews/downloads and record links.

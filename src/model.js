@@ -1,3 +1,4 @@
+import {financialTotals} from "./financialRules.js";
 export const modules = [
   { name: "Tasks & projects", description: "Collaborative board, deadlines, checklists and task progress." },
   { name: "Staff & volunteers", description: "A combined people and team directory." },
@@ -303,6 +304,7 @@ export function seedRecords(orgs) {
       status:i?"In progress":"Planned",priority:i?"High":"Normal",
       owner:i?"Sample operations team":"",dueDate:i?"2026-11-18":"2026-11-10",
       ...(extras[m]?.[i]||{}),
+      ...(m==="Quotes and invoices"?{recordType:i?"invoice":"quote",customerId:o.id+"-Customers / CRM-0",creationDate:"2026-11-01",dueDate:"2026-12-01",expiryDate:i?"":"2026-12-20",lineItems:[{description:detail,quantity:1,rate:Number(extras[m][i].amount),discount:0,vat:0}],totals:financialTotals([{description:detail,quantity:1,rate:Number(extras[m][i].amount),discount:0,vat:0}]),payments:[],credits:[],history:[]}:{ }),
       ...(["Staff & volunteers","Staff","Volunteers"].includes(m)?{employmentStatus:"Active"}:{}),
       ...(m==="Tasks & projects"?{recordType:"task",projectId:o.id+"-sample-project"}:{})
     }))),

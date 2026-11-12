@@ -11,3 +11,5 @@ createRoot(document.getElementById("root")).render(<App />);
 import "./operational-redesign.css";
 
 import "./stage3.css";
+
+import "./financial.css";

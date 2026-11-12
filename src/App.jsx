@@ -134,15 +134,16 @@ export default function App({ backend: suppliedBackend }) {
                   roleTeams={roleTeams}
                   setRoleTeams={setRoleTeams}
                   onAdd={async (r) => {
-                    const saved = await run(() =>
-                      backend.records.create(r.orgId, r),
-                    );
+                    let createdRecord;
+                    const saved = await run(async () => {
+                      createdRecord = await backend.records.create(r.orgId, r);
+                    });
                     if (saved)
                       await log(
                         "Added sample " + r.module + " record",
                         r.orgId,
                       );
-                    return saved;
+                    return saved ? createdRecord : false;
                   }}
                   onUpdate={async (orgId, id, patch) => {
                     const changed = await run(() => backend.records.update(orgId, id, patch));
