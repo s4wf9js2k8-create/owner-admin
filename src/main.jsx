@@ -7,3 +7,5 @@ import "./owner.css";
 import "./customer-connected.css";
 import "./operational-pages.css";
 createRoot(document.getElementById("root")).render(<App />);
+
+import "./operational-redesign.css";

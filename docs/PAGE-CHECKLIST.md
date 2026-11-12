@@ -1,0 +1,53 @@
+# Overhaul page checklist
+
+Updated 12 November 2026. A checked batch item means that specific interaction is implemented and covered by browser tests, not that every feature in the full specification is complete. Every page still requiring work remains listed below. Public demo data resets on refresh.
+
+## Current visible batch — implemented; verification recorded in PR checks
+
+- [x] Dashboard: operational queue layout; live clock-in/out; linked work/stock/inspection alerts; presets; add/remove, reorder and widen widgets; direct task/work-order/leave/inspection creation shortcuts.
+- [x] Staff & volunteers: profile tabs for personal details, qualifications, schedule, assigned work and derived history; linked records open their relevant pages; editable status and department.
+- [x] Rotas: staff-by-day weekly grid, mobile day agenda, week picker, minimum daily shift coverage warnings, validated shift creation and saved reassignment/location/time editing.
+- [x] Maintenance: seven delivery lanes, linked engineer and asset, checklists/labour/review, job history, direct inventory allocation and completion reflected in equipment history.
+- [x] Assets: equipment, maintenance-history and inspection-record tabs with linked record navigation and equipment controls.
+
+## Still unfinished against the complete specification
+
+- [ ] Dashboard: richer display preferences and record-level permissions.
+- [ ] Staff: evidence/documents, full immutable activity history, per-person permissions.
+- [ ] Rotas: competency-specific staffing minima, recurring patterns/templates, completed swap workflow. Minimum shift coverage is a session-only setting and does not certify qualified staffing.
+- [ ] Maintenance: enforced supervisor completion gates, attachments, recurring jobs/templates, atomic stock/job transaction. Parts updates are sequential in this single-user fictional demo.
+- [ ] Assets: purchase information, QR deep links and document library links.
+- [ ] **Next module: Inspections & checklists** — per-question outcomes, templates, required evidence and completion validation.
+- [ ] Tasks/projects — dependencies, resources, evidence and full budgets.
+- [ ] Attendance — correction requests, location and edit validation.
+- [ ] Timesheets — allocations, configurable overtime, correction approval.
+- [ ] Leave — balances and complete calendar.
+- [ ] Training — sessions, assessments, local evidence files.
+- [ ] Inventory — returns/transfers, purchase orders, suppliers and atomic movements.
+- [ ] Health & safety — risk scoring, reviews and linked corrective workflow.
+- [ ] Fleet — insurance, service history and driver fixtures.
+- [ ] CRM — complete linked job, appointment and document tabs.
+- [ ] Quotes/invoices — discounts, VAT rules and transition validation.
+- [ ] Events/bookings — calendar, ticket categories, eligible staff/equipment.
+- [ ] Appointments/resources — shared resource registry and conflict prevention.
+- [ ] Documents — actual browser-local files, previews/downloads and record links.
+- [ ] Archives — provenance, historical dates and digital references.
+- [ ] Forms — conditional sections and workflow triggers.
+- [ ] Donations — linked donors/events and reconciliation.
+- [ ] Visitor statistics — category/date aggregation and comparisons.
+- [ ] Daily operations — daily scoping and closing templates.
+- [ ] Reports — domain metrics, date filtering, custom fields.
+- [ ] Notifications — preferences, meaningful generated activities.
+- [ ] Global search — saved searches and full scope coverage.
+- [ ] Roles/company settings — complete configuration and approval/ownership scopes.
+- [ ] Owner overview/customer profiles — connected configuration/activity/usage.
+- [ ] Owner onboarding — guided creation into public fictional workspace.
+- [ ] Owner packages/modules — bespoke package preview/configuration.
+- [ ] Owner branding — logo, terminology, welcome text and document branding.
+- [ ] Owner support — assignment/resolution/response metrics.
+- [ ] Owner feature requests — linked companies/support and priority scoring.
+- [ ] Owner leads — follow-ups and conversion to onboarding draft.
+- [ ] Owner announcements/settings/activity — complete connected behavior.
+- [ ] Server management — verified diagnostics only; self-hosted production approval remains separate.
+
+See OVERHAUL-AUDIT.md for the earlier baseline inventory. This checklist supersedes its descriptions of the five redesigned interfaces. No EVLT access/modification, Vercel hosting, paid infrastructure or real customer data is involved.

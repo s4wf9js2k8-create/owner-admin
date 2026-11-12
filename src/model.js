@@ -100,7 +100,7 @@ export const sectors = {
       "Schedules",
       "Job records",
       "Reporting",
-      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Assets & equipment", "Maintenance & work orders", "Health & safety", "Vehicle / fleet management", "Training and qualifications", "Leave and availability", "Customers / CRM", "Quotes and invoices", "Documents & files",
+      "Tasks & projects", "Staff & volunteers", "Shift rotas", "Attendance & timesheets", "Assets & equipment", "Maintenance & work orders", "Inventory and stock", "Health & safety", "Vehicle / fleet management", "Training and qualifications", "Leave and availability", "Customers / CRM", "Quotes and invoices", "Documents & files",
     ],
   },
   visitor: {
@@ -280,7 +280,7 @@ const extras = {
   "Maintenance & work orders": [{asset:"EQ-101",fault:"Replace and test filter",severity:"Medium"},{asset:"EQ-102",fault:"Inspect and repair lighting",severity:"High"}],
   "Inspections & checklists": [{asset:"Workshop",result:"Pending",inspector:"Sample inspector"},{asset:"Entrance",result:"Requires attention",inspector:"Sample supervisor"}],
   "Attendance & timesheets": [{person:"Sample coordinator A",startTime:"2026-11-06T09:00",endTime:"",approval:"Pending"},{person:"Sample colleague B",startTime:"2026-11-06T13:00",endTime:"2026-11-06T16:00",approval:"Approved"}],
-  "Shift rotas": [{person:"Sample colleague B",startTime:"2026-11-10T09:00",endTime:"2026-11-10T13:00",location:"Office"},{person:"Sample coordinator A",startTime:"2026-11-11T10:00",endTime:"2026-11-11T17:00",location:"Site"}],
+  "Shift rotas": [{person:"Sample colleague B",startTime:"2026-11-10T09:00",endTime:"2026-11-10T13:00",location:"Office"},{person:"Sample coordinator A",startTime:"2026-11-13T10:00",endTime:"2026-11-13T17:00",location:"Site"}],
   "Leave and availability": [{person:"Sample coordinator A",startDate:"2026-11-12",endDate:"2026-11-13",approval:"Pending"},{person:"Sample colleague B",startDate:"2026-11-20",endDate:"2026-11-22",approval:"Approved"}],
   "Documents & files": [{folder:"Policies",version:"v1.1",documentType:"Policy"},{folder:"Technical",version:"v2",documentType:"Procedure"}],
   "Events & bookings": [{location:"Main hall",startTime:"2026-11-14T10:00",capacity:"40"},{location:"Workshop",startTime:"2026-11-21T13:00",capacity:"20"}],

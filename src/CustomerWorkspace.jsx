@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { isTaskModule, moduleInfo } from "./customerModules";
+import OperationalDashboard from "./OperationalDashboard";
 import CustomerPeopleOps from "./CustomerPeopleOps";
 import CustomerAssetOps from "./CustomerAssetOps";
 import CustomerEventsOps from "./CustomerEventsOps";
@@ -11,7 +12,7 @@ import CustomerTaskBoard from "./CustomerTaskBoard";
 import CustomerModulePage from "./CustomerModulePage";
 import CustomerCommandBar from "./CustomerCommandBar";
 import {
-  CustomerDashboard, CustomerMyWork, CustomerCalendar, CustomerNotifications,
+  CustomerMyWork, CustomerCalendar, CustomerNotifications,
   CustomerSettings, CustomerInsights
 } from "./CustomerEssentialPages";
 
@@ -24,7 +25,7 @@ export default function CustomerWorkspace({
   const [formTemplates,setFormTemplates]=useState(initialFormTemplates);
   const [prefs,setPrefs] = useState({
     home:"Dashboard",compact:false,reminders:true,
-    widgets:["staff","shifts","attention","progress"]
+    widgets:org.sector==="engineering"?["attention","staff","work","shifts"]:org.sector==="charity"?["events","shifts","staff","work"]:["staff","shifts","attention","work"]
   });
   const [createRequest,setCreateRequest]=useState(0);
   const [focus,setFocus]=useState(null);
@@ -55,6 +56,7 @@ export default function CustomerWorkspace({
     if(options.recordId)setFocus({page:target,id:options.recordId});
     else setFocus(null);
     if(options.create)setCreateRequest(v=>v+1);
+    else setCreateRequest(0);
     setPage(target);
   };
   const safeUpdate=(orgId,id,patch)=>canEdit?onUpdate(orgId,id,patch):Promise.resolve(false);
@@ -62,19 +64,19 @@ export default function CustomerWorkspace({
   const shared={org:visibleOrg,records:visibleRecords,onNavigate:navigate,onUpdate:safeUpdate,actor,canEdit};
   const focusId=focus?.page===current?focus.id:null;
   let content;
-  if(current==="Dashboard")content=<CustomerDashboard {...shared} prefs={prefs} setPrefs={setPrefs}/>;
+  if(current==="Dashboard")content=<OperationalDashboard {...shared} onAdd={safeAdd} canCreate={canCreate} prefs={prefs} setPrefs={setPrefs}/>;
   else if(current==="My work")content=<CustomerMyWork {...shared}/>;
   else if(current==="Calendar")content=<CustomerCalendar {...shared}/>;
   else if(current==="Notifications")content=<CustomerNotifications {...shared} readIds={readIds} setReadIds={setReadIds} prefs={prefs}/>;
   else if(current==="Settings")content=<CustomerSettings org={visibleOrg} records={visibleRecords} onNavigate={navigate} prefs={prefs} setPrefs={setPrefs} roles={customerRoles} setRoles={setCustomerRoles} roleModules={roleModules} setRoleModules={setRoleModules} roleTeams={roleTeams} setRoleTeams={setRoleTeams} customerRole={customerRole} canManage={(customerRoles[customerRole]||[]).includes("Manage")}/>;
   else if(current==="Insights"||current==="Reporting"||current==="Reports & analytics")content=<CustomerInsights {...shared}/>;
   else if(isTaskModule(current))content=<CustomerTaskBoard org={visibleOrg} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} actor={actor} canEdit={canEdit} canCreate={canCreate} canApprove={canApprove} createRequest={createRequest} focusId={focusId} onNavigate={navigate}/>;
-  else if(["people","timesheets","schedule","leave","training"].includes(moduleInfo(current).type))content=<CustomerPeopleOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit} canApprove={canApprove}/>;
+  else if(["people","timesheets","schedule","leave","training"].includes(moduleInfo(current).type))content=<CustomerPeopleOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit} canApprove={canApprove} createRequest={createRequest}/>;
   else if(["documents","archives","fleet","safety","bookings","operations","visitors"].includes(moduleInfo(current).type))content=<CustomerResourcesOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit}/>;
   else if(["crm","finance","donations"].includes(moduleInfo(current).type))content=<CustomerCommercialOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit}/>;
   else if(moduleInfo(current).type==="forms")content=<CustomerFormsOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} canCreate={canCreate} templates={formTemplates} setTemplates={setFormTemplates}/>;
   else if(moduleInfo(current).type==="events")content=<CustomerEventsOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} canCreate={canCreate} canEdit={canEdit}/>;
-  else if(["assets","maintenance","inspections","inventory"].includes(moduleInfo(current).type))content=<CustomerAssetOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit} canApprove={canApprove}/>;
+  else if(["assets","maintenance","inspections","inventory"].includes(moduleInfo(current).type))content=<CustomerAssetOps key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canCreate={canCreate} canEdit={canEdit} canApprove={canApprove} createRequest={createRequest}/>;
   else content=<CustomerModulePage key={current} org={visibleOrg} module={current} records={visibleRecords} onAdd={safeAdd} onUpdate={safeUpdate} onNavigate={navigate} focusId={focusId} canEdit={canEdit} canCreate={canCreate} canApprove={canApprove} canExport={canExport}/>;
   return <div className={"customer-shell "+(prefs.compact?"customer-compact":"")}>
     <div className="customer-context"><span>{org.name}</span><span>Fictional customer demo</span><span>{visibleOrg.modules.length} accessible modules</span></div>

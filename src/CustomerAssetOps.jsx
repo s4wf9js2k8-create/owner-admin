@@ -11,11 +11,16 @@ const today=()=>new Date().toISOString().slice(0,10);
 const conditions=["Good","Monitor","Needs attention","Out of service"];
 const results=["Pending","Pass","Fail","Requires attention"];
 const states=["Planned","In progress","Complete"];
+const stages=["Reported","Awaiting assignment","Scheduled","In progress","Awaiting parts","Awaiting inspection","Completed"];
+const stageOf=r=>r.status==="Complete"?"Completed":r.workStage||(r.status==="In progress"?"In progress":r.owner?"Scheduled":"Reported");
 const Severity=["Low","Medium","High","Critical"];
 const assetId=r=>r.asset||r.reference||r.title;
 const summary=(label,value)=> <div className="metric-tile"><span>{label}</span><strong>{value}</strong></div>;
-export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNavigate,focusId,canCreate=true,canEdit=true,canApprove=true}) {
+export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNavigate,focusId,canCreate=true,canEdit=true,canApprove=true,createRequest=0}) {
   const type=moduleInfo(module).type;
+  const [profileTab,setProfileTab]=useState("Equipment");
+  const [busy,setBusy]=useState(false);
+  useEffect(()=>{if(createRequest)setCreating(true);},[createRequest]);
   const [creating,setCreating]=useState(false);
   const [assignmentDate,setAssignmentDate]=useState("");
   const [selected,setSelected]=useState(null);
@@ -32,7 +37,7 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
   const filtered=rows.filter(r=>[r.title,r.detail,r.asset,r.sku,r.location,r.fault].join(" ").toLowerCase().includes(filter.toLowerCase()));
   const current=rows.find(r=>r.id===selected);
   useEffect(()=>{if(focusId)setSelected(focusId);},[focusId]);
-  const update=(r,patch)=>onUpdate(org.id,r.id,patch);
+  const update=(r,patch)=>onUpdate(org.id,r.id,{...patch,...(type==="maintenance"?{history:[...(r.history||[]),{at:new Date().toISOString(),text:patch.status?"Status changed to "+patch.status:patch.review?"Supervisor review: "+patch.review:patch.workLogs?"Labour recorded":patch.owner!==undefined?"Engineer assignment updated":"Work details updated"}]}:{})});
   const create=async e=>{
     e.preventDefault();setError("");
     const raw=Object.fromEntries(new FormData(e.currentTarget));
@@ -56,7 +61,7 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
     setError("");
     const workModule=firstModuleOfType(org,"maintenance");
     if(!workModule){setError("Enable Maintenance & work orders first.");return;}
-    const relatedAsset=findAsset(assets,source.assetRefId||source.asset);
+    const relatedAsset=kind==="asset"?source:findAsset(assets,source.assetRefId||source.asset);
     if(kind==="inspection" && workOrders.some(w=>w.sourceInspectionId===source.id&&w.status!=="Complete")){setError("An open corrective work order already exists for this inspection.");return;}
     const title=kind==="inspection"?"Corrective action: "+source.title:"Service asset: "+source.title;
     const saved=await onAdd({orgId:org.id,module:workModule,title,detail:kind==="inspection"?"Created from failed inspection: "+source.title:"Maintenance requested from asset profile.",
@@ -78,8 +83,8 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
   </div>;
   const maintenanceView=()=> <div><div className="customer-page-intro"><div><span className="eyebrow">WORK ORDER DELIVERY</span><h2>Maintenance & work orders</h2><p>Track faults, allocated engineers, job checklists, time and parts.</p></div>{canCreate&&<button className="action-primary" onClick={()=>setCreating(true)}><Plus size={16}/> Raise work order</button>}</div>
     <div className="customer-metrics">{summary("Open jobs",rows.filter(r=>r.status!=="Complete").length)}{summary("Completed",rows.filter(r=>r.status==="Complete").length)}{summary("Critical",rows.filter(r=>r.severity==="Critical").length)}</div>
-    <div className="job-board">{states.map(status=><section key={status}><h3>{status} <span>{filtered.filter(r=>r.status===status).length}</span></h3>
-      {filtered.filter(r=>r.status===status).map(r=><article key={r.id} className="job-board-card"><small>{r.asset||"No asset"} · {r.severity||"Medium"} priority</small><h4>{r.title}</h4><p>{r.fault||r.detail}</p><div><span>{r.owner||"Unassigned"}</span><span>{fmtDate(r.dueDate)}</span></div><button onClick={()=>setSelected(r.id)}>Manage work order</button></article>)}</section>)}</div>
+    <div className="job-board">{stages.map(status=><section key={status}><h3>{status} <span>{filtered.filter(r=>stageOf(r)===status).length}</span></h3>
+      {filtered.filter(r=>stageOf(r)===status).map(r=><article key={r.id} className="job-board-card"><small>{r.asset||"No asset"} · {r.severity||"Medium"} priority</small><h4>{r.title}</h4><p>{r.fault||r.detail}</p><div><span>{r.owner||"Unassigned"}</span><span>{fmtDate(r.dueDate)}</span></div><button onClick={()=>setSelected(r.id)}>Manage work order</button></article>)}</section>)}</div>
   </div>;
   const inspectionView=()=> <div><div className="customer-page-intro"><div><span className="eyebrow">INSPECTION CONTROL</span><h2>Inspections & checklists</h2><p>Scheduled checks, results and corrective maintenance actions.</p></div>{canCreate&&<button className="action-primary" onClick={()=>setCreating(true)}><Plus size={16}/> New inspection</button>}</div>
     <div className="customer-metrics">{summary("Inspections",rows.length)}{summary("Passed",rows.filter(r=>r.result==="Pass").length)}{summary("Attention required",rows.filter(r=>["Fail","Requires attention"].includes(r.result)).length)}</div>
@@ -96,14 +101,15 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
   </div>;
   };
   const details=r=><div className="asset-detail-content"><h3>{r.title}</h3><p>{r.detail||r.fault}</p>
-    {type==="assets"&&<><div className="detail-data-grid"><div><small>Asset ID</small><strong>{assetId(r)}</strong></div><div><small>Location</small><strong>{r.location||"—"}</strong></div><div><small>Custodian</small><strong>{r.custodian||"Not assigned"}</strong></div><div><small>Warranty until</small><strong>{fmtDate(r.warrantyUntil)}</strong></div></div>
+    {type==="assets"&&<><div className="profile-tabs" role="tablist" aria-label="Equipment profile sections">{["Equipment","Maintenance history","Inspection records"].map(t=><button role="tab" aria-selected={profileTab===t} key={t} onClick={()=>setProfileTab(t)}>{t}</button>)}</div>{profileTab!=="Equipment"?<section role="tabpanel" aria-label={profileTab}><h3>{profileTab}</h3>{related(r).filter(x=>moduleInfo(x.module).type===(profileTab==="Maintenance history"?"maintenance":"inspections")).map(x=><button className="profile-linked-row" key={x.id} onClick={()=>onNavigate(x.module,{recordId:x.id})}><span><strong>{x.title}</strong><small>{x.owner||x.inspector||"Unassigned"} · {fmtDate(x.dueDate)}{x.completedAt?" · Completed "+fmtDate(x.completedAt):""}</small></span><Status>{x.result||x.status}</Status><span>→</span></button>)}{!related(r).some(x=>moduleInfo(x.module).type===(profileTab==="Maintenance history"?"maintenance":"inspections"))&&<Empty>No linked records yet.</Empty>}</section>:<><div className="detail-data-grid"><div><small>Asset ID</small><strong>{assetId(r)}</strong></div><div><small>Location</small><strong>{r.location||"—"}</strong></div><div><small>Custodian</small><strong>{r.custodian||"Not assigned"}</strong></div><div><small>Warranty until</small><strong>{fmtDate(r.warrantyUntil)}</strong></div></div>
       <label>Condition<select aria-label="Asset condition" disabled={!canEdit} value={r.condition||"Good"} onChange={e=>update(r,{condition:e.target.value})}>{conditions.map(x=><option key={x}>{x}</option>)}</select></label>
       {canEdit&&<div className="form-pair"><label>Location<input aria-label="Asset location" value={r.location||""} onChange={e=>update(r,{location:e.target.value})}/></label><StaffSelect people={staff} label="Asset custodian" name="custodian" value={r.custodian||""} onChange={e=>update(r,{custodian:e.target.value,custodianId:staff.find(p=>p.title===e.target.value)?.id||""})}/></div>}
       <h3>Related work & inspections</h3>{related(r).map(x=><div className="ticket" key={x.id}><span>{x.title} · {x.module}</span><button onClick={()=>onNavigate(x.module,{recordId:x.id})}>Open</button></div>)}
       {canCreate&&firstModuleOfType(org,"maintenance")&&<button className="action-primary" onClick={()=>startWorkOrder(r,"asset")}><Wrench size={15}/> Create work order for this asset</button>}
-      <p className="module-disclaimer">Asset reference: {r.id}. This can be used to connect demo records; external camera QR scanning is not yet implemented.</p></>}
+      <p className="module-disclaimer">Asset reference: {r.id}. This can be used to connect demo records; external camera QR scanning is not yet implemented.</p></>}</>}
     {type==="maintenance"&&<><div className="detail-data-grid"><div><small>Asset</small><strong>{r.asset||"Not linked"}</strong></div><div><small>Severity</small><strong>{r.severity||"Medium"}</strong></div><div><small>Engineer</small><strong>{r.owner||"Unassigned"}</strong></div><div><small>Due</small><strong>{fmtDate(r.dueDate)}</strong></div></div>
-      <label>Job status<select aria-label="Work order status" disabled={!canEdit} value={r.status||"Planned"} onChange={e=>update(r,{status:e.target.value})}>{states.map(x=><option key={x}>{x}</option>)}</select></label>
+      <label>Job status<select aria-label="Work order status" disabled={!canEdit} value={r.status||"Planned"} onChange={e=>update(r,{status:e.target.value,completedAt:e.target.value==="Complete"?new Date().toISOString():""})}>{states.map(x=><option key={x}>{x}</option>)}</select></label>
+      <label>Delivery stage<select aria-label="Delivery stage" disabled={!canEdit} value={stageOf(r)} onChange={e=>update(r,{workStage:e.target.value,status:e.target.value==="Completed"?"Complete":["In progress","Awaiting parts","Awaiting inspection"].includes(e.target.value)?"In progress":"Planned",completedAt:e.target.value==="Completed"?new Date().toISOString():""})}>{stages.map(stage=><option key={stage}>{stage}</option>)}</select></label>
       <QualifiedStaffSelect records={records} orgId={org.id} kind="maintenance" date={r.dueDate} excludedRecordId={r.id} name="engineer" label="Assigned engineer" disabled={!canEdit} value={r.owner||""} onChange={e=>{const name=e.target.value;const result=validateAssignee(records,org.id,name,{kind:"maintenance",date:r.dueDate,excludedRecordId:r.id});if(result.eligible)update(r,{owner:name,engineerId:staff.find(p=>p.title===name)?.id||""});}}/>
       {r.assetRefId&&<button onClick={()=>{const a=assets.find(a=>a.id===r.assetRefId);if(a)onNavigate(a.module,{recordId:a.id});}}>Open linked asset</button>}
       {r.sourceInspectionId&&<button onClick={()=>{const i=inspections.find(i=>i.id===r.sourceInspectionId);if(i)onNavigate(i.module,{recordId:i.id});}}>Open source inspection</button>}
@@ -112,6 +118,9 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
       <h3>Labour & parts</h3><p>{(r.workLogs||[]).reduce((sum,log)=>sum+Number(log.minutes||0),0)} minutes recorded · {(r.partsUsed||[]).length} stock allocations</p>
       {(r.partsUsed||[]).map((part,i)=><p className="task-note" key={i}>{part.name}: {part.qty} units</p>)}
       {canEdit&&<form onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);const mins=Number(f.get("minutes"));if(mins>0&&mins<=1440){update(r,{workLogs:[...(r.workLogs||[]),{minutes:mins,note:String(f.get("note")||"").trim()}]});e.currentTarget.reset();}}}><div className="form-pair"><label>Labour minutes<input type="number" min="1" max="1440" name="minutes" required/></label><label>Work notes<input name="note" maxLength={100}/></label></div><button>Log labour</button></form>}
+      {canEdit&&<form onSubmit={async e=>{e.preventDefault();if(busy)return;const form=e.currentTarget,f=new FormData(form),stock=records.find(x=>x.id===f.get("stockId")&&x.orgId===org.id&&moduleInfo(x.module).type==="inventory"),qty=Number(f.get("qty"));if(!stock||!Number.isInteger(qty)||qty<1||qty>Number(stock.quantity)){setError("Select a stock item and a positive quantity within available stock.");return;}setBusy(true);const ok=await onUpdate(org.id,stock.id,{quantity:String(Number(stock.quantity)-qty),movements:[...(stock.movements||[]),{mode:"Allocate",qty,orderId:r.id,at:new Date().toLocaleString("en-GB")}]});if(ok){await update(r,{partsUsed:[...(r.partsUsed||[]),{stockId:stock.id,name:stock.title,sku:stock.sku,qty}]});setError("");form.reset();}setBusy(false);}}><h3>Issue parts to this job</h3><label>Inventory part<select name="stockId" required><option value="">Select available part</option>{records.filter(x=>x.orgId===org.id&&moduleInfo(x.module).type==="inventory").map(x=><option key={x.id} value={x.id} disabled={Number(x.quantity)<=0}>{x.title} · {x.quantity} available</option>)}</select></label><label>Units to issue<input type="number" name="qty" min="1" step="1" required/></label><button disabled={busy}>Allocate part</button></form>}
+      {error&&<p role="alert">{error}</p>}
+      <h3>Work history</h3>{(r.history||[]).length?(r.history||[]).map((h,i)=><p className="task-note" key={i}>{new Date(h.at).toLocaleString("en-GB")} · {h.text}</p>):<p>No changes recorded in this demo session.</p>}
       <h3>Supervisor review</h3><label>Review status<select disabled={!canApprove} value={r.review||"Pending"} onChange={e=>update(r,{review:e.target.value})}>{["Pending","Approved","Requires changes"].map(x=><option key={x}>{x}</option>)}</select></label></>}
     {type==="inspections"&&<><QualifiedStaffSelect records={records} orgId={org.id} kind="inspections" date={r.dueDate} excludedRecordId={r.id} label="Inspector" name="inspector" value={r.inspector||""} disabled={!canEdit} onChange={e=>{const name=e.target.value;const result=validateAssignee(records,org.id,name,{kind:"inspections",date:r.dueDate,excludedRecordId:r.id});if(result.eligible)update(r,{inspector:name,inspectorId:staff.find(p=>p.title===name)?.id||""});}}/><label>Inspection result<select aria-label="Inspection result" disabled={!canEdit} value={r.result||"Pending"} onChange={e=>update(r,{result:e.target.value,status:e.target.value==="Pass"?"Complete":"In progress"})}>{results.map(x=><option key={x}>{x}</option>)}</select></label>
       <h3>Inspection steps</h3>{(r.checklist||[]).map((item,i)=><label className="task-check" key={i}><input type="checkbox" disabled={!canEdit} checked={Boolean(item.done)} onChange={e=>update(r,{checklist:r.checklist.map((x,j)=>i===j?{...x,done:e.target.checked}:x)})}/>{item.text}</label>)}

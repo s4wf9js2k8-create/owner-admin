@@ -136,7 +136,7 @@ export function CustomerSettings({org,records,prefs,setPrefs,roles,setRoles,role
   const permitted=roleModules[role]||[];
   const selectedAll=permitted.includes("*");
   const teams=[...new Set(records.filter(r=>["Staff & volunteers","Staff","Volunteers"].includes(r.module)).map(r=>r.team).filter(Boolean))];
-  const availableWidgets={staff:"Staff on site",shifts:"Upcoming shifts",attention:"Work needing attention",progress:"Completion progress"};
+  const availableWidgets={staff:"Staff on site",shifts:"Upcoming shifts",attention:"Work needing attention",work:"My assigned work",events:"Upcoming events"};
   const toggleModule=(module,enabled)=>{
     const current=selectedAll?[...org.modules]:permitted.filter(x=>x!=="*");
     setRoleModules(old=>({...old,[role]:enabled?[...new Set([...current,module])]:current.filter(x=>x!==module)}));
