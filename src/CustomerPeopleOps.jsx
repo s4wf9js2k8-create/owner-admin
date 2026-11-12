@@ -3,6 +3,7 @@ import { Empty, Modal, Status } from "./components";
 import { Clock3, Plus, ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
 import { moduleInfo, isTaskModule } from "./customerModules";
 import {QualifiedStaffSelect} from "./LinkedSelectors";
+import {weeklyHours,timesheetCsv} from "./timeReporting";
 import {validateAssignee} from "./staffEligibility";
 
 const day=v=>v?.slice(0,10)||"";
@@ -48,7 +49,7 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
       const result=validateAssignee(records,org.id,values.person,{kind:"schedule",date:values.startTime,startTime:values.startTime,endTime:values.endTime});
       if(!values.person||!result.eligible){setError("Shift assignment rejected: "+(result.reasons||["Select a team member"]).join("; "));return;}
     }
-    const saved=await onAdd({orgId:org.id,module,title,detail:String(values.detail||"").trim(),status:"Planned",
+    const saved=await onAdd({orgId:org.id,module,title,detail:String(values.detail||"").trim(),status:"Planned",employmentStatus:type==="people"?"Active":undefined,
       person:String(values.person||"").trim(),personId:people.find(p=>p.title===values.person)?.id||"",role:String(values.role||"").trim(),team:String(values.team||"").trim(),
       contact:String(values.contact||"").trim(),startTime:values.startTime||"",endTime:values.endTime||"",
       startDate:values.startDate||"",endDate:values.endDate||"",location:values.location||"",
@@ -79,10 +80,8 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
   const timesheetPage=()=>{
     const open=list.filter(r=>r.startTime&&!r.endTime);
     const approved=list.filter(r=>r.approval==="Approved");
-    const totals=[...new Set(list.map(r=>r.person).filter(Boolean))].map(person=>{
-      const sessions=list.filter(r=>r.person===person),mins=sessions.reduce((sum,r)=>sum+minutes(r.startTime,r.endTime),0);
-      return {person,sessions:sessions.length,hours:(mins/60).toFixed(2),pending:sessions.filter(r=>r.approval==="Pending").length};
-    });
+    const totals=weeklyHours(list,week);
+    const exportWeek=()=>{const url=URL.createObjectURL(new Blob([timesheetCsv(totals)],{type:"text/csv;charset=utf-8"}));const link=document.createElement("a");link.href=url;link.download="timesheets-"+week+".csv";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
     return <div><SectionHeading eyebrow="TIME & ATTENDANCE" title="Attendance & timesheets" description="Open clock-ins, reviewed sessions, corrections and sample hours.">
       {canCreate&&<button className="action-primary" onClick={()=>setCreating(true)}><Plus size={16}/> Manual session</button>}</SectionHeading>
       <div className="customer-metrics"><Measure title="Open clock-ins" value={open.length} desc="No recorded clock-out"/><Measure title="Completed sessions" value={list.filter(r=>r.startTime&&r.endTime).length} desc="Sample time entries"/><Measure title="Approved" value={approved.length} desc="Manager-reviewed sessions"/></div>
@@ -91,7 +90,11 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
       <h3 className="section-title">Open clock-ins</h3><div className="people-time-list">
         {open.length?open.map(r=><article key={r.id}><div><strong>{r.person||r.title}</strong><small>Started {tableDate(r.startTime)}</small></div>{canEdit&&<button onClick={()=>update(r,{endTime:new Date().toISOString().slice(0,16),status:"Complete"})}>Clock out</button>}</article>):<Empty>All sample sessions have a clock-out.</Empty>}
       </div>
-      <h3 className="section-title">Weekly review by person</h3><div className="table-wrap"><table><thead><tr><th>Person</th><th>Sessions</th><th>Recorded hours</th><th>Pending review</th></tr></thead><tbody>{totals.map(t=><tr key={t.person}><th>{t.person}</th><td>{t.sessions}</td><td>{t.hours} h</td><td>{t.pending}</td></tr>)}</tbody></table></div>
+      <h3 className="section-title">Weekly review by person</h3>
+      <div className="rota-header"><button onClick={()=>setWeek(nextDate(week,-7))} aria-label="Previous timesheet week"><ArrowLeft size={16}/></button><strong>Week beginning {date(week)}</strong><button onClick={()=>setWeek(nextDate(week,7))} aria-label="Next timesheet week"><ArrowRight size={16}/></button><button onClick={exportWeek}>Export weekly CSV</button></div>
+      <p>Completed sessions only · recorded breaks deducted · overnight sessions split across days · overtime shown above 40 hours (illustrative).</p>
+      <div className="table-wrap"><table><thead><tr><th>Person</th>{["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=><th key={d}>{d}</th>)}<th>Total</th><th>Overtime</th><th>Review</th></tr></thead><tbody>{totals.map(t=><tr key={t.id}><th>{t.person}</th>{t.days.map((h,i)=><td key={i}>{h.toFixed(2)}</td>)}<td>{t.total.toFixed(2)} h</td><td>{t.overtime.toFixed(2)} h</td><td>{t.pending?`${t.pending} pending`:"Approved"}</td></tr>)}</tbody></table></div>
+      {!totals.length&&<Empty>No completed sessions in this week. Use the week controls to review historical entries.</Empty>}
       <h3 className="section-title">Sessions requiring review</h3><div className="people-time-list">{filtered.map(r=><article key={r.id}><div><strong>{r.person||r.title}</strong><small>{tableDate(r.startTime)} – {tableDate(r.endTime)} · {(minutes(r.startTime,r.endTime)/60).toFixed(2)}h · {r.approval||"Pending"}</small></div>
         <div className="quick-actions">{canApprove&&r.endTime&&r.approval!=="Approved"&&<button onClick={()=>approve(r,"Approved")}>Approve</button>}<button onClick={()=>setSelected(r.id)}>Review / correct</button></div></article>)}</div>
       <p className="module-disclaimer">Clock-in actions and approvals are temporary demonstration records. They are not verified workplace attendance or payroll.</p>
@@ -128,21 +131,28 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
   };
   const trainingPage=()=> {
     const missing=people.filter(p=>!list.some(r=>r.person===p.title));
-    const expiring=list.filter(r=>r.expiry&&r.expiry<=nextDate(today(),45));
+    const expiring=list.filter(r=>r.expiry&&r.expiry>=today()&&r.expiry<=nextDate(today(),45));
     return <div><SectionHeading eyebrow="COMPETENCY MANAGEMENT" title="Training & qualifications" description="Team certificates, renewal dates and competency coverage.">
       {canCreate&&<button className="action-primary" onClick={()=>setCreating(true)}><Plus size={16}/> Record qualification</button>}</SectionHeading>
       <div className="customer-metrics"><Measure title="Qualifications" value={list.length} desc="Example records"/><Measure title="Expiring soon" value={expiring.length} desc="Within 45 days"/><Measure title="No qualifications" value={missing.length} desc="Profiles without a linked record"/></div>
-      <div className="table-wrap"><table><thead><tr><th>Staff member</th><th>Qualification</th><th>Renewal date</th><th>Progress</th></tr></thead><tbody>{filtered.map(r=><tr key={r.id}><th>{r.person||r.title}</th><td>{r.qualification||r.detail}</td><td>{date(r.expiry)}</td><td><button onClick={()=>setSelected(r.id)}>Open</button></td></tr>)}</tbody></table></div>
+      <label className="people-search">Find qualification or person<input aria-label="Search competency matrix" value={query} onChange={e=>setQuery(e.target.value)}/></label>
+      <div className="table-wrap competency-matrix"><table><caption>Competency matrix · select a certificate to review its approval and expiry</caption><thead><tr><th scope="col">Staff member</th>{[...new Set(list.map(r=>r.qualification||r.title))].map(q=><th scope="col" key={q}>{q}</th>)}</tr></thead><tbody>{people.filter(p=>!query||p.title.toLowerCase().includes(query.toLowerCase())||list.some(r=>(r.personId===p.id||!r.personId&&r.person===p.title)&&(r.qualification||r.title).toLowerCase().includes(query.toLowerCase()))).map(p=><tr key={p.id}><th scope="row">{p.title}<small className="cell-subtitle">{p.team||"Department not recorded"}</small></th>{[...new Set(list.map(r=>r.qualification||r.title))].map(q=>{
+        const certificates=list.filter(r=>(r.personId===p.id||!r.personId&&r.person===p.title)&&(r.qualification||r.title)===q);
+        const certificate=certificates.find(r=>r.approval==="Approved"&&(r.noExpiry||r.expiry>=today()))||certificates[0];
+        const state=!certificate?"Missing":certificate.approval!=="Approved"?"Awaiting approval":!certificate.expiry&&!certificate.noExpiry?"Expiry not recorded":certificate.expiry<today()?"Expired":certificate.expiry<=nextDate(today(),45)?"Expiring soon":"Valid";
+        return <td key={q}>{certificate?<button aria-label={p.title+" · "+q+" · "+state} onClick={()=>setSelected(certificate.id)}><Status>{state}</Status><small className="cell-subtitle">{certificate.noExpiry?"No expiry":date(certificate.expiry)}</small></button>:<span>Missing</span>}</td>;
+      })}</tr>)}</tbody></table></div>
+      {!list.length&&<Empty>Record qualifications to build the competency matrix.</Empty>}
       </div>;
   };
   const selectedDetails=r=><div className="people-details"><h3>{r.title}</h3><p>{r.detail}</p>
     {type==="people"?<><label>Role<input disabled={!canEdit} value={r.role||""} onChange={e=>update(r,{role:e.target.value})}/></label>
       <label>Team<input disabled={!canEdit} value={r.team||""} onChange={e=>update(r,{team:e.target.value})}/></label>
       <label>Sample contact<input disabled={!canEdit} value={r.contact||""} onChange={e=>update(r,{contact:e.target.value})}/></label>
-      <h3>Related work</h3>{records.filter(x=>x.orgId===org.id&&isTaskModule(x.module)&&x.owner===r.title).map(t=><div key={t.id} className="ticket">{t.title}<button onClick={()=>onNavigate("Tasks & projects",{recordId:t.id})}>Open task</button></div>)}
+      <label>Employment status<select disabled={!canEdit} value={r.employmentStatus||""} onChange={e=>update(r,{employmentStatus:e.target.value})}><option value="">Not recorded</option>{["Active","Suspended","Left"].map(x=><option key={x}>{x}</option>)}</select></label><h3>Related work</h3>{records.filter(x=>x.orgId===org.id&&isTaskModule(x.module)&&x.owner===r.title).map(t=><div key={t.id} className="ticket">{t.title}<button onClick={()=>onNavigate("Tasks & projects",{recordId:t.id})}>Open task</button></div>)}
       <h3>Qualifications</h3>{training.filter(t=>t.person===r.title).map(t=><p key={t.id}>{t.qualification||t.title} · {date(t.expiry)}</p>)}</>:
       <>{["person","startTime","endTime","startDate","endDate","location","qualification","expiry"].filter(key=>r[key]!==undefined).map(key=><label key={key}>{key}<input disabled={!canEdit} type={key==="startTime"||key==="endTime"?"datetime-local":key==="startDate"||key==="endDate"||key==="expiry"?"date":"text"} value={r[key]||""} onChange={e=>update(r,{[key]:e.target.value})}/></label>)}
-        <label>Approval<select disabled={!canApprove} value={r.approval||"Pending"} onChange={e=>approve(r,e.target.value)}>{["Pending","Approved","Rejected"].map(x=><option key={x}>{x}</option>)}</select></label>
+        <label>Approval<select disabled={!canApprove} value={r.approval||"Pending"} onChange={e=>approve(r,e.target.value)}>{(type==="leave"?["Pending","Approved","Rejected","Cancelled"]:["Pending","Approved","Rejected"]).map(x=><option key={x}>{x}</option>)}</select></label>
         {type==="schedule"&&<div className="quick-actions">{canEdit&&<button onClick={()=>update(r,{swapRequested:true})}>Request shift swap</button>}{canApprove&&r.swapRequested&&<button onClick={()=>update(r,{swapRequested:false})}>Resolve swap request</button>}</div>}</>}
     <p className="module-disclaimer">This is fictional demo information, not a live staff or payroll record.</p></div>;
   const form=()=> <Modal title={type==="people"?"Add sample person":type==="schedule"?"Add sample shift":type==="timesheets"?"Add manual time entry":type==="leave"?"Request sample leave":"Record sample training"} onClose={()=>setCreating(false)}><form className="customer-form" onSubmit={created}>

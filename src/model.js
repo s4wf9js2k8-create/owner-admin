@@ -303,6 +303,7 @@ export function seedRecords(orgs) {
       status:i?"In progress":"Planned",priority:i?"High":"Normal",
       owner:i?"Sample operations team":"",dueDate:i?"2026-11-18":"2026-11-10",
       ...(extras[m]?.[i]||{}),
+      ...(["Staff & volunteers","Staff","Volunteers"].includes(m)?{employmentStatus:"Active"}:{}),
       ...(m==="Tasks & projects"?{recordType:"task",projectId:o.id+"-sample-project"}:{})
     }))),
     ...(o.modules.includes("Tasks & projects")?[{

@@ -26,3 +26,13 @@ test("inspection assignment includes inspection-trained staff",async({page})=>{
  await page.getByRole("button",{name:"New inspection"}).click();
  await expect(page.getByRole("dialog").getByLabel("Inspector").locator("option").filter({hasText:"Sample colleague B"})).toHaveCount(1);
 });
+test("competency matrix updates assignment eligibility when expiry changes",async({page})=>{
+ await openEngineering(page);await navigate(page,"Training and qualifications");
+ await expect(page.getByRole("table")).toContainText("Maintenance engineering");
+ await page.getByRole("button",{name:"Sample coordinator A · Maintenance engineering · Valid",exact:true}).click();
+ await page.getByRole("dialog").getByLabel("expiry",{exact:true}).fill("2020-01-01");
+ await page.getByRole("dialog").getByRole("button",{name:"Close dialog"}).click();
+ await navigate(page,"Maintenance & work orders");
+ await page.getByRole("button",{name:"Raise work order"}).click();
+ await expect(page.getByRole("dialog").getByLabel("Assigned engineer").locator("option").filter({hasText:"Sample coordinator A"})).toHaveCount(0);
+});

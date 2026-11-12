@@ -60,3 +60,29 @@ test("pending or rejected qualifications cannot unlock maintenance assignment",(
  assert.equal(validateAssignee(pending,orgId,"Alex Engineer",criteria).eligible,false);
  assert.equal(validateAssignee(rejected,orgId,"Alex Engineer",criteria).eligible,false);
 });
+
+test("missing employment and certificate validity never imply eligibility",()=>{
+ assert.equal(availabilityAssessment({...personA,employmentStatus:undefined},records,orgId,criteria).eligible,false);
+ const missingExpiry=records.map(r=>r.id==="qa"?{...r,expiry:""}:r);
+ assert.equal(validateAssignee(missingExpiry,orgId,"Alex Engineer",criteria).eligible,false);
+ assert.equal(validateAssignee(missingExpiry.map(r=>r.id==="qa"?{...r,noExpiry:true}:r),orgId,"Alex Engineer",criteria).eligible,true);
+});
+test("stable engineer IDs detect conflicts after a display name changes",()=>{
+ const job={id:"job",orgId,module:"Maintenance & work orders",engineerId:"a",owner:"Old name",startTime:"2027-02-14T09:00",endTime:"2027-02-14T13:00",status:"In progress"};
+ const next={...criteria,startTime:"2027-02-14T12:00",endTime:"2027-02-14T14:00"};
+ assert.equal(validateAssignee([...records,job],orgId,"Alex Engineer",next).eligible,false);
+ assert.equal(validateAssignee([...records,{...job,status:"Complete"}],orgId,"Alex Engineer",next).eligible,true);
+});
+test("cancelled leave immediately restores eligibility",()=>{
+ const leave={id:"leave",orgId,module:"Leave and availability",personId:"a",startDate:"2027-02-14",endDate:"2027-02-14",approval:"Approved"};
+ assert.equal(validateAssignee([...records,leave],orgId,"Alex Engineer",criteria).eligible,false);
+ assert.equal(validateAssignee([...records,{...leave,approval:"Cancelled"}],orgId,"Alex Engineer",criteria).eligible,true);
+});
+test("department, future certificate and invalid assignment windows are checked",()=>{
+ assert.equal(validateAssignee(records,orgId,"Alex Engineer",{...criteria,department:"Engineering"}).eligible,false);
+ assert.equal(validateAssignee(records.map(r=>r.id==="qa"?{...r,validFrom:"2027-03-01"}:r),orgId,"Alex Engineer",criteria).eligible,false);
+ assert.equal(validateAssignee(records,orgId,"Alex Engineer",{...criteria,startTime:"2027-02-14T14:00",endTime:"2027-02-14T12:00"}).eligible,false);
+});
+test("engineering alone does not grant inspection competence",()=>{
+ assert.equal(validateAssignee(records,orgId,"Alex Engineer",{...criteria,kind:"inspections"}).eligible,false);
+});
