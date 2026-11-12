@@ -32,3 +32,9 @@ test('rota creates an eligible linked shift, then edits its location',async({pag
  await page.locator('.rota-assignment').filter({hasText:'Workshop'}).first().click();await page.getByLabel('Shift location').fill('Service bay');await page.getByRole('button',{name:'Save shift changes'}).click();await expect(page.locator('.rota-assignment').filter({hasText:'Service bay'})).toHaveCount(1);
  await page.getByLabel('Minimum shifts per day').fill('2');await expect(page.locator('.rota-coverage')).toContainText('1 unfilled');
 });
+test('dashboard clock actions update on-site people and attendance records',async({page})=>{
+ await open(page);await page.getByLabel('Sample team member',{exact:true}).selectOption('Sample colleague B');await page.getByRole('button',{name:'Clock in',exact:true}).click();
+ const site=page.getByRole('region',{name:'Staff on site',exact:true});await expect(site).toContainText('Sample colleague B');
+ await page.getByRole('button',{name:'Clock out',exact:true}).click();await expect(site).not.toContainText('Sample colleague B');
+ await go(page,'Attendance & timesheets');await expect(page.locator('.people-time-list').last()).toContainText('Sample colleague B');
+});
