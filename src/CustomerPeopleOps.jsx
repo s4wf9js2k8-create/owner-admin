@@ -3,6 +3,8 @@ import { Empty, Modal, Status } from "./components";
 import { Clock3, Plus, ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
 import { moduleInfo, isTaskModule } from "./customerModules";
 import {QualifiedStaffSelect} from "./LinkedSelectors";
+import RotaPlanner from "./RotaPlanner";
+import StaffProfile from "./StaffProfile";
 import {weeklyHours,timesheetCsv} from "./timeReporting";
 import {validateAssignee} from "./staffEligibility";
 
@@ -13,14 +15,14 @@ const minutes=(start,end)=>start&&end?Math.max(0,Math.round((new Date(end)-new D
 const weekStart=v=>{const d=new Date(day(v)+"T12:00:00");d.setDate(d.getDate()-(d.getDay()+6)%7);return d.toISOString().slice(0,10);};
 const weekDays=v=>Array.from({length:7},(_,i)=>{const d=new Date(v+"T12:00:00");d.setDate(d.getDate()+i);return d.toISOString().slice(0,10);});
 const shiftEndValid=(start,end)=>!start||!end||end>start;
-const startsWithin=(d,start,end)=>d>=day(start)&&d<=day(end);
 const tableDate=v=>v?String(v).replace("T"," "):"Open";
 const peopleType=name=>moduleInfo(name).type==="people";
 const nextDate=(base,increment)=>{const d=new Date(base+"T12:00:00");d.setDate(d.getDate()+increment);return d.toISOString().slice(0,10);};
 function SectionHeading({eyebrow,title,description,children}){return <div className="customer-page-intro"><div><span className="eyebrow">{eyebrow}</span><h2>{title}</h2><p>{description}</p></div>{children}</div>;}
 function Measure({title,value,desc}){return <div className="metric-tile"><span>{title}</span><strong>{value}</strong><small>{desc}</small></div>;}
-export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onNavigate,focusId,canCreate=true,canEdit=true,canApprove=true}) {
+export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onNavigate,focusId,canCreate=true,canEdit=true,canApprove=true,createRequest=0}) {
   const type=moduleInfo(module).type;
+  useEffect(()=>{if(createRequest)setCreating(true);},[createRequest]);
   const [selected,setSelected]=useState(null),[creating,setCreating]=useState(false);
   const [query,setQuery]=useState(""),[error,setError]=useState("");
   const [week,setWeek]=useState(weekStart(today()));
@@ -29,7 +31,6 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
   const list=records.filter(r=>r.orgId===org.id&&r.module===module);
   const people=records.filter(r=>r.orgId===org.id&&peopleType(r.module));
   const rotas=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="schedule");
-  const leaves=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="leave");
   const timesheets=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="timesheets");
   const training=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="training");
   const actorNames=[...new Set([...people.map(p=>p.title),...list.map(r=>r.person)].filter(Boolean))].sort();
@@ -91,7 +92,7 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
         {open.length?open.map(r=><article key={r.id}><div><strong>{r.person||r.title}</strong><small>Started {tableDate(r.startTime)}</small></div>{canEdit&&<button onClick={()=>update(r,{endTime:new Date().toISOString().slice(0,16),status:"Complete"})}>Clock out</button>}</article>):<Empty>All sample sessions have a clock-out.</Empty>}
       </div>
       <h3 className="section-title">Weekly review by person</h3>
-      <div className="rota-header"><button onClick={()=>setWeek(nextDate(week,-7))} aria-label="Previous timesheet week"><ArrowLeft size={16}/></button><strong>Week beginning {date(week)}</strong><button onClick={()=>setWeek(nextDate(week,7))} aria-label="Next timesheet week"><ArrowRight size={16}/></button><button onClick={exportWeek}>Export weekly CSV</button></div>
+      <div className="rota-header"><button onClick={()=>setWeek(nextDate(week,-7))} aria-label="Previous timesheet week"><ArrowLeft size={16}/></button><strong>Week beginning {date(week)}</strong><button onClick={()=>setWeek(weekStart(today()))}>This week</button><button onClick={()=>setWeek(nextDate(week,7))} aria-label="Next timesheet week"><ArrowRight size={16}/></button><button onClick={exportWeek}>Export weekly CSV</button></div>
       <p>Completed sessions only · recorded breaks deducted · overnight sessions split across days · overtime shown above 40 hours (illustrative).</p>
       <div className="table-wrap"><table><thead><tr><th>Person</th>{["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=><th key={d}>{d}</th>)}<th>Total</th><th>Overtime</th><th>Review</th></tr></thead><tbody>{totals.map(t=><tr key={t.id}><th>{t.person}</th>{t.days.map((h,i)=><td key={i}>{h.toFixed(2)}</td>)}<td>{t.total.toFixed(2)} h</td><td>{t.overtime.toFixed(2)} h</td><td>{t.pending?`${t.pending} pending`:"Approved"}</td></tr>)}</tbody></table></div>
       {!totals.length&&<Empty>No completed sessions in this week. Use the week controls to review historical entries.</Empty>}
@@ -102,21 +103,11 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
   };
   const rotaPage=()=>{
     const dates=weekDays(week);
-    const leaveOn=(person,when)=>leaves.some(r=>r.person===person&&r.approval==="Approved"&&startsWithin(when,r.startDate,r.endDate));
-    const conflicts=r=>rotas.some(other=>other.id!==r.id&&other.person===r.person&&other.startTime&&other.endTime&&r.startTime&&r.endTime&&other.startTime<r.endTime&&r.startTime<other.endTime);
     const weekRows=filtered.filter(r=>r.startTime&&day(r.startTime)>=week&&day(r.startTime)<=dates[6]);
     return <div><SectionHeading eyebrow="SHIFT PLANNING" title="Shift rotas" description="Weekly staff assignments, coverage and leave conflicts.">
       {canCreate&&<button className="action-primary" onClick={()=>setCreating(true)}><Plus size={16}/> Add shift</button>}</SectionHeading>
-      <div className="rota-header"><button onClick={()=>setWeek(nextDate(week,-7))} aria-label="Previous rota week"><ArrowLeft size={16}/></button><strong>Week beginning {date(week)}</strong><button onClick={()=>setWeek(nextDate(week,7))} aria-label="Next rota week"><ArrowRight size={16}/></button></div>
-      <div className="rota-week">{dates.map(d=>{
-        const shifts=weekRows.filter(r=>day(r.startTime)===d);
-        return <section key={d} className="rota-day"><h3>{new Date(d+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric"})}<span>{shifts.length} shifts</span></h3>
-          {shifts.map(r=><article key={r.id} className={leaveOn(r.person,d)||conflicts(r)?"rota-conflict":""}><strong>{r.person||r.owner||r.title}</strong><small>{r.startTime.slice(11)} – {r.endTime?.slice(11)||"Open"}</small><small>{r.location||"Location not set"}</small>
-            {(leaveOn(r.person,d)||conflicts(r))&&<span className="rota-warning"><AlertTriangle size={12}/> Staffing conflict</span>}
-            {r.swapRequested&&<span className="rota-warning">Swap requested</span>}
-            <button onClick={()=>setSelected(r.id)}>Manage</button></article>)}
-          {!shifts.length&&<small className="rota-empty">Unstaffed</small>}</section>;
-      })}</div>
+      <div className="rota-header"><label>Week containing<input aria-label="Rota week containing" type="date" value={week} onChange={e=>{if(e.target.value)setWeek(weekStart(e.target.value));}}/></label><button onClick={()=>setWeek(nextDate(week,-7))} aria-label="Previous rota week"><ArrowLeft size={16}/></button><strong>Week beginning {date(week)}</strong><button onClick={()=>setWeek(weekStart(today()))}>This week</button><button onClick={()=>setWeek(nextDate(week,7))} aria-label="Next rota week"><ArrowRight size={16}/></button></div>
+      <RotaPlanner days={dates} people={people} shifts={weekRows} records={records} orgId={org.id} canEdit={canEdit} onOpen={id=>{setShiftStart("");setShiftEnd("");setSelected(id);}}/>
       <p className="module-disclaimer">Availability and overlap conflicts use current sample leave and shift records; drag-and-drop shift moves are not enabled yet.</p>
     </div>;
   };
@@ -146,11 +137,7 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
       </div>;
   };
   const selectedDetails=r=><div className="people-details"><h3>{r.title}</h3><p>{r.detail}</p>
-    {type==="people"?<><label>Role<input disabled={!canEdit} value={r.role||""} onChange={e=>update(r,{role:e.target.value})}/></label>
-      <label>Team<input disabled={!canEdit} value={r.team||""} onChange={e=>update(r,{team:e.target.value})}/></label>
-      <label>Sample contact<input disabled={!canEdit} value={r.contact||""} onChange={e=>update(r,{contact:e.target.value})}/></label>
-      <label>Employment status<select disabled={!canEdit} value={r.employmentStatus||""} onChange={e=>update(r,{employmentStatus:e.target.value})}><option value="">Not recorded</option>{["Active","Suspended","Left"].map(x=><option key={x}>{x}</option>)}</select></label><h3>Related work</h3>{records.filter(x=>x.orgId===org.id&&isTaskModule(x.module)&&x.owner===r.title).map(t=><div key={t.id} className="ticket">{t.title}<button onClick={()=>onNavigate("Tasks & projects",{recordId:t.id})}>Open task</button></div>)}
-      <h3>Qualifications</h3>{training.filter(t=>t.person===r.title).map(t=><p key={t.id}>{t.qualification||t.title} · {date(t.expiry)}</p>)}</>:
+    {type==="schedule"?<form onSubmit={async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.currentTarget));const result=validateAssignee(records,org.id,f.person,{kind:"schedule",startTime:f.startTime,endTime:f.endTime,excludedRecordId:r.id});if(!f.person||!result.eligible){setError(result.reasons.join("; ")||"Choose an eligible person");return;}if(await update(r,{...f,personId:people.find(p=>p.title===f.person)?.id||""})){setError("");setSelected(null);}}}><label>Shift start<input name="startTime" type="datetime-local" required defaultValue={r.startTime} onChange={e=>setShiftStart(e.target.value)}/></label><label>Shift end<input name="endTime" type="datetime-local" required defaultValue={r.endTime} onChange={e=>setShiftEnd(e.target.value)}/></label><QualifiedStaffSelect records={records} orgId={org.id} kind="schedule" startTime={shiftStart||r.startTime} endTime={shiftEnd||r.endTime} excludedRecordId={r.id} label="Reassign shift" name="person" value={r.person} required/><label>Shift location<input name="location" required defaultValue={r.location}/></label>{error&&<p role="alert">{error}</p>}<button disabled={!canEdit}>Save shift changes</button></form>:type==="people"?<StaffProfile person={r} records={records} canEdit={canEdit} onUpdate={onUpdate} onNavigate={onNavigate}/>:
       <>{["person","startTime","endTime","startDate","endDate","location","qualification","expiry"].filter(key=>r[key]!==undefined).map(key=><label key={key}>{key}<input disabled={!canEdit} type={key==="startTime"||key==="endTime"?"datetime-local":key==="startDate"||key==="endDate"||key==="expiry"?"date":"text"} value={r[key]||""} onChange={e=>update(r,{[key]:e.target.value})}/></label>)}
         <label>Approval<select disabled={!canApprove} value={r.approval||"Pending"} onChange={e=>approve(r,e.target.value)}>{(type==="leave"?["Pending","Approved","Rejected","Cancelled"]:["Pending","Approved","Rejected"]).map(x=><option key={x}>{x}</option>)}</select></label>
         {type==="schedule"&&<div className="quick-actions">{canEdit&&<button onClick={()=>update(r,{swapRequested:true})}>Request shift swap</button>}{canApprove&&r.swapRequested&&<button onClick={()=>update(r,{swapRequested:false})}>Resolve swap request</button>}</div>}</>}
@@ -159,7 +146,7 @@ export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onN
     {error&&<p role="alert">{error}</p>}
     {type==="people"?<><label>Name<input name="title" maxLength={100} required autoFocus/></label><label>Role<input name="role" maxLength={80}/></label><label>Team<input name="team" maxLength={80}/></label><label>Sample contact<input name="contact" maxLength={100}/></label><label>Profile notes<textarea name="detail" maxLength={200}/></label></>:
       <>{type==="schedule"?<QualifiedStaffSelect records={records} orgId={org.id} kind="schedule" label="Person" name="person" required startTime={shiftStart} endTime={shiftEnd} date={shiftStart}/>:<label>Person<select name="person" required><option value="">Select team member</option>{actorNames.map(x=><option key={x}>{x}</option>)}</select></label>}{""}
-        {["timesheets","schedule"].includes(type)&&<><label>Start<input name="startTime" type="datetime-local" required {...(type==="schedule"?{value:shiftStart,onChange:e=>setShiftStart(e.target.value)}:{})}/></label><label>End<input name="endTime" type="datetime-local" {...(type==="schedule"?{value:shiftEnd,onChange:e=>setShiftEnd(e.target.value)}:{})}/></label></>}
+        {["timesheets","schedule"].includes(type)&&<><label>Start<input name="startTime" type="datetime-local" required {...(type==="schedule"?{value:shiftStart,onChange:e=>setShiftStart(e.target.value)}:{})}/></label><label>End<input name="endTime" type="datetime-local" required={type==="schedule"} {...(type==="schedule"?{value:shiftEnd,onChange:e=>setShiftEnd(e.target.value)}:{})}/></label></>}
         {type==="schedule"&&<label>Location<input name="location" maxLength={80}/></label>}
         {type==="leave"&&<><label>First day<input name="startDate" type="date" required/></label><label>Last day<input name="endDate" type="date" required/></label></>}
         {type==="training"&&<><label>Qualification<input name="qualification" maxLength={120} required/></label><label>Expiry<input name="expiry" type="date"/></label></>}
