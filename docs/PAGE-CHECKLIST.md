@@ -10,6 +10,16 @@ Updated 12 November 2026. A checked batch item means that specific interaction i
 - [x] Maintenance: seven delivery lanes, linked engineer and asset, checklists/labour/review, job history, direct inventory allocation and completion reflected in equipment history.
 - [x] Assets: equipment, maintenance-history and inspection-record tabs with linked record navigation and equipment controls.
 
+## Stage 3 operational batch
+
+- [x] Daily Operations: dated opening/closing checks, staff attribution, timestamps, supervisor approvals, history, linked operational overview and acknowledged handovers.
+- [x] Inspections: reusable question templates, asset/recorded-location selection, eligible inspector, required responses and browser-local evidence, draft/submission/review, failed-result corrective maintenance and asset history.
+- [ ] Fleet Management: detailed profile tabs, per-item daily checks and driver-specific qualification fixtures. Existing vehicle cards and basic checks are preserved.
+- [ ] Inventory: returns, transfers, adjustments, purchase orders and suppliers. Existing issue/allocation/receive workflows are preserved.
+- [ ] CRM: full profile tabs, linked follow-up tasks and quote activity timeline. Existing customers/contacts/notes/quote links are preserved.
+
+**Next module: Fleet Management**, then Inventory and CRM. Stage 3 is not complete.
+
 ## Still unfinished against the complete specification
 
 - [ ] Dashboard: richer display preferences and record-level permissions.
@@ -17,7 +27,7 @@ Updated 12 November 2026. A checked batch item means that specific interaction i
 - [ ] Rotas: competency-specific staffing minima, recurring patterns/templates, completed swap workflow. Minimum shift coverage is a session-only setting and does not certify qualified staffing.
 - [ ] Maintenance: enforced supervisor completion gates, attachments, recurring jobs/templates, atomic stock/job transaction. Parts updates are sequential in this single-user fictional demo.
 - [ ] Assets: purchase information, QR deep links and document library links.
-- [ ] **Next module: Inspections & checklists** — per-question outcomes, templates, required evidence and completion validation.
+- [ ] Inspections — template editing/version management, recurring schedules and durable evidence storage. Current evidence is browser memory only.
 - [ ] Tasks/projects — dependencies, resources, evidence and full budgets.
 - [ ] Attendance — correction requests, location and edit validation.
 - [ ] Timesheets — allocations, configurable overtime, correction approval.
@@ -35,7 +45,7 @@ Updated 12 November 2026. A checked batch item means that specific interaction i
 - [ ] Forms — conditional sections and workflow triggers.
 - [ ] Donations — linked donors/events and reconciliation.
 - [ ] Visitor statistics — category/date aggregation and comparisons.
-- [ ] Daily operations — daily scoping and closing templates.
+- [ ] Daily operations — reusable recurring check templates and bulk day preparation. Dated opening/closing checks and history are implemented.
 - [ ] Reports — domain metrics, date filtering, custom fields.
 - [ ] Notifications — preferences, meaningful generated activities.
 - [ ] Global search — saved searches and full scope coverage.
