@@ -1,3 +1,4 @@
+import {activityEntry} from "./administrationRules";
 import React, { useState } from "react";
 import OwnerBusinessPages, { ownerSeed } from "./OwnerBusinessPages";
 import CompanyOnboarding from "./CompanyOnboarding";
@@ -106,6 +107,7 @@ export default function App({ backend: suppliedBackend }) {
                       value={selected}
                       onChange={(e) => {
                         setSelected(e.target.value);
+                        setCustomerRole("Administrator");
                         setCustomerPage("Dashboard");
                       }}
                     >
@@ -123,6 +125,13 @@ export default function App({ backend: suppliedBackend }) {
                   key={active.id}
                   org={active}
                   records={records}
+                  onConfigure={async(patch,event,actor)=>{
+                    if(Object.keys(patch).some(key=>!["name","sector","contactPhone","contactEmail","address","description","color","logo","workspaceConfig","modules"].includes(key)))return false;
+                    const currentOrg=backend.getSnapshot().orgs.find(o=>o.id===active.id);
+                    const {modules:enabled,...fields}=patch;
+                    const workspaceConfig={...currentOrg.workspaceConfig,...fields.workspaceConfig,activity:[...(currentOrg.workspaceConfig?.activity||[]),activityEntry(actor,event||"Configuration updated",Object.keys(patch.workspaceConfig||patch).join(", "))].slice(-300)};
+                    return run(async()=>{if(enabled)await backend.entitlements.replace(active.id,enabled);await backend.organisations.update(active.id,{...fields,workspaceConfig});});
+                  }}
                   page={customerPage}
                   setPage={setCustomerPage}
                   customerRole={customerRole}

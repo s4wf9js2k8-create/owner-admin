@@ -54,7 +54,7 @@ export default function CustomerTaskBoard({org,records,onAdd,onUpdate,onNavigate
       setNotice("Complete the linked dependency before finishing this task.");return;
     }
     if(status==="Complete" && task.approval==="Pending"){setNotice("This task is awaiting manager approval.");return;}
-    if(status==="Complete" && task.recurrence && task.recurrence!=="None" && (task.recurringMode||"After completion")==="After completion"){
+    if(status==="Complete" && task.recurrence && task.recurrence!=="None" && (task.recurringMode||"After completion")==="After completion" && !(org.workspaceConfig?.automationRules||[]).some(r=>r.enabled&&r.trigger==="Task completed"&&(!r.priority||r.priority===task.priority))){
       const dueDate=nextRecurrenceDate(task.dueDate||today(),task.recurrence);
       if(dueDate){
         const saved=await onAdd({...task,id:undefined,createdAt:new Date().toISOString(),title:task.title,originId:task.id,

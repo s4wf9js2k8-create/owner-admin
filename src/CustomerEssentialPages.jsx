@@ -127,9 +127,10 @@ export function CustomerNotifications({org,records,readIds,setReadIds,onNavigate
     <div className="notification-feed">{visible.map(n=><article className={"notification-item "+(!readIds.includes(n.id)?"unread":"")} key={n.id}><span className="notification-icon"><Bell size={18}/></span><div><small>{n.kind} · {n.record.module}</small><h3>{n.title}</h3><p>{n.record.owner||"Unassigned"} · {format(n.record.dueDate)}</p></div><div className="notification-actions"><button onClick={()=>setReadIds(ids=>ids.includes(n.id)?ids.filter(x=>x!==n.id):[...ids,n.id])}>{readIds.includes(n.id)?"Mark unread":"Mark read"}</button><button onClick={()=>onNavigate(n.record.module)}>Open</button></div></article>)}</div>
     {!visible.length&&<Empty>You're all caught up with this notification filter.</Empty>}</div>;
 }
-const permissions=["View","Create","Edit","Approve","Export","Manage"];
+const permissions=["View","Create","Edit","Approve","Export","Manage","Manage staff","Reports"];
 export function CustomerSettings({org,records,prefs,setPrefs,roles,setRoles,roleModules,setRoleModules,roleTeams,setRoleTeams,customerRole,canManage,onNavigate}) {
   const [newRole,setNewRole]=useState("");
+  const [roleError,setRoleError]=useState("");
   const [role,setRole]=useState("Administrator");
   const roleNames=Object.keys(roles);
   const selected=roles[role]||[];
@@ -157,12 +158,12 @@ export function CustomerSettings({org,records,prefs,setPrefs,roles,setRoles,role
         <p className="panel-helper">Choose what a simulated role can do, which modules it sees and the team it covers. Current role: <strong>{customerRole}</strong>.</p>
         <label>Edit role<select aria-label="Choose custom role" value={role} onChange={e=>setRole(e.target.value)}>{roleNames.map(name=><option key={name}>{name}</option>)}</select></label>
         <h3>Allowed actions</h3>
-        <div className="permission-grid">{permissions.map(p=><label className="permission-switch" key={p}><input type="checkbox" disabled={!canManage} checked={selected.includes(p)} onChange={e=>setRoles(current=>({...current,[role]:e.target.checked?[...new Set([...(current[role]||[]),p])]:(current[role]||[]).filter(x=>x!==p)}))}/><span>{p}</span></label>)}</div>
+        <div className="permission-grid">{permissions.map(p=><label className="permission-switch" key={p}><input type="checkbox" disabled={!canManage||(role==="Administrator"&&["View","Manage"].includes(p))} checked={selected.includes(p)} onChange={e=>setRoles(current=>({...current,[role]:e.target.checked?[...new Set([...(current[role]||[]),p])]:(current[role]||[]).filter(x=>x!==p)}))}/><span>{p}</span></label>)}</div>
         <h3>Module visibility</h3>
         <div className="permission-grid">{org.modules.map(m=><label className="permission-switch" key={m}><input type="checkbox" disabled={!canManage} checked={selectedAll||permitted.includes(m)} onChange={e=>toggleModule(m,e.target.checked)}/><span>{m}</span></label>)}</div>
         <label>Team restriction<select aria-label="Role team scope" disabled={!canManage} value={roleTeams[role]||"All teams"} onChange={e=>setRoleTeams(old=>({...old,[role]:e.target.value}))}><option>All teams</option>{teams.map(team=><option key={team}>{team}</option>)}</select></label>
-        <form className="create-role-form" onSubmit={e=>{e.preventDefault();const name=newRole.trim();if(name&&!roles[name]){setRoles(prev=>({...prev,[name]:["View"]}));setRoleModules(old=>({...old,[name]:[]}));setRoleTeams(old=>({...old,[name]:"All teams"}));setRole(name);setNewRole("");}}}>
-          <label>New role<input value={newRole} maxLength={40} onChange={e=>setNewRole(e.target.value)} placeholder="e.g. Team leader" required disabled={!canManage}/></label>
+        <form className="create-role-form" onSubmit={e=>{e.preventDefault();const name=newRole.trim();if(!name||roles[name]){setRoleError(name?"A role with this name already exists.":"Enter a role name.");return;}setRoleError("");if(name&&!roles[name]){setRoles(prev=>({...prev,[name]:["View"]}));setRoleModules(old=>({...old,[name]:[]}));setRoleTeams(old=>({...old,[name]:"All teams"}));setRole(name);setNewRole("");}}}>
+          {roleError&&<p role="alert">{roleError}</p>}<label>New role<input value={newRole} maxLength={40} onChange={e=>setNewRole(e.target.value)} placeholder="e.g. Team leader" required disabled={!canManage}/></label>
           <button type="submit" disabled={!canManage}><Plus size={16}/> Add role</button>
         </form>
         <p className="module-disclaimer">This is only a role-visibility demonstration. It does not authenticate users or enforce server-side permissions.</p>

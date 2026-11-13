@@ -31,6 +31,7 @@ import {
   Megaphone,
   Server,
   UserPlus,
+  Search,
 } from "lucide-react";
 const pages = [
   ["Overview", LayoutDashboard],
@@ -54,18 +55,18 @@ const iconFor = name => ({communications:Megaphone,people:Users,timesheets:Clock
 
 const peopleTypes = new Set(["people","timesheets","schedule","leave","training"]);
 const operationsTypes = new Set(["projects","assets","maintenance","inspections","safety","fleet","inventory","operations"]);
-const customerGroups = (org, role, roleModules) => {
+const customerGroups = (org, role, roleModules, actions=[]) => {
   const enabled=org.modules.filter(m=>moduleAllowed(role,m,roleModules));
   const modules=enabled.filter(m=>!isTaskModule(m));
   if(enabled.some(isTaskModule)) modules.unshift("Tasks & projects");
   const by = types => modules.filter(m=>types.has(moduleInfo(m).type)).map(m=>[m,iconFor(m)]);
   const grouped = new Set([...peopleTypes,...operationsTypes]);
   return [
-    ["WORKSPACE",[["Dashboard",LayoutDashboard],["My work",ClipboardList],["Calendar",CalendarDays],["Notifications",Bell]]],
+    ["WORKSPACE",[["Dashboard",LayoutDashboard],["My work",ClipboardList],["Calendar",CalendarDays],["Notifications",Bell],...((actions.includes("Approve")||actions.includes("Edit"))?[["Approvals",ClipboardCheck]]:[]),["Activity history",ScrollText]]],
     ["TEAM",by(peopleTypes)],
     ["WORK & EQUIPMENT",by(operationsTypes)],
     ["BUSINESS & RESOURCES",modules.filter(m=>!grouped.has(moduleInfo(m).type)).map(m=>[m,iconFor(m)])],
-    ["ACCOUNT",[["Settings",Settings]]]
+    ["ACCOUNT",actions.includes("Manage")?[["Settings",Settings],["Automations",Blocks]]:[]]
   ].filter(([,items])=>items.length);
 };
 const ownerGroups = [
@@ -89,6 +90,7 @@ export default function Navigation({ controller }) {
     navigate,
     customerRole,
     roleModules,
+    customerRoles,
   } = controller;
   return (
     <>
@@ -106,9 +108,10 @@ export default function Navigation({ controller }) {
           {menuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
         <span className="topbrand">
-          {customer ? active.name : "Owner Admin"}
+          {customer&&active.logo&&<img src={active.logo} alt="Company logo" className="header-company-logo"/>}{customer ? active.name : "Owner Admin"}
         </span>
         <span className="tag">Fictional demo</span>
+        {customer&&<button className="header-search" aria-label="Open global search" onClick={()=>window.dispatchEvent(new Event("channel-open-search"))}><Search size={17}/><span>Search</span></button>}
         {customer && (
           <button
             className="header-action"
@@ -139,7 +142,7 @@ export default function Navigation({ controller }) {
           {customer ? customerRole+" · Demo workspace" : "Platform management"}
         </div>
         <nav aria-label="Main navigation">
-          {(customer ? customerGroups(active,customerRole,roleModules) : ownerGroups).map(([group,items])=>(
+          {(customer ? customerGroups(active,customerRole,roleModules,customerRoles[customerRole]||[]) : ownerGroups).map(([group,items])=>(
             <React.Fragment key={group}>
               <div className="nav-section-label">{group}</div>
               {items.map(([name, Icon])=>(
@@ -151,7 +154,7 @@ export default function Navigation({ controller }) {
                     if(customer){setCustomerPage(name);setMenuOpen(false);}
                     else navigate(name);
                   }}
-                ><Icon size={18}/>{name}</button>
+                ><Icon size={18}/>{customer?(active.workspaceConfig?.navLabels?.[name]||name):name}</button>
               ))}
             </React.Fragment>
           ))}

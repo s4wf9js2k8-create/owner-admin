@@ -1,3 +1,9 @@
+import { validateDemoAssignment } from "../demoAssignmentRules.js";
+import {
+  activityEntry,
+  decideApproval,
+  processAutomations,
+} from "../administrationRules.js";
 import {
   createOrganisation,
   starter,
@@ -131,8 +137,42 @@ export function createFictionalBackend({
           !org.modules.includes(values.module)
         )
           throw new Error("Invalid example record scope or module.");
-        const record = { ...copy(values), orgId, id: crypto.randomUUID() };
-        publish({ ...state, records: [...state.records, record] });
+        const { _actor, ...fields } = copy(values);
+        const record = {
+          ...fields,
+          orgId,
+          id: crypto.randomUUID(),
+          createdById: _actor?.actorId || fields.createdById || "",
+          activity: [
+            activityEntry(
+              _actor,
+              "Created",
+              "Created " + values.module + " record",
+            ),
+          ],
+        };
+        validateDemoAssignment(record, record, state.records, true);
+        const automated = processAutomations(
+          [...state.records, record],
+          record,
+          org,
+          org.workspaceConfig?.automationRuns,
+        );
+        publish({
+          ...state,
+          records: automated.records,
+          orgs: state.orgs.map((o) =>
+            o.id === orgId
+              ? {
+                  ...o,
+                  workspaceConfig: {
+                    ...o.workspaceConfig,
+                    automationRuns: automated.runs,
+                  },
+                }
+              : o,
+          ),
+        });
         return copy(record);
       },
       update: async (orgId, id, patch) => {
@@ -141,9 +181,100 @@ export function createFictionalBackend({
           throw new Error("Example record unavailable.");
         if ("orgId" in patch || "id" in patch || "module" in patch)
           throw new Error("Example record identity cannot change.");
+        const { _actor, _approval, ...fields } = copy(patch);
+        const org = organisation(orgId);
+        const decision = _approval
+          ? decideApproval(record, _approval, org, state.records)
+          : {};
+        const values = { ...fields, ...decision };
+        if (values.approval === "Pending" && !_approval)
+          values.approvalNeedsChanges = false;
+        const changedKeys = Object.keys(values).filter(
+          (key) =>
+            key !== "activity" &&
+            JSON.stringify(values[key]) !== JSON.stringify(record[key]),
+        );
+        const action = _approval
+          ? "Approval " + _approval.decision
+          : values.automationRequestedAt
+            ? "Automation evaluation"
+            : changedKeys.includes("status")
+              ? "Status changed"
+              : changedKeys.some((k) =>
+                    [
+                      "ownerId",
+                      "owner",
+                      "personId",
+                      "engineerId",
+                      "inspectorId",
+                    ].includes(k),
+                  )
+                ? "Staff assignment"
+                : changedKeys.includes("quantity")
+                  ? "Stock adjusted"
+                  : changedKeys.includes("expiry")
+                    ? "Qualification updated"
+                    : changedKeys.includes("approval")
+                      ? "Approval changed"
+                      : "Updated";
+        const details =
+          changedKeys
+            .filter((k) =>
+              [
+                "status",
+                "approval",
+                "review",
+                "owner",
+                "person",
+                "ownerId",
+                "personId",
+                "engineerId",
+                "inspectorId",
+                "quantity",
+                "expiry",
+                "result",
+                "documentStatus",
+              ].includes(k),
+            )
+            .map((k) => {
+              const label = (value) =>
+                state.records.find((p) => p.orgId === orgId && p.id === value)
+                  ?.title || String(value ?? "Not recorded");
+              return k + ": " + label(record[k]) + " → " + label(values[k]);
+            })
+            .join("; ") ||
+          changedKeys.join(", ") ||
+          action;
+        values.activity =
+          changedKeys.length || _approval
+            ? [
+                ...(record.activity || []),
+                activityEntry(_actor, action, details),
+              ].slice(-100)
+            : record.activity || [];
+        const next = updateRecord(state.records, orgId, id, values),
+          changed = next.find((r) => r.id === id && r.orgId === orgId);
+        validateDemoAssignment(changed, fields, state.records);
+        const automated = processAutomations(
+          next,
+          changed,
+          org,
+          org.workspaceConfig?.automationRuns,
+        );
         publish({
           ...state,
-          records: updateRecord(state.records, orgId, id, patch),
+          records: automated.records,
+          orgs: state.orgs.map((o) =>
+            o.id === orgId
+              ? {
+                  ...o,
+                  workspaceConfig: {
+                    ...o.workspaceConfig,
+                    automationRuns: automated.runs,
+                  },
+                }
+              : o,
+          ),
         });
       },
     },

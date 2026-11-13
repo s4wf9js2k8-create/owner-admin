@@ -26,17 +26,21 @@ export const nextRecurrenceDate = (date,frequency) => {
 export const onSiteEntries = (records,org) => scopedRecords(records,org).filter(r=>moduleInfo(r.module).type==="timesheets" && r.startTime && !r.endTime);
 export const upcomingShifts = (records,org) => scopedRecords(records,org).filter(r=>moduleInfo(r.module).type==="schedule" && r.startTime).sort((a,b)=>a.startTime.localeCompare(b.startTime));
 export const demoRoleDefaults = {
-  Administrator:["View","Create","Edit","Approve","Export","Manage"],
-  Manager:["View","Create","Edit","Approve","Export"],
+  Administrator:["View","Create","Edit","Approve","Export","Manage","Manage staff","Reports"],
+  Manager:["View","Create","Edit","Approve","Export","Manage staff","Reports"],
+  Supervisor:["View","Create","Edit","Approve","Export","Manage staff","Reports"],
+  Volunteer:["View","Create","Edit"],
   Staff:["View","Create","Edit"],
-  Viewer:["View"]
+  Viewer:["View","Reports"]
 };
 export function moduleAllowed(role,module,roleModules) {
   const configured=roleModules[role];
-  if(!configured) return true;
+  if(!configured) return false;
   return configured.includes("*") || configured.includes(module) || (isTaskModule(module)&&configured.includes("Tasks & projects"));
 }
 export const defaultRoleModules = {
-  Administrator:["*"],Manager:["*"],Staff:["*"],
+  Administrator:["*"],Manager:["*"],Supervisor:["Tasks & projects","Staff & volunteers","Shift rotas","Attendance & timesheets","Leave and availability","Training and qualifications","Maintenance & work orders","Maintenance","Assets & equipment","Assets","Inspections & checklists","Inspections","Daily operations","Staff communications","Documents & files"],
+  Staff:["Tasks & projects","Tasks","Projects","Staff & volunteers","Staff","Volunteers","Shift rotas","Schedules","Attendance & timesheets","Attendance & Hours","Leave and availability","Training and qualifications","Maintenance & work orders","Maintenance","Assets & equipment","Assets","Inspections & checklists","Inspections","Staff communications","Documents & files"],
+  Volunteer:["Tasks & projects","Tasks","Staff & volunteers","Volunteers","Shift rotas","Attendance & timesheets","Attendance & Hours","Leave and availability","Training and qualifications","Staff communications"],
   Viewer:["Staff & volunteers","Volunteers","Staff","Assets & equipment","Assets","Documents & files","Events & bookings","Events","Shift rotas","Schedules","Tasks & projects","Tasks","Projects","Reports & analytics","Reporting"]
 };

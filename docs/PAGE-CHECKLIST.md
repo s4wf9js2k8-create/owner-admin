@@ -1,6 +1,6 @@
 # Overhaul page checklist
 
-Updated 12 November 2026. A checked batch item means that specific interaction is implemented and covered by browser tests, not that every feature in the full specification is complete. Every page still requiring work remains listed below. Public demo data resets on refresh.
+Updated 13 November 2026. A checked batch item means that specific interaction is implemented and covered by browser tests, not that every feature in the full specification is complete. Every page still requiring work remains listed below. Public demo data resets on refresh.
 
 ## Current visible batch — implemented; verification recorded in PR checks
 
@@ -24,7 +24,7 @@ Updated 12 November 2026. A checked batch item means that specific interaction i
 
 - [x] Quotations: draft builder, calculations, CRM links, approval/sent/accepted/rejected/expired states, editing, duplication and printable previews.
 - [x] Invoices: accepted-quote conversion, draft/issued/cancelled states, partial fictional payments, outstanding balances, basic credit notes and CRM financial history.
-- [ ] Financial extensions: product/service catalogue, contact-ID registry, advanced tax rules, refunds and branding/address configuration.
+- [ ] Financial extensions: product/service catalogue, contact-ID registry, advanced tax rules and refunds. Company address/contact branding is now configurable.
 - [ ] Events and Bookings — next Stage 4 batch: calendar, linked eligible staff/equipment, CRM reservations and resource/capacity checks.
 - [ ] Appointments — scheduling views, rescheduling, outcomes, follow-up tasks and CRM history.
 - [ ] Documents — local files, stable record links and profile access.
@@ -38,21 +38,21 @@ Stage 4 is not complete. The earlier Stage 3 Fleet/Inventory/CRM gaps above rema
 - [x] Reporting: source-specific measures, date/staff/department/location/status/category filters, grouped charts and drill-down, totals/averages, previous-period comparison, saved configurations, CSV and print/PDF.
 - [x] Notifications: actionable current-record inbox, versioned alerts, per-user read/dismiss state, categories, priority and reminder preferences.
 - [x] Staff Communications: company/department/staff audiences, draft editing, publishing, acknowledgement history, archiving and shared Daily Operations handover links.
-- [ ] Roles and permissions — next Stage 5 priority: six default templates, ownership/location scopes and sensitive-record handling. Existing custom roles and module/team/action controls remain.
-- [ ] Central approvals — decision history, approver assignment and self-approval rules. Existing module approvals remain.
-- [ ] Workflow automations — trigger/action builder, active-session processing, execution history and deduplication.
-- [ ] Company settings — company profile, operations configuration, branding and module-specific options.
-- [ ] Dashboard — additional domain widgets, reset-to-template and configuration.
-- [ ] Search — header entry point, mobile palette and complete quick commands.
-- [ ] Audit — actor/record-specific structured activity and filtering.
+- [x] Roles and permissions: six templates, custom roles, action/module/team permissions, own-record/location scopes, sensitive-record controls and guarded demo mutations. Client-side controls are not production security.
+- [x] Central approvals: pending/assigned/urgent/history queues, approver assignment, comments, approve/reject/request changes, self-review policy and stale-decision protection. Leave availability, timesheet corrections and supported record statuses update through the same adapter.
+- [x] Workflow automations: configurable failure-to-maintenance, maintenance-to-inspection and recurring-task rules; optional priority condition, enable/disable, execution/error history, deduplication and explicit evaluation. Active browser session only.
+- [x] Company settings: per-company profile, departments/locations, working hours/days, leave allowance, minimum shift coverage, roles, modules/dependencies, branding, navigation labels, notification defaults and self-review policy.
+- [x] Dashboard: additional enabled-module widgets, per-widget record limits, company-session layout, add/remove/reorder/resize and industry-template reset.
+- [x] Search: header command palette, keyboard focus/Escape, responsive overlay, permitted record results and task/work-order/customer/rota/inspection/booking commands. Saved searches remain available.
+- [x] Activity: actor, UTC timestamp, meaningful changed fields and record links; date/user/module/action filters; company configuration history. Bounded browser-session history, not a legal audit ledger.
 - [ ] Reporting extensions — overtime, full project progress, native Excel and server-scheduled reports.
 - [ ] Notification extensions — durable event history, persistent organisation/user preferences and external delivery adapters. No email/push is sent.
 
-Stage 5 is not complete. All earlier unchecked items remain outstanding.
+The core Stage 5 browser-demonstration workflows are implemented. Reporting/persistence extensions above, production authorization and the earlier unchecked Stage 3/4 and owner-console items remain unfinished. See STAGE5-FINISH.md for verified scope and limitations.
 
 ## Still unfinished against the complete specification
 
-- [ ] Dashboard: richer display preferences and record-level permissions.
+- [ ] Dashboard: advanced widget-specific filters and finer-grained server-enforced record permissions.
 - [ ] Staff: evidence/documents, full immutable activity history, per-person permissions.
 - [ ] Rotas: competency-specific staffing minima, recurring patterns/templates, completed swap workflow. Minimum shift coverage is a session-only setting and does not certify qualified staffing.
 - [ ] Maintenance: enforced supervisor completion gates, attachments, recurring jobs/templates, atomic stock/job transaction. Parts updates are sequential in this single-user fictional demo.
@@ -60,7 +60,7 @@ Stage 5 is not complete. All earlier unchecked items remain outstanding.
 - [ ] Inspections — template editing/version management, recurring schedules and durable evidence storage. Current evidence is browser memory only.
 - [ ] Tasks/projects — dependencies, resources, evidence and full budgets.
 - [ ] Attendance — correction requests, location and edit validation.
-- [ ] Timesheets — allocations, configurable overtime, correction approval.
+- [ ] Timesheets — allocations and configurable overtime. Central correction requests and approval are implemented.
 - [ ] Leave — balances and complete calendar.
 - [ ] Training — sessions, assessments, local evidence files.
 - [ ] Inventory — returns/transfers, purchase orders, suppliers and atomic movements.
@@ -78,8 +78,8 @@ Stage 5 is not complete. All earlier unchecked items remain outstanding.
 - [ ] Daily operations — reusable recurring check templates and bulk day preparation. Dated opening/closing checks and history are implemented.
 - [ ] Reports — remaining extensions listed in Stage 5 above; core filtered reports and custom fields are implemented.
 - [ ] Notifications — remaining persistence/delivery extensions listed in Stage 5 above; record-based inbox and preferences are implemented.
-- [ ] Global search — saved searches and full scope coverage.
-- [ ] Roles/company settings — complete configuration and approval/ownership scopes.
+- [ ] Global search — advanced indexed search and production permission enforcement. Session saved searches and permitted-record palette are implemented.
+- [ ] Roles/company settings — production server enforcement, granular per-person exceptions and advanced module-specific policies. Demo scopes and central approval rules are implemented.
 - [ ] Owner overview/customer profiles — connected configuration/activity/usage.
 - [ ] Owner onboarding — guided creation into public fictional workspace.
 - [ ] Owner packages/modules — bespoke package preview/configuration.
