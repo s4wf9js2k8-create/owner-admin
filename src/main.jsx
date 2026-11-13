@@ -13,3 +13,5 @@ import "./operational-redesign.css";
 import "./stage3.css";
 
 import "./financial.css";
+
+import "./stage5.css";

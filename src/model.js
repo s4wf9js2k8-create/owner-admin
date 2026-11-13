@@ -13,6 +13,7 @@ export const modules = [
   { name: "Reports & analytics", description: "Operational charts and completion reporting." },
   { name: "Inventory and stock", description: "Stock quantities and reorder thresholds." },
   { name: "Customers / CRM", description: "Customer relationships and a prospect pipeline." },
+  { name: "Staff communications", requires: ["Staff & volunteers"], description: "Fictional staff notices and acknowledgements." },
   { name: "Quotes and invoices", requires: ["Customers / CRM"], description: "Fictional commercial document register, no payments." },
   { name: "Training and qualifications", requires: ["Staff & volunteers"], description: "Training records and renewal dates." },
   { name: "Health & safety", description: "Hazards, corrective actions and risk tracking." },
@@ -119,6 +120,8 @@ export const sectors = {
     ],
   },
 };
+for (const sector of Object.values(sectors)) sector.modules.push("Staff communications");
+
 export const plans = [
   { name: "Pilot", monthly: 0, annual: 0, trial: 30 },
   { name: "Starter", monthly: 25, annual: 250, trial: 14 },
