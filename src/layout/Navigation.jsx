@@ -50,7 +50,7 @@ const pages = [
   ["Infrastructure", Server],
   ["Settings", Settings],
 ];
-const iconFor = name => ({people:Users,timesheets:Clock3,assets:Package,maintenance:Wrench,inspections:ClipboardCheck,documents:FileText,schedule:CalendarDays,events:CalendarDays,bookings:CalendarDays,donations:HeartHandshake,fleet:CarFront,archives:Folder,projects:ClipboardList,reporting:ChartNoAxesCombined,training:UserRound}[moduleInfo(name).type] || Blocks);
+const iconFor = name => ({communications:Megaphone,people:Users,timesheets:Clock3,assets:Package,maintenance:Wrench,inspections:ClipboardCheck,documents:FileText,schedule:CalendarDays,events:CalendarDays,bookings:CalendarDays,donations:HeartHandshake,fleet:CarFront,archives:Folder,projects:ClipboardList,reporting:ChartNoAxesCombined,training:UserRound}[moduleInfo(name).type] || Blocks);
 
 const peopleTypes = new Set(["people","timesheets","schedule","leave","training"]);
 const operationsTypes = new Set(["projects","assets","maintenance","inspections","safety","fleet","inventory","operations"]);

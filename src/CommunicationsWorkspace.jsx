@@ -1,0 +1,420 @@
+import React, { useEffect, useState } from "react";
+import { Empty, Modal, Status } from "./components";
+import { moduleInfo, isTaskModule } from "./customerModules";
+import { noticeRelevant } from "./communicationRules";
+export default function CommunicationsWorkspace({
+  org,
+  module,
+  records,
+  onAdd,
+  onUpdate,
+  onNavigate,
+  actorId,
+  department,
+  canManage,
+  focusId,
+}) {
+  const [tab, setTab] = useState("Published"),
+    [editor, setEditor] = useState(null),
+    [selected, setSelected] = useState(null),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (focusId) setSelected(focusId);
+  }, [focusId]);
+  const people = records.filter(
+    (r) => r.orgId === org.id && moduleInfo(r.module).type === "people",
+  );
+  const notices = records.filter(
+    (r) =>
+      r.orgId === org.id && r.module === module && r.recordType === "notice",
+  );
+  const visible = notices.filter(
+    (n) =>
+      canManage ||
+      (n.status === "Published" && noticeRelevant(n, actorId, department)),
+  );
+  const current = visible.find((n) => n.id === selected);
+  const handovers = records.filter(
+    (r) =>
+      r.orgId === org.id &&
+      moduleInfo(r.module).type === "operations" &&
+      (r.recordType === "handover" || r.handover?.length),
+  );
+  const blank = () => ({
+    title: "",
+    body: "",
+    audience: "Company",
+    department: "",
+    recipients: [],
+    priority: "Normal",
+    recordId: "",
+    status: "Draft",
+  });
+  const save = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (
+      !editor.title.trim() ||
+      !editor.body.trim() ||
+      (editor.audience === "Staff" && !editor.recipients.length) ||
+      (editor.audience === "Department" && !editor.department)
+    ) {
+      setError("Enter a title, message and a valid audience.");
+      return;
+    }
+    setBusy(true);
+    const values = {
+      title: editor.title.trim(),
+      body: editor.body.trim(),
+      audience: editor.audience,
+      department: editor.department,
+      recipients: editor.recipients,
+      priority: editor.priority,
+      recordId: editor.recordId,
+      updatedAt: new Date().toISOString(),
+    };
+    const ok = editor.id
+      ? await onUpdate(org.id, editor.id, values)
+      : await onAdd({
+          ...values,
+          orgId: org.id,
+          module,
+          recordType: "notice",
+          status: "Draft",
+          createdAt: new Date().toISOString(),
+          acknowledgements: [],
+        });
+    if (ok) setEditor(null);
+    setBusy(false);
+  };
+  const change = async (n, status) => {
+    if (!canManage || busy) return;
+    setBusy(true);
+    await onUpdate(org.id, n.id, {
+      status,
+      ...(status === "Published"
+        ? { publishedAt: new Date().toISOString(), acknowledgements: [] }
+        : {}),
+      updatedAt: new Date().toISOString(),
+    });
+    setBusy(false);
+  };
+  const acknowledge = async (n) => {
+    if (
+      !actorId ||
+      busy ||
+      n.acknowledgements?.some((a) => a.personId === actorId)
+    )
+      return;
+    setBusy(true);
+    await onUpdate(org.id, n.id, {
+      acknowledgements: [
+        ...(n.acknowledgements || []),
+        { personId: actorId, at: new Date().toISOString() },
+      ],
+    });
+    setBusy(false);
+  };
+  const name = (id) =>
+    people.find((p) => p.id === id)?.title || "Staff profile unavailable";
+  const related = (r) =>
+    records.find((x) => x.orgId === org.id && x.id === r.recordId);
+  const open = (r) =>
+    onNavigate(isTaskModule(r.module) ? "Tasks & projects" : r.module, {
+      recordId: r.id,
+    });
+  return (
+    <div className="communications-workspace">
+      <div className="ops-banner">
+        <div>
+          <span className="eyebrow">STAFF COMMUNICATIONS</span>
+          <h2>Notices & announcements</h2>
+          <p>
+            Operational instructions with clear audiences and acknowledgement.
+          </p>
+        </div>
+        {canManage && (
+          <button
+            className="action-primary"
+            onClick={() => {
+              setEditor(blank());
+              setError("");
+            }}
+          >
+            Draft announcement
+          </button>
+        )}
+      </div>
+      <div
+        className="profile-tabs"
+        role="tablist"
+        aria-label="Communication views"
+      >
+        {[
+          "Published",
+          ...(canManage ? ["Draft", "Archived"] : []),
+          "Shift handovers",
+        ].map((t) => (
+          <button
+            key={t}
+            role="tab"
+            aria-selected={tab === t}
+            onClick={() => setTab(t)}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+      {tab === "Shift handovers" ? (
+        <div className="communication-handovers">
+          {handovers.map((r) => (
+            <article key={r.id}>
+              <small>{r.operationDate || "Legacy date not recorded"}</small>
+              <h3>{r.title}</h3>
+              {r.note && <p>{r.note}</p>}
+              {(r.handover || []).map((n, i) => (
+                <p key={i}>{n.note}</p>
+              ))}
+              <button onClick={() => open(r)}>
+                Open Daily Operations handover
+              </button>
+            </article>
+          ))}
+          {!handovers.length && (
+            <Empty>
+              No operational handover entries in your permitted records.
+            </Empty>
+          )}
+        </div>
+      ) : (
+        <div className="notice-board">
+          {visible
+            .filter((n) => n.status === tab)
+            .map((n) => (
+              <article
+                key={n.id}
+                className={
+                  "staff-notice " +
+                  (n.priority === "Important" ? "important" : "")
+                }
+              >
+                <small>
+                  {n.audience === "Company"
+                    ? "All staff"
+                    : n.audience === "Department"
+                      ? n.department
+                      : n.recipients.map(name).join(", ")}{" "}
+                  ·{" "}
+                  {n.publishedAt
+                    ? new Date(n.publishedAt).toLocaleString("en-GB")
+                    : "Draft, not published"}
+                </small>
+                <h3>{n.title}</h3>
+                <p>{n.body}</p>
+                <p>{n.acknowledgements?.length || 0} acknowledgements</p>
+                <div className="quick-actions">
+                  <button onClick={() => setSelected(n.id)}>Open notice</button>
+                  {canManage && n.status === "Draft" && (
+                    <>
+                      <button onClick={() => setEditor({ ...n })}>
+                        Edit draft
+                      </button>
+                      <button
+                        disabled={busy}
+                        onClick={() => change(n, "Published")}
+                      >
+                        Publish notice
+                      </button>
+                    </>
+                  )}
+                  {canManage && n.status === "Published" && (
+                    <button
+                      disabled={busy}
+                      onClick={() => change(n, "Archived")}
+                    >
+                      Archive notice
+                    </button>
+                  )}
+                </div>
+              </article>
+            ))}
+          {!visible.some((n) => n.status === tab) && (
+            <Empty>No {tab.toLowerCase()} notices for this audience.</Empty>
+          )}
+        </div>
+      )}
+      {editor && (
+        <Modal title="Announcement draft" onClose={() => setEditor(null)}>
+          <form className="customer-form" onSubmit={save}>
+            <label>
+              Announcement title
+              <input
+                value={editor.title}
+                required
+                maxLength={120}
+                onChange={(e) =>
+                  setEditor({ ...editor, title: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Message
+              <textarea
+                value={editor.body}
+                required
+                maxLength={2000}
+                onChange={(e) => setEditor({ ...editor, body: e.target.value })}
+              />
+            </label>
+            <label>
+              Audience
+              <select
+                aria-label="Announcement audience"
+                value={editor.audience}
+                onChange={(e) =>
+                  setEditor({ ...editor, audience: e.target.value })
+                }
+              >
+                <option>Company</option>
+                <option>Department</option>
+                <option>Staff</option>
+              </select>
+            </label>
+            {editor.audience === "Department" && (
+              <label>
+                Department
+                <select
+                  value={editor.department}
+                  required
+                  onChange={(e) =>
+                    setEditor({ ...editor, department: e.target.value })
+                  }
+                >
+                  <option value="">Choose department</option>
+                  {[...new Set(people.map((p) => p.team).filter(Boolean))].map(
+                    (d) => (
+                      <option key={d}>{d}</option>
+                    ),
+                  )}
+                </select>
+              </label>
+            )}
+            {editor.audience === "Staff" && (
+              <fieldset>
+                <legend>Recipients</legend>
+                {people.map((p) => (
+                  <label className="task-check" key={p.id}>
+                    <input
+                      type="checkbox"
+                      checked={editor.recipients.includes(p.id)}
+                      onChange={(e) =>
+                        setEditor({
+                          ...editor,
+                          recipients: e.target.checked
+                            ? [...editor.recipients, p.id]
+                            : editor.recipients.filter((id) => id !== p.id),
+                        })
+                      }
+                    />
+                    {p.title}
+                  </label>
+                ))}
+              </fieldset>
+            )}
+            <label>
+              Priority
+              <select
+                value={editor.priority}
+                onChange={(e) =>
+                  setEditor({ ...editor, priority: e.target.value })
+                }
+              >
+                <option>Normal</option>
+                <option>Important</option>
+              </select>
+            </label>
+            <label>
+              Linked operational record
+              <select
+                value={editor.recordId}
+                onChange={(e) =>
+                  setEditor({ ...editor, recordId: e.target.value })
+                }
+              >
+                <option value="">General notice</option>
+                {records
+                  .filter(
+                    (r) =>
+                      r.orgId === org.id &&
+                      [
+                        "projects",
+                        "maintenance",
+                        "assets",
+                        "operations",
+                        "documents",
+                      ].includes(moduleInfo(r.module).type),
+                  )
+                  .map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.title}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            {error && <p role="alert">{error}</p>}
+            <button disabled={busy}>Save announcement draft</button>
+          </form>
+        </Modal>
+      )}
+      {current && (
+        <Modal title="Staff notice" onClose={() => setSelected(null)}>
+          <Status>{current.status}</Status>
+          <h3>{current.title}</h3>
+          <p>{current.body}</p>
+          {related(current) && (
+            <button onClick={() => open(related(current))}>
+              Open linked record
+            </button>
+          )}
+          {current.recordId && !related(current) && (
+            <p>
+              Linked record is unavailable in this role's permitted records.
+            </p>
+          )}
+          {current.status === "Published" &&
+            noticeRelevant(current, actorId, department) && (
+              <button
+                disabled={
+                  !actorId ||
+                  busy ||
+                  current.acknowledgements?.some((a) => a.personId === actorId)
+                }
+                onClick={() => acknowledge(current)}
+              >
+                {current.acknowledgements?.some((a) => a.personId === actorId)
+                  ? "Acknowledged"
+                  : "Acknowledge notice"}
+              </button>
+            )}
+          {!actorId && (
+            <p>
+              Select a staff profile using Working as to acknowledge notices.
+            </p>
+          )}
+          <h3>Acknowledgement history</h3>
+          {(current.acknowledgements || []).map((a) => (
+            <p key={a.personId}>
+              {name(a.personId)} · {new Date(a.at).toLocaleString("en-GB")}
+            </p>
+          ))}
+        </Modal>
+      )}
+      <p className="module-disclaimer">
+        Announcements are published inside this fictional company only. No
+        email, text message or external delivery occurs. Handover editing
+        remains in Daily Operations.
+      </p>
+    </div>
+  );
+}

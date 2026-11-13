@@ -1,6 +1,7 @@
 // Customer-facing module definitions for the fictional demonstration.
 // Identity keys for existing modules are kept for backwards-compatible fixtures.
 export const moduleSpecs = {
+  "Staff communications": {type:"communications",title:"Staff communications",subtitle:"Targeted notices, acknowledgements and linked operational handovers.",fields:[]},
   "Tasks & projects": {type:"projects",title:"Tasks & projects",subtitle:"Team work, deliverables and milestones.",fields:[["project","Project"],["owner","Assignee"],["dueDate","Deadline","date"]]},
   Tasks: {type:"projects",title:"Tasks",subtitle:"Team work and prioritised action items.",fields:[["owner","Assignee"],["dueDate","Deadline","date"]]},
   Projects: {type:"projects",title:"Projects",subtitle:"Track project outcomes and delivery.",fields:[["owner","Lead"],["dueDate","Target date","date"]]},

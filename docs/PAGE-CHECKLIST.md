@@ -33,6 +33,23 @@ Updated 12 November 2026. A checked batch item means that specific interaction i
 
 Stage 4 is not complete. The earlier Stage 3 Fleet/Inventory/CRM gaps above remain outstanding.
 
+## Stage 5 reporting and communications batch
+
+- [x] Reporting: source-specific measures, date/staff/department/location/status/category filters, grouped charts and drill-down, totals/averages, previous-period comparison, saved configurations, CSV and print/PDF.
+- [x] Notifications: actionable current-record inbox, versioned alerts, per-user read/dismiss state, categories, priority and reminder preferences.
+- [x] Staff Communications: company/department/staff audiences, draft editing, publishing, acknowledgement history, archiving and shared Daily Operations handover links.
+- [ ] Roles and permissions — next Stage 5 priority: six default templates, ownership/location scopes and sensitive-record handling. Existing custom roles and module/team/action controls remain.
+- [ ] Central approvals — decision history, approver assignment and self-approval rules. Existing module approvals remain.
+- [ ] Workflow automations — trigger/action builder, active-session processing, execution history and deduplication.
+- [ ] Company settings — company profile, operations configuration, branding and module-specific options.
+- [ ] Dashboard — additional domain widgets, reset-to-template and configuration.
+- [ ] Search — header entry point, mobile palette and complete quick commands.
+- [ ] Audit — actor/record-specific structured activity and filtering.
+- [ ] Reporting extensions — overtime, full project progress, native Excel and server-scheduled reports.
+- [ ] Notification extensions — durable event history, persistent organisation/user preferences and external delivery adapters. No email/push is sent.
+
+Stage 5 is not complete. All earlier unchecked items remain outstanding.
+
 ## Still unfinished against the complete specification
 
 - [ ] Dashboard: richer display preferences and record-level permissions.
@@ -59,8 +76,8 @@ Stage 4 is not complete. The earlier Stage 3 Fleet/Inventory/CRM gaps above rema
 - [ ] Donations — linked donors/events and reconciliation.
 - [ ] Visitor statistics — category/date aggregation and comparisons.
 - [ ] Daily operations — reusable recurring check templates and bulk day preparation. Dated opening/closing checks and history are implemented.
-- [ ] Reports — domain metrics, date filtering, custom fields.
-- [ ] Notifications — preferences, meaningful generated activities.
+- [ ] Reports — remaining extensions listed in Stage 5 above; core filtered reports and custom fields are implemented.
+- [ ] Notifications — remaining persistence/delivery extensions listed in Stage 5 above; record-based inbox and preferences are implemented.
 - [ ] Global search — saved searches and full scope coverage.
 - [ ] Roles/company settings — complete configuration and approval/ownership scopes.
 - [ ] Owner overview/customer profiles — connected configuration/activity/usage.

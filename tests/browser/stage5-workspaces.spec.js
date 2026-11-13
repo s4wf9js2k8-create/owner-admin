@@ -1,0 +1,160 @@
+import { test, expect } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+async function open(page) {
+  await page.goto("./");
+  await page
+    .getByRole("button", { name: "Explore customer workspace" })
+    .click();
+  await page.getByLabel("Example workspace").selectOption("demo-engineering");
+}
+async function go(page, name) {
+  await page.getByRole("button", { name: "Open navigation menu" }).click();
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name, exact: true })
+    .click();
+}
+test("report filters current records, saves its configuration and exports the filtered CSV", async ({
+  page,
+}) => {
+  await open(page);
+  await go(page, "Maintenance & work orders");
+  await page
+    .getByRole("button", { name: "Raise work order", exact: true })
+    .click();
+  await page.getByLabel("Record title").fill("Report-specific fictional job");
+  await page.getByLabel("Due date").fill("2027-02-01");
+  await page.getByRole("button", { name: "Save sample work order" }).click();
+  await go(page, "Reporting");
+  await page
+    .getByLabel("Report source module")
+    .selectOption("Maintenance & work orders");
+  await page.getByLabel("Report from date").fill("2027-02-01");
+  await page.getByLabel("Report to date").fill("2027-02-01");
+  await expect(
+    page.getByRole("region", { name: "Report results" }),
+  ).toContainText("1 records");
+  await page
+    .getByLabel("Report configuration name")
+    .fill("February maintenance");
+  await page.getByRole("button", { name: "Save report configuration" }).click();
+  await page.getByRole("button", { name: "Reset report filters" }).click();
+  await page
+    .getByRole("button", { name: "February maintenance", exact: true })
+    .click();
+  await expect(page.getByLabel("Report from date")).toHaveValue("2027-02-01");
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export report CSV" }).click();
+  const download = await downloadPromise;
+  const csv = await readFile(await download.path(), "utf8");
+  expect(csv).toContain("Report-specific fictional job");
+  expect(csv).not.toContain("Service workshop compressor");
+  await go(page, "Dashboard");
+  await go(page, "Reporting");
+  await page
+    .getByRole("button", { name: "February maintenance", exact: true })
+    .click();
+  await expect(page.getByLabel("Report to date")).toHaveValue("2027-02-01");
+  await page.getByLabel("Example workspace").selectOption("demo-charity");
+  await go(page, "Reporting");
+  await expect(
+    page.getByRole("button", { name: "February maintenance", exact: true }),
+  ).toHaveCount(0);
+});
+test("urgent task creates actionable alerts and read state is scoped to the fictional user", async ({
+  page,
+}) => {
+  await open(page);
+  await go(page, "Tasks & projects");
+  await page.getByRole("button", { name: "New task", exact: true }).click();
+  await page.getByLabel("Task title").fill("Stage five urgent task");
+  await page
+    .getByRole("dialog")
+    .getByLabel("Assign to")
+    .selectOption("Sample coordinator A");
+  await page
+    .getByRole("dialog")
+    .getByLabel("Priority", { exact: true })
+    .selectOption("Urgent");
+  await page.getByRole("button", { name: "Create task", exact: true }).click();
+  await go(page, "Notifications");
+  const message = page
+    .locator(".inbox-message")
+    .filter({ hasText: "Assigned: Stage five urgent task" });
+  await expect(message).toBeVisible();
+  await message.getByRole("button", { name: "Mark read", exact: true }).click();
+  await expect(message).toHaveCount(0);
+  await page.getByLabel("Filter notifications").selectOption("Read");
+  await expect(message).toBeVisible();
+  await message.getByRole("button", { name: "Open associated record" }).click();
+  await expect(page.getByRole("dialog")).toContainText(
+    "Stage five urgent task",
+  );
+  await page.getByRole("button", { name: "Close dialog" }).click();
+  await page
+    .getByLabel("Sample team member", { exact: true })
+    .selectOption("Sample colleague B");
+  await go(page, "Notifications");
+  await expect(
+    page
+      .locator(".inbox-message")
+      .filter({ hasText: "Assigned: Stage five urgent task" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Mark all read" }).click();
+  await expect(page.getByLabel("Unread notification count")).toHaveText("0");
+});
+test("targeted staff notice publishes, respects recipients and records one acknowledgement", async ({
+  page,
+}) => {
+  await open(page);
+  await go(page, "Staff communications");
+  await page.getByRole("button", { name: "Draft announcement" }).click();
+  await page.getByLabel("Announcement title").fill("Workshop policy briefing");
+  await page
+    .getByLabel("Message", { exact: true })
+    .fill("Review the fictional workshop operating instructions.");
+  await page.getByLabel("Announcement audience").selectOption("Staff");
+  await page
+    .getByRole("checkbox", { name: "Sample colleague B", exact: true })
+    .check();
+  await page.getByRole("button", { name: "Save announcement draft" }).click();
+  await page.getByRole("tab", { name: "Draft", exact: true }).click();
+  await page.getByRole("button", { name: "Publish notice" }).click();
+  await page.getByRole("tab", { name: "Published", exact: true }).click();
+  await expect(page.locator(".staff-notice")).toContainText(
+    "Workshop policy briefing",
+  );
+  await page
+    .getByLabel("Sample team member", { exact: true })
+    .selectOption("Sample coordinator A");
+  await page.getByLabel("Simulated customer role").selectOption("Staff");
+  await go(page, "Staff communications");
+  await expect(
+    page.getByRole("button", { name: "Draft announcement" }),
+  ).toHaveCount(0);
+  await expect(page.locator(".staff-notice")).toHaveCount(0);
+  await page
+    .getByLabel("Sample team member", { exact: true })
+    .selectOption("Sample colleague B");
+  await expect(page.locator(".staff-notice")).toContainText(
+    "Workshop policy briefing",
+  );
+  await page.getByRole("button", { name: "Open notice" }).click();
+  await page
+    .getByRole("button", { name: "Acknowledge notice", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Acknowledged", exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByRole("dialog")).toContainText("Sample colleague B");
+  await page.getByRole("button", { name: "Close dialog" }).click();
+  await page
+    .getByLabel("Simulated customer role")
+    .selectOption("Administrator");
+  await go(page, "Staff communications");
+  await page.getByRole("button", { name: "Archive notice" }).click();
+  await page.getByRole("tab", { name: "Archived", exact: true }).click();
+  await expect(page.locator(".staff-notice")).toContainText(
+    "Workshop policy briefing",
+  );
+});
