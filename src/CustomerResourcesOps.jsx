@@ -9,7 +9,8 @@ const day=()=>new Date().toISOString().slice(0,10);
 const fmt=d=>d?new Date(d.slice(0,10)+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"Not set";
 const types={documents:"DOCUMENT CONTROL",archives:"COLLECTION CATALOGUE",fleet:"FLEET OPERATIONS",safety:"SAFETY MANAGEMENT",bookings:"APPOINTMENT PLANNER",operations:"DAILY OPERATIONS",visitors:"VISITOR INSIGHTS"};
 const stages=["Planned","In progress","Complete"];
-export default function CustomerResourcesOps({org,module,records,onAdd,onUpdate,onNavigate,focusId,canCreate=true,canEdit=true}){
+export default function CustomerResourcesOps({org,module,records,onAdd,onUpdate,onNavigate,focusId,canCreate=true,canEdit=true,createRequest=0}){
+ useEffect(()=>{if(createRequest)setCreating(true);},[createRequest]);
  const type=moduleInfo(module).type,staff=teamMembers(records,org.id);
  const rows=records.filter(r=>r.orgId===org.id&&r.module===module);
  const customers=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="crm");

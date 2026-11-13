@@ -9,7 +9,8 @@ const fmtMoney=n=>"£"+(Number(n)||0).toLocaleString("en-GB",{minimumFractionDig
 const today=()=>new Date().toISOString().slice(0,10);
 const relatedName=(items,id)=>items.find(x=>x.id===id)?.company||items.find(x=>x.id===id)?.title||"Not linked";
 const Button=({children,...props})=><button type="button" className="action-secondary" {...props}>{children}</button>;
-export default function CustomerCommercialOps({org,module,records,onAdd,onUpdate,canCreate=true,canEdit=true,focusId,onNavigate}){
+export default function CustomerCommercialOps({org,module,records,onAdd,onUpdate,canCreate=true,canEdit=true,focusId,onNavigate,createRequest=0}){
+ useEffect(()=>{if(createRequest)setCreating(true);},[createRequest]);
  const type=moduleInfo(module).type;
  const [selected,setSelected]=useState(null),[creating,setCreating]=useState(false),[error,setError]=useState("");
  const [filter,setFilter]=useState("All"),[search,setSearch]=useState("");
