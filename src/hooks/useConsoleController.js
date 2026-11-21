@@ -1,12 +1,33 @@
+import { toggleModule } from "../model";
+import {
+  ownerCanManage,
+  ownerCanSupport,
+  ownerPageAllowed,
+} from "../owner/rules";
 import { useState, useRef } from "react";
 import { useBackend } from "./useBackend";
 import { useDrawer } from "./useDrawer";
 import { demoRoleDefaults, defaultRoleModules } from "../customerWorkflows";
 export function useConsoleController(backend) {
-  const { data, status, error, run, retry } = useBackend(backend);
+  const { data, status, error, run: rawRun, retry } = useBackend(backend);
   const { orgs, records, tickets, logs, plans, flags } = data;
-  const setPlans = (value) => run(() => backend.demoSettings.setPlans(value));
-  const setFlags = (value) => run(() => backend.demoSettings.setFlags(value));
+  const [ownerRole, setOwnerRole] = useState("Platform Owner");
+  const deny = () => {
+    setMessage(
+      "This action is unavailable to the selected demonstration owner role.",
+    );
+    return Promise.resolve(false);
+  };
+  const run = (operation) =>
+    !customer && ownerRole === "Read-only Auditor" ? deny() : rawRun(operation);
+  const setPlans = (value) =>
+    ownerCanManage(ownerRole)
+      ? run(() => backend.demoSettings.setPlans(value))
+      : deny();
+  const setFlags = (value) =>
+    ownerCanManage(ownerRole)
+      ? run(() => backend.demoSettings.setFlags(value))
+      : deny();
   const [page, setPage] = useState("Overview"),
     [menuOpen, setMenuOpen] = useState(false),
     [selected, setSelected] = useState(orgs[0]?.id),
@@ -18,30 +39,57 @@ export function useConsoleController(backend) {
     [customerPage, setCustomerPage] = useState("Dashboard"),
     [confirm, setConfirm] = useState(null),
     [ticketId, setTicketId] = useState("ticket-1"),
-    [customerRole,setCustomerRole] = useState("Administrator"),
-    [customerRoles,setCustomerRoles] = useState(demoRoleDefaults),
-    [roleModules,setRoleModules] = useState(defaultRoleModules),
-    [roleTeams,setRoleTeams] = useState({Administrator:"All teams",Manager:"All teams",Staff:"All teams",Viewer:"All teams"});
+    [customerRole, setCustomerRole] = useState("Administrator"),
+    [customerRoles, setCustomerRoles] = useState(demoRoleDefaults),
+    [roleModules, setRoleModules] = useState(defaultRoleModules),
+    [roleTeams, setRoleTeams] = useState({
+      Administrator: "All teams",
+      Manager: "All teams",
+      Staff: "All teams",
+      Viewer: "All teams",
+    });
   const menuRef = useRef(null),
     menuButton = useRef(null);
   const active = orgs.find((o) => o.id === selected) || orgs[0],
     ticket = tickets.find((t) => t.id === ticketId);
   const log = async (event, orgId = active?.id) => {
-    if (await run(() => backend.auditEvents.append(orgId, event)))
+    if (
+      await run(() =>
+        backend.auditEvents.append(orgId, event, {
+          actorName: "Fictional operator",
+          role: ownerRole,
+          module: page,
+        }),
+      )
+    )
       setMessage(event);
   };
   const update = async (id, patch, event = "Updated example organisation") => {
-    const saved = await run(() =>
-      "modules" in patch
-        ? backend.entitlements.replace(id, patch.modules)
-        : "admins" in patch
-          ? backend.memberships.replace(id, patch.admins)
-          : backend.organisations.update(id, patch),
-    );
+    if (!customer && !ownerCanManage(ownerRole)) return deny();
+    const saved = await run(async () => {
+      const { modules: enabled, admins, ...fields } = patch;
+      if (enabled) await backend.entitlements.replace(id, enabled);
+      if (admins) await backend.memberships.replace(id, admins);
+      if (fields.plan) {
+        const plan = plans.find((p) => p.name === fields.plan);
+        let combined = backend
+          .getSnapshot()
+          .orgs.find((o) => o.id === id).modules;
+        for (const name of plan?.includedModules || [])
+          if (!combined.includes(name)) combined = toggleModule(combined, name);
+        await backend.entitlements.replace(id, combined);
+      }
+      if (Object.keys(fields).length)
+        await backend.organisations.update(id, fields);
+    });
     if (saved) await log(event, id);
     return saved;
   };
   const navigate = (name) => {
+    if (!customer && !ownerPageAllowed(ownerRole, name)) {
+      deny();
+      return;
+    }
     setPage(name);
     setMenuOpen(false);
     setQuery("");
@@ -51,9 +99,12 @@ export function useConsoleController(backend) {
     navigate("Company Profile");
   };
   const preview = (id) => {
+    if (!customer && !ownerCanManage(ownerRole)) return deny();
     if (
       !flags.customerPreview ||
-      !orgs.some((o) => o.id === id && o.status !== "Archived")
+      !orgs.some(
+        (o) => o.id === id && !["Archived", "Suspended"].includes(o.status),
+      )
     )
       return;
     setSelected(id);
@@ -63,6 +114,7 @@ export function useConsoleController(backend) {
   };
   const closeMenu = useDrawer(menuOpen, setMenuOpen, menuRef, menuButton);
   const changeTicket = async (patch) => {
+    if (!ownerCanSupport(ownerRole)) return deny();
     if (
       await run(() =>
         backend.supportTickets.update(ticket.orgId, ticketId, patch),
@@ -71,7 +123,7 @@ export function useConsoleController(backend) {
       await log("Updated sample ticket " + ticket.subject, ticket.orgId);
   };
   const reset = async () => {
-    if (await run(() => backend.reset())) {
+    if (await rawRun(() => backend.reset())) {
       setSelected(backend.getSnapshot().orgs[0]?.id);
       setPage("Overview");
       setCustomer(false);
@@ -82,15 +134,26 @@ export function useConsoleController(backend) {
       setTicketId("ticket-1");
       setQuery("");
       setStatusFilter("All");
+      setOwnerRole("Platform Owner");
       setCustomerRole("Administrator");
       setCustomerRoles(demoRoleDefaults);
       setRoleModules(defaultRoleModules);
-      setRoleTeams({Administrator:"All teams",Manager:"All teams",Staff:"All teams",Viewer:"All teams"});
+      setRoleTeams({
+        Administrator: "All teams",
+        Manager: "All teams",
+        Staff: "All teams",
+        Viewer: "All teams",
+      });
       setMessage("Fictional demo reset. All session changes cleared.");
+      return true;
     }
+    return false;
   };
   return {
     backend,
+    denyOwnerAction: deny,
+    ownerRole,
+    setOwnerRole,
     run,
     status,
     error,
@@ -108,7 +171,7 @@ export function useConsoleController(backend) {
     statusFilter,
     setStatusFilter,
     form,
-    setForm,
+    setForm: (value) => (ownerCanManage(ownerRole) ? setForm(value) : deny()),
     logs,
     message,
     plans,
@@ -120,11 +183,11 @@ export function useConsoleController(backend) {
     setCustomerPage,
     customerRole,
     setCustomerRole,
-    customerRoles:active?.workspaceConfig?.roles||customerRoles,
+    customerRoles: active?.workspaceConfig?.roles || customerRoles,
     setCustomerRoles,
-    roleModules:active?.workspaceConfig?.roleModules||roleModules,
+    roleModules: active?.workspaceConfig?.roleModules || roleModules,
     setRoleModules,
-    roleTeams:active?.workspaceConfig?.roleTeams||roleTeams,
+    roleTeams: active?.workspaceConfig?.roleTeams || roleTeams,
     setRoleTeams,
     confirm,
     setConfirm,

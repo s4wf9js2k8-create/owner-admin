@@ -1,3 +1,4 @@
+import { ownerPageAllowed } from "../owner/rules";
 import React from "react";
 import { moduleInfo, isTaskModule } from "../customerModules";
 import { moduleAllowed } from "../customerWorkflows";
@@ -49,31 +50,112 @@ const pages = [
   ["Sales Leads", Target],
   ["Announcements", Megaphone],
   ["Infrastructure", Server],
+  ["Owner Access", Users],
+  ["Product Roadmap", ClipboardList],
   ["Settings", Settings],
 ];
-const iconFor = name => ({communications:Megaphone,people:Users,timesheets:Clock3,assets:Package,maintenance:Wrench,inspections:ClipboardCheck,documents:FileText,schedule:CalendarDays,events:CalendarDays,bookings:CalendarDays,donations:HeartHandshake,fleet:CarFront,archives:Folder,projects:ClipboardList,reporting:ChartNoAxesCombined,training:UserRound}[moduleInfo(name).type] || Blocks);
+const iconFor = (name) =>
+  ({
+    communications: Megaphone,
+    people: Users,
+    timesheets: Clock3,
+    assets: Package,
+    maintenance: Wrench,
+    inspections: ClipboardCheck,
+    documents: FileText,
+    schedule: CalendarDays,
+    events: CalendarDays,
+    bookings: CalendarDays,
+    donations: HeartHandshake,
+    fleet: CarFront,
+    archives: Folder,
+    projects: ClipboardList,
+    reporting: ChartNoAxesCombined,
+    training: UserRound,
+  })[moduleInfo(name).type] || Blocks;
 
-const peopleTypes = new Set(["people","timesheets","schedule","leave","training"]);
-const operationsTypes = new Set(["projects","assets","maintenance","inspections","safety","fleet","inventory","operations"]);
-const customerGroups = (org, role, roleModules, actions=[]) => {
-  const enabled=org.modules.filter(m=>moduleAllowed(role,m,roleModules));
-  const modules=enabled.filter(m=>!isTaskModule(m));
-  if(enabled.some(isTaskModule)) modules.unshift("Tasks & projects");
-  const by = types => modules.filter(m=>types.has(moduleInfo(m).type)).map(m=>[m,iconFor(m)]);
-  const grouped = new Set([...peopleTypes,...operationsTypes]);
+const peopleTypes = new Set([
+  "people",
+  "timesheets",
+  "schedule",
+  "leave",
+  "training",
+]);
+const operationsTypes = new Set([
+  "projects",
+  "assets",
+  "maintenance",
+  "inspections",
+  "safety",
+  "fleet",
+  "inventory",
+  "operations",
+]);
+const customerGroups = (org, role, roleModules, actions = []) => {
+  const enabled = org.modules.filter((m) =>
+    moduleAllowed(role, m, roleModules),
+  );
+  const modules = enabled.filter((m) => !isTaskModule(m));
+  if (enabled.some(isTaskModule)) modules.unshift("Tasks & projects");
+  const by = (types) =>
+    modules
+      .filter((m) => types.has(moduleInfo(m).type))
+      .map((m) => [m, iconFor(m)]);
+  const grouped = new Set([...peopleTypes, ...operationsTypes]);
   return [
-    ["WORKSPACE",[["Dashboard",LayoutDashboard],["My work",ClipboardList],["Calendar",CalendarDays],["Notifications",Bell],...((actions.includes("Approve")||actions.includes("Edit"))?[["Approvals",ClipboardCheck]]:[]),["Activity history",ScrollText]]],
-    ["TEAM",by(peopleTypes)],
-    ["WORK & EQUIPMENT",by(operationsTypes)],
-    ["BUSINESS & RESOURCES",modules.filter(m=>!grouped.has(moduleInfo(m).type)).map(m=>[m,iconFor(m)])],
-    ["ACCOUNT",actions.includes("Manage")?[["Settings",Settings],["Automations",Blocks]]:[]]
-  ].filter(([,items])=>items.length);
+    [
+      "WORKSPACE",
+      [
+        ["Dashboard", LayoutDashboard],
+        ["My work", ClipboardList],
+        ["Calendar", CalendarDays],
+        ["Notifications", Bell],
+        ...(actions.includes("Approve") || actions.includes("Edit")
+          ? [["Approvals", ClipboardCheck]]
+          : []),
+        ["Activity history", ScrollText],
+      ],
+    ],
+    ["TEAM", by(peopleTypes)],
+    ["WORK & EQUIPMENT", by(operationsTypes)],
+    [
+      "BUSINESS & RESOURCES",
+      modules
+        .filter((m) => !grouped.has(moduleInfo(m).type))
+        .map((m) => [m, iconFor(m)]),
+    ],
+    [
+      "ACCOUNT",
+      actions.includes("Manage")
+        ? [
+            ["Settings", Settings],
+            ["Automations", Blocks],
+          ]
+        : [],
+    ],
+  ].filter(([, items]) => items.length);
 };
 const ownerGroups = [
-  ["OWNER CONSOLE",pages.slice(0,8)],
-  ["BUSINESS OPERATIONS",pages.slice(8,-1)],
-  ["ACCOUNT",[pages[pages.length-1]]]
-];
+  ["OVERVIEW", ["Overview", "Client Insights", "Activity Logs"]],
+  [
+    "CUSTOMERS",
+    [
+      "Organisations",
+      "Company Profile",
+      "Onboarding",
+      "Branding Templates",
+      "Users",
+    ],
+  ],
+  ["COMMERCIAL", ["Sales Leads", "Subscriptions"]],
+  ["CUSTOMER SERVICE", ["Support", "Feature Requests", "Announcements"]],
+  ["PRODUCT", ["Modules", "Product Roadmap"]],
+  ["PLATFORM", ["Infrastructure"]],
+  ["ADMINISTRATION", ["Owner Access", "Settings"]],
+].map(([group, names]) => [
+  group,
+  names.map((name) => pages.find(([page]) => page === name)),
+]);
 export default function Navigation({ controller }) {
   const {
     menuButton,
@@ -108,10 +190,28 @@ export default function Navigation({ controller }) {
           {menuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
         <span className="topbrand">
-          {customer&&active.logo&&<img src={active.logo} alt="Company logo" className="header-company-logo"/>}{customer ? active.name : "Owner Admin"}
+          {customer && active.logo && (
+            <img
+              src={active.logo}
+              alt="Company logo"
+              className="header-company-logo"
+            />
+          )}
+          {customer ? active.name : "Owner Admin"}
         </span>
         <span className="tag">Fictional demo</span>
-        {customer&&<button className="header-search" aria-label="Open global search" onClick={()=>window.dispatchEvent(new Event("channel-open-search"))}><Search size={17}/><span>Search</span></button>}
+        {customer && (
+          <button
+            className="header-search"
+            aria-label="Open global search"
+            onClick={() =>
+              window.dispatchEvent(new Event("channel-open-search"))
+            }
+          >
+            <Search size={17} />
+            <span>Search</span>
+          </button>
+        )}
         {customer && (
           <button
             className="header-action"
@@ -139,22 +239,52 @@ export default function Navigation({ controller }) {
       >
         <div className="brand">{customer ? active.name : "Owner Admin"}</div>
         <div className="sub">
-          {customer ? customerRole+" · Demo workspace" : "Platform management"}
+          {customer
+            ? customerRole + " · Demo workspace"
+            : "Platform management"}
         </div>
         <nav aria-label="Main navigation">
-          {(customer ? customerGroups(active,customerRole,roleModules,customerRoles[customerRole]||[]) : ownerGroups).map(([group,items])=>(
+          {(customer
+            ? customerGroups(
+                active,
+                customerRole,
+                roleModules,
+                customerRoles[customerRole] || [],
+              )
+            : ownerGroups
+                .map(([g, items]) => [
+                  g,
+                  items.filter(([p]) =>
+                    ownerPageAllowed(controller.ownerRole, p),
+                  ),
+                ])
+                .filter(([, items]) => items.length)
+          ).map(([group, items]) => (
             <React.Fragment key={group}>
               <div className="nav-section-label">{group}</div>
-              {items.map(([name, Icon])=>(
+              {items.map(([name, Icon]) => (
                 <button
                   key={name}
-                  aria-current={(customer?customerPage:page)===name?"page":undefined}
-                  className={(customer?customerPage:page)===name?"selected":""}
-                  onClick={()=>{
-                    if(customer){setCustomerPage(name);setMenuOpen(false);}
-                    else navigate(name);
+                  aria-current={
+                    (customer ? customerPage : page) === name
+                      ? "page"
+                      : undefined
+                  }
+                  className={
+                    (customer ? customerPage : page) === name ? "selected" : ""
+                  }
+                  onClick={() => {
+                    if (customer) {
+                      setCustomerPage(name);
+                      setMenuOpen(false);
+                    } else navigate(name);
                   }}
-                ><Icon size={18}/>{customer?(active.workspaceConfig?.navLabels?.[name]||name):name}</button>
+                >
+                  <Icon size={18} />
+                  {customer
+                    ? active.workspaceConfig?.navLabels?.[name] || name
+                    : name}
+                </button>
               ))}
             </React.Fragment>
           ))}

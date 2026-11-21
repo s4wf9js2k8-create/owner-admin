@@ -42,7 +42,9 @@ test("organisation creation, search, edit, archive and refresh reset", async ({
     .getByRole("textbox", { name: "Search organisations" })
     .fill("Renamed");
   await expect(
-    page.getByRole("row").filter({ hasText: "Renamed Sample Works" }),
+    page
+      .locator(".owner-company-entry")
+      .filter({ hasText: "Renamed Sample Works" }),
   ).toContainText("Archived");
   await page.getByLabel("Filter organisation status").selectOption("Active");
   await expect(
@@ -65,15 +67,25 @@ test("customer modules are interactive and session records remain scoped", async
     .click();
   await navigate(page, "Volunteers");
   await page.getByRole("button", { name: "Add person" }).click();
-  await page.getByRole("textbox", { name: "Name", exact: true }).fill("Sample isolated volunteer");
+  await page
+    .getByRole("textbox", { name: "Name", exact: true })
+    .fill("Sample isolated volunteer");
   await page
     .getByLabel("Profile notes", { exact: true })
     .fill("Fictional welcome team");
   await page.getByRole("button", { name: "Save sample person" }).click();
-  await page.locator(".people-profile").filter({hasText:"Sample isolated volunteer"}).getByRole("button",{name:"Open profile"}).click();
-  await page.getByRole("textbox",{name:"Team",exact:true}).fill("Sample welcome team");
-  await expect(page.getByRole("textbox",{name:"Team",exact:true})).toHaveValue("Sample welcome team");
-  await page.getByRole("button", {name:"Close dialog"}).click();
+  await page
+    .locator(".people-profile")
+    .filter({ hasText: "Sample isolated volunteer" })
+    .getByRole("button", { name: "Open profile" })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Team", exact: true })
+    .fill("Sample welcome team");
+  await expect(
+    page.getByRole("textbox", { name: "Team", exact: true }),
+  ).toHaveValue("Sample welcome team");
+  await page.getByRole("button", { name: "Close dialog" }).click();
   await page
     .getByLabel("Example workspace", { exact: true })
     .selectOption("demo-charity");
@@ -127,7 +139,7 @@ test("module dependencies, package confirmations and support history", async ({
   ).toBeVisible();
   await navigate(page, "Activity Logs");
   await expect(
-    page.getByRole("cell", {
+    page.getByRole("heading", {
       name: "Changed sample package to Starter",
       exact: true,
     }),

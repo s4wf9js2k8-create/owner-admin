@@ -17,3 +17,5 @@ import "./financial.css";
 import "./stage5.css";
 
 import "./administration.css";
+
+import "./owner/stage6.css";
