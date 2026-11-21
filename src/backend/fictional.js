@@ -1,3 +1,4 @@
+import { moveStock } from "../stockTransactions.js";
 import { validateDemoAssignment } from "../demoAssignmentRules.js";
 import {
   activityEntry,
@@ -181,6 +182,17 @@ export function createFictionalBackend({
           throw new Error("Example record unavailable.");
         if ("orgId" in patch || "id" in patch || "module" in patch)
           throw new Error("Example record identity cannot change.");
+        if (patch._stockMovement) {
+          const next = moveStock(
+            state.records,
+            orgId,
+            id,
+            patch._stockMovement,
+            patch._actor,
+          );
+          publish({ ...state, records: next });
+          return copy(next.find((r) => r.id === id));
+        }
         const { _actor, _approval, ...fields } = copy(patch);
         const org = organisation(orgId);
         const decision = _approval

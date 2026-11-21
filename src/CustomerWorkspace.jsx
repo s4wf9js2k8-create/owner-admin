@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { isTaskModule, moduleInfo } from "./customerModules";
+const InventoryWorkspace = React.lazy(() => import("./InventoryWorkspace"));
 const ReportingWorkspace = React.lazy(() => import("./ReportingWorkspace"));
 const NotificationInbox = React.lazy(() => import("./NotificationInbox"));
 const CommunicationsWorkspace = React.lazy(
@@ -268,6 +269,11 @@ export default function CustomerWorkspace({
       )
     )
       return deny("This role can assign work to itself only.");
+    if (
+      patch._stockMovement?.orderId &&
+      !accessibleRecords.some((r) => r.id === patch._stockMovement.orderId)
+    )
+      return deny("The receiving job is outside your access.");
     return onUpdate(orgId, id, { ...patch, _actor: actorMeta });
   };
   const safeAdd = (payload) => {
@@ -477,6 +483,17 @@ export default function CustomerWorkspace({
         onAdd={safeAdd}
         canCreate={canCreate}
         canApprove={canApprove}
+      />
+    );
+  else if (moduleInfo(current).type === "inventory")
+    content = (
+      <InventoryWorkspace
+        key={current}
+        {...shared}
+        module={current}
+        onAdd={safeAdd}
+        focusId={focusId}
+        canCreate={canCreate}
       />
     );
   else if (

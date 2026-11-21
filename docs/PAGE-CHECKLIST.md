@@ -15,7 +15,7 @@ Updated 13 November 2026. A checked batch item means that specific interaction i
 - [x] Daily Operations: dated opening/closing checks, staff attribution, timestamps, supervisor approvals, history, linked operational overview and acknowledged handovers.
 - [x] Inspections: reusable question templates, asset/recorded-location selection, eligible inspector, required responses and browser-local evidence, draft/submission/review, failed-result corrective maintenance and asset history.
 - [ ] Fleet Management: detailed profile tabs, per-item daily checks and driver-specific qualification fixtures. Existing vehicle cards and basic checks are preserved.
-- [ ] Inventory: returns, transfers, adjustments, purchase orders and suppliers. Existing issue/allocation/receive workflows are preserved.
+- [x] Inventory: receive/issue/allocation, returns, transfers, reasoned adjustments, suppliers, purchase orders and partial deliveries; linked stock/job/order transactions publish atomically. See WORKSPACE-RECOVERY.md.
 - [ ] CRM: full profile tabs, linked follow-up tasks and quote activity timeline. Existing customers/contacts/notes/quote links are preserved.
 
 **Next module: Fleet Management**, then Inventory and CRM. Stage 3 is not complete.
@@ -63,7 +63,7 @@ The core Stage 5 browser-demonstration workflows are implemented. Reporting/pers
 - [ ] Timesheets — allocations and configurable overtime. Central correction requests and approval are implemented.
 - [ ] Leave — balances and complete calendar.
 - [ ] Training — sessions, assessments, local evidence files.
-- [ ] Inventory — returns/transfers, purchase orders, suppliers and atomic movements.
+- [x] Inventory — returns/transfers, suppliers, purchase orders/deliveries and atomic stock/job movements.
 - [ ] Health & safety — risk scoring, reviews and linked corrective workflow.
 - [ ] Fleet — insurance, service history and driver fixtures.
 - [ ] CRM — complete linked job, appointment and document tabs.
