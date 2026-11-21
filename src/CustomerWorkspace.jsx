@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { isTaskModule, moduleInfo } from "./customerModules";
 const InventoryWorkspace = React.lazy(() => import("./InventoryWorkspace"));
+const DocumentWorkspace = React.lazy(() => import("./DocumentWorkspace"));
 const ReportingWorkspace = React.lazy(() => import("./ReportingWorkspace"));
 const NotificationInbox = React.lazy(() => import("./NotificationInbox"));
 const CommunicationsWorkspace = React.lazy(
@@ -483,6 +484,18 @@ export default function CustomerWorkspace({
         onAdd={safeAdd}
         canCreate={canCreate}
         canApprove={canApprove}
+      />
+    );
+  else if (moduleInfo(current).type === "documents")
+    content = (
+      <DocumentWorkspace
+        key={current}
+        {...shared}
+        module={current}
+        onAdd={safeAdd}
+        focusId={focusId}
+        canCreate={canCreate}
+        canExport={canExport}
       />
     );
   else if (moduleInfo(current).type === "inventory")

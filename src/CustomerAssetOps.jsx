@@ -1,3 +1,4 @@
+import {LinkedRecordFiles} from "./RecordFiles";
 import React, { useEffect, useState } from "react";
 import { Empty, Modal, Status } from "./components";
 import { ClipboardCheck, Package, Plus, Wrench } from "lucide-react";
@@ -168,6 +169,6 @@ export default function CustomerAssetOps({org,module,records,onAdd,onUpdate,onNa
           <label>Checklist steps (one per line)<textarea name="checklist" maxLength={1000}/></label><label>Due date<input type="date" name="dueDate" value={assignmentDate} onChange={e=>setAssignmentDate(e.target.value)}/></label></>}
         {type==="inventory"&&<><label>SKU<input name="sku" required maxLength={40}/></label><label>Opening quantity<input name="quantity" type="number" min="0" step="1" required/></label><label>Reorder threshold<input name="reorder" type="number" min="0" step="1"/></label><label>Store location<input name="location" maxLength={80}/></label></>}
         <button className="action-primary" type="submit">Save sample {type==="assets"?"asset":type==="maintenance"?"work order":type==="inspections"?"inspection":"item"}</button></form></Modal>}
-    {current&&<Modal title={type==="assets"?"Asset quick actions":type==="maintenance"?"Work order detail":type==="inspections"?"Inspection detail":"Stock management"} onClose={()=>{setSelected(null);setError("");}}>{details(current)}</Modal>}
+    {current&&<Modal title={type==="assets"?"Asset quick actions":type==="maintenance"?"Work order detail":type==="inspections"?"Inspection detail":"Stock management"} onClose={()=>{setSelected(null);setError("");}}>{details(current)}<LinkedRecordFiles record={current} records={records} onNavigate={onNavigate}/></Modal>}
   </div>;
 }

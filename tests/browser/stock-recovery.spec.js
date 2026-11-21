@@ -69,3 +69,46 @@ test("supplier purchase delivery completes an order", async ({ page }) => {
   await expect(po).toContainText("3 of 3 delivered");
   await expect(po).toContainText("Complete");
 });
+test("document versions and local files remain linked to the selected asset", async ({
+  page,
+}) => {
+  await open(page);
+  await page.getByRole("button", { name: "Open navigation menu" }).click();
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Documents & files", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Add document" }).click();
+  await page.getByLabel("Document title").fill("Connected asset manual");
+  const asset = page
+      .getByLabel("Related records (select multiple)")
+      .locator("option")
+      .filter({ hasText: "Assets" })
+      .first(),
+    id = await asset.getAttribute("value");
+  await page.getByLabel("Related records (select multiple)").selectOption(id);
+  await page
+    .getByLabel("Local file (optional, up to 2 MB)")
+    .setInputFiles({
+      name: "manual.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from("Fictional manual"),
+    });
+  await page.getByRole("button", { name: "Save document record" }).click();
+  await page
+    .getByRole("button")
+    .filter({ hasText: "Connected asset manual" })
+    .click();
+  await expect(page.getByRole("dialog")).toContainText("manual.txt");
+  await page.getByRole("button", { name: "Edit document details" }).click();
+  await page.getByLabel("Document title").fill("Revised asset manual");
+  await page.getByRole("button", { name: "Save document record" }).click();
+  await expect(page.getByRole("dialog")).toContainText("Version 2");
+  await page
+    .getByRole("dialog")
+    .getByRole("button")
+    .filter({ hasText: "Assets" })
+    .first()
+    .click();
+  await expect(page.getByRole("dialog")).toContainText("Revised asset manual");
+});

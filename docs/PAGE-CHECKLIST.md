@@ -27,7 +27,7 @@ Updated 13 November 2026. A checked batch item means that specific interaction i
 - [ ] Financial extensions: product/service catalogue, contact-ID registry, advanced tax rules and refunds. Company address/contact branding is now configurable.
 - [ ] Events and Bookings — next Stage 4 batch: calendar, linked eligible staff/equipment, CRM reservations and resource/capacity checks.
 - [ ] Appointments — scheduling views, rescheduling, outcomes, follow-up tasks and CRM history.
-- [ ] Documents — local files, stable record links and profile access.
+- [x] Documents — browser-local files, image previews/downloads, versions, classification, stable links and asset/staff profile access.
 - [ ] Business-record Archives — archive/restore eligible records without losing their links. Existing historical collection catalogue remains distinct.
 - [ ] Forms — publish/archive lifecycle, conditional sections and associated-record responses.
 
@@ -70,7 +70,7 @@ The core Stage 5 browser-demonstration workflows are implemented. Reporting/pers
 - [ ] Quotes/invoices — advanced financial extensions noted above; the core financial document workflow is implemented.
 - [ ] Events/bookings — calendar, ticket categories, eligible staff/equipment.
 - [ ] Appointments/resources — shared resource registry and conflict prevention.
-- [ ] Documents — actual browser-local files, previews/downloads and record links.
+- [x] Documents — actual browser-local files, image previews/downloads, versions and record links.
 - [ ] Archives — provenance, historical dates and digital references.
 - [ ] Forms — conditional sections and workflow triggers.
 - [ ] Donations — linked donors/events and reconciliation.
