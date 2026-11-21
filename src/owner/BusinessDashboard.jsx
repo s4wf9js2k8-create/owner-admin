@@ -277,7 +277,9 @@ export default function BusinessDashboard({ controller, data }) {
                       {l.event}
                     </p>
                   ))}
-                  {!logs.length && <p>No owner actions recorded yet.</p>}
+                  {!logs.length && (
+                    <p>Make a demonstration change to see activity here.</p>
+                  )}
                   <button onClick={() => jump("Activity Logs")}>
                     Open activity centre
                   </button>
