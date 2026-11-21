@@ -20,7 +20,7 @@ Updated 21 November 2026. Checked rows describe working public-demo workflows; t
 - [x] Activity centre: structured fictional actor/role/timestamp/module, company/action/module/date filters and chronological cards. Not tamper-proof.
 - [x] Owner permissions: five fictional role templates, navigation/page guards, write guards and blocked unsupported company actions; public reset consistently restores all session state.
 - [x] Business settings: business profile, configured onboarding package default and support planning target; existing preview flag retained.
-- [ ] Final release verification: full regression suite, CI, merge, GitHub Pages deployment and live workflow checks (recorded in PR when complete).
+Release verification is tracked separately in PR #32, including executed regression counts, merge status, GitHub Pages deployment and live-site workflow checks: https://github.com/s4wf9js2k8-create/owner-admin/pull/32
 
 ## Remaining Stage 6 extensions
 

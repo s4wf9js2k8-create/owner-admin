@@ -1,6 +1,6 @@
 # Overhaul page checklist
 
-Updated 13 November 2026. A checked batch item means that specific interaction is implemented and covered by browser tests, not that every feature in the full specification is complete. Every page still requiring work remains listed below. Public demo data resets on refresh.
+Updated 21 November 2026. A checked batch item means that specific interaction is implemented and covered by browser tests, not that every feature in the full specification is complete. Every page still requiring work remains listed below. Public demo data resets on refresh.
 
 ## Current visible batch — implemented; verification recorded in PR checks
 
@@ -18,7 +18,7 @@ Updated 13 November 2026. A checked batch item means that specific interaction i
 - [x] Inventory: receive/issue/allocation, returns, transfers, reasoned adjustments, suppliers, purchase orders and partial deliveries; linked stock/job/order transactions publish atomically. See WORKSPACE-RECOVERY.md.
 - [ ] CRM: full profile tabs, linked follow-up tasks and quote activity timeline. Existing customers/contacts/notes/quote links are preserved.
 
-**Next module: Fleet Management**, then Inventory and CRM. Stage 3 is not complete.
+**Next Stage 3 module: Fleet Management**, then CRM. Inventory is implemented. Stage 3 is not complete.
 
 ## Stage 4 financial batch
 
@@ -31,7 +31,7 @@ Updated 13 November 2026. A checked batch item means that specific interaction i
 - [ ] Business-record Archives — archive/restore eligible records without losing their links. Existing historical collection catalogue remains distinct.
 - [ ] Forms — publish/archive lifecycle, conditional sections and associated-record responses.
 
-Stage 4 is not complete. The earlier Stage 3 Fleet/Inventory/CRM gaps above remain outstanding.
+Stage 4 is not complete. The earlier Stage 3 Fleet/CRM gaps above remain outstanding.
 
 ## Stage 5 reporting and communications batch
 
@@ -55,8 +55,8 @@ The core Stage 5 browser-demonstration workflows are implemented. Reporting/pers
 - [ ] Dashboard: advanced widget-specific filters and finer-grained server-enforced record permissions.
 - [ ] Staff: evidence/documents, full immutable activity history, per-person permissions.
 - [ ] Rotas: competency-specific staffing minima, recurring patterns/templates, completed swap workflow. Minimum shift coverage is a session-only setting and does not certify qualified staffing.
-- [ ] Maintenance: enforced supervisor completion gates, attachments, recurring jobs/templates, atomic stock/job transaction. Parts updates are sequential in this single-user fictional demo.
-- [ ] Assets: purchase information, QR deep links and document library links.
+- [ ] Maintenance: enforced supervisor completion gates, attachments and recurring jobs/templates. Stock/job movements are now atomic in the fictional adapter.
+- [ ] Assets: purchase information and QR deep links. Document-library links are implemented.
 - [ ] Inspections — template editing/version management, recurring schedules and durable evidence storage. Current evidence is browser memory only.
 - [ ] Tasks/projects — dependencies, resources, evidence and full budgets.
 - [ ] Attendance — correction requests, location and edit validation.
@@ -80,14 +80,16 @@ The core Stage 5 browser-demonstration workflows are implemented. Reporting/pers
 - [ ] Notifications — remaining persistence/delivery extensions listed in Stage 5 above; record-based inbox and preferences are implemented.
 - [ ] Global search — advanced indexed search and production permission enforcement. Session saved searches and permitted-record palette are implemented.
 - [ ] Roles/company settings — production server enforcement, granular per-person exceptions and advanced module-specific policies. Demo scopes and central approval rules are implemented.
-- [ ] Owner overview/customer profiles — connected configuration/activity/usage.
-- [ ] Owner onboarding — guided creation into public fictional workspace.
-- [ ] Owner packages/modules — bespoke package preview/configuration.
-- [ ] Owner branding — logo, terminology, welcome text and document branding.
-- [ ] Owner support — assignment/resolution/response metrics.
-- [ ] Owner feature requests — linked companies/support and priority scoring.
-- [ ] Owner leads — follow-ups and conversion to onboarding draft.
-- [ ] Owner announcements/settings/activity — complete connected behavior.
+- [x] Owner overview/customer profiles — connected company/status/support/usage widgets, directory, profile tabs and company contact/module/subscription changes.
+- [x] Owner onboarding — guided nine-stage creation into the actual public fictional workspace, industry recommendations, branding and linked lead conversion.
+- [x] Owner packages/modules — new configured/bespoke packages, included-module dependencies, negotiated subscription prices and illustrative payment records.
+- [x] Owner branding — company-specific logo, accent/secondary navigation colours, labels, welcome/presets and financial-document logo.
+- [x] Owner support — inbox filters, assignment, local conversations, resolution/reopen and timestamp-supported response metrics.
+- [x] Owner feature requests/roadmap — linked companies/support, priority/votes, company-interest IDs and shared development states.
+- [x] Owner leads — seven-stage pipeline, contact/opportunity/follow-up/activity fields and conversion without duplicate companies.
+- [x] Owner announcements/settings/activity — targeted in-app publication/archive, retained drafts, business/onboarding defaults and filtered structured activity timeline.
+- [x] Owner role previews — five templates, restricted navigation and guarded writes. This is not secure authentication.
+- [ ] Owner advanced extensions — optional add-on pricing/period accounting; package allowance editing after creation; custom owner accounts/permission matrices; further support, notification and onboarding templates. See STAGE6-CHECKLIST.md for exact limits.
 - [ ] Server management — verified diagnostics only; self-hosted production approval remains separate.
 
 See OVERHAUL-AUDIT.md for the earlier baseline inventory. This checklist supersedes its descriptions of the five redesigned interfaces. No EVLT access/modification, Vercel hosting, paid infrastructure or real customer data is involved.
