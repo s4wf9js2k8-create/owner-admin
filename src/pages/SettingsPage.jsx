@@ -27,7 +27,7 @@ export default function SettingsPage({ controller }) {
             type="checkbox"
             checked={flags.customerPreview}
             onChange={(e) => {
-              setFlags({ customerPreview: e.target.checked });
+              setFlags({ ...flags, customerPreview: e.target.checked });
               log("Changed local customer preview flag");
             }}
           />

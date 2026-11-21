@@ -315,7 +315,7 @@ export function createFictionalBackend({
     },
     auditEvents: {
       list: async (orgId) => copy(scoped(state.logs, orgId)),
-      append: async (orgId, event) => {
+      append: async (orgId, event, meta = {}) => {
         organisation(orgId);
         publish({
           ...state,
@@ -324,6 +324,10 @@ export function createFictionalBackend({
               id: crypto.randomUUID(),
               orgId,
               event,
+              at: new Date().toISOString(),
+              actorName: meta.actorName || "Fictional operator",
+              role: meta.role || "Demo",
+              module: meta.module || "Owner",
               time: new Date().toLocaleString("en-GB"),
             },
             ...state.logs,

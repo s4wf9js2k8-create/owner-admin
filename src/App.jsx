@@ -1,4 +1,13 @@
-import {activityEntry} from "./administrationRules";
+import BusinessDashboard from "./owner/BusinessDashboard";
+import CompanyDirectory from "./owner/CompanyDirectory";
+import CompanyProfile from "./owner/CompanyProfile";
+import ActivityCentre from "./owner/ActivityCentre";
+import OnboardingWizard from "./owner/OnboardingWizard";
+import OwnerAccess from "./owner/OwnerAccess";
+import BusinessSettings from "./owner/BusinessSettings";
+import Roadmap from "./owner/Roadmap";
+import { ownerRoles, ownerPageAllowed } from "./owner/rules";
+import { activityEntry } from "./administrationRules";
 import React, { useState } from "react";
 import OwnerBusinessPages, { ownerSeed } from "./OwnerBusinessPages";
 import CompanyOnboarding from "./CompanyOnboarding";
@@ -7,13 +16,9 @@ import { ShieldAlert } from "lucide-react";
 import { createFictionalBackend } from "./backend/fictional";
 import { BackendState } from "./layout/BackendState";
 import CustomerWorkspace from "./CustomerWorkspace";
-import { Activity } from "./pages/shared";
 import { useConsoleController } from "./hooks/useConsoleController";
 import Navigation from "./layout/Navigation";
 import ConsoleDialogs from "./layout/ConsoleDialogs";
-import OverviewPage from "./pages/OverviewPage";
-import OrganisationsPage from "./pages/OrganisationsPage";
-import CompanyProfilePage from "./pages/CompanyProfilePage";
 import ModulesPage from "./pages/ModulesPage";
 import SubscriptionsPage from "./pages/SubscriptionsPage";
 import UsersPage from "./pages/UsersPage";
@@ -32,7 +37,6 @@ export default function App({ backend: suppliedBackend }) {
     selected,
     setSelected,
     setForm,
-    logs,
     message,
     records,
     customer,
@@ -80,7 +84,14 @@ export default function App({ backend: suppliedBackend }) {
             {message}
           </div>
           <div className="toolbar">
-            <button onClick={async () => { await reset(); setOwnerData(ownerSeed); }}>Reset fictional demo</button>
+            <button
+              onClick={async () => {
+                await reset();
+                setOwnerData(ownerSeed);
+              }}
+            >
+              Reset fictional demo
+            </button>
             <button onClick={() => setServerWorkspace(true)}>
               Private server workspace
             </button>
@@ -125,12 +136,51 @@ export default function App({ backend: suppliedBackend }) {
                   key={active.id}
                   org={active}
                   records={records}
-                  onConfigure={async(patch,event,actor)=>{
-                    if(Object.keys(patch).some(key=>!["name","sector","contactPhone","contactEmail","address","description","color","logo","workspaceConfig","modules"].includes(key)))return false;
-                    const currentOrg=backend.getSnapshot().orgs.find(o=>o.id===active.id);
-                    const {modules:enabled,...fields}=patch;
-                    const workspaceConfig={...currentOrg.workspaceConfig,...fields.workspaceConfig,activity:[...(currentOrg.workspaceConfig?.activity||[]),activityEntry(actor,event||"Configuration updated",Object.keys(patch.workspaceConfig||patch).join(", "))].slice(-300)};
-                    return run(async()=>{if(enabled)await backend.entitlements.replace(active.id,enabled);await backend.organisations.update(active.id,{...fields,workspaceConfig});});
+                  onConfigure={async (patch, event, actor) => {
+                    if (
+                      Object.keys(patch).some(
+                        (key) =>
+                          ![
+                            "name",
+                            "sector",
+                            "contactPhone",
+                            "contactEmail",
+                            "address",
+                            "description",
+                            "color",
+                            "logo",
+                            "workspaceConfig",
+                            "modules",
+                          ].includes(key),
+                      )
+                    )
+                      return false;
+                    const currentOrg = backend
+                      .getSnapshot()
+                      .orgs.find((o) => o.id === active.id);
+                    const { modules: enabled, ...fields } = patch;
+                    const workspaceConfig = {
+                      ...currentOrg.workspaceConfig,
+                      ...fields.workspaceConfig,
+                      activity: [
+                        ...(currentOrg.workspaceConfig?.activity || []),
+                        activityEntry(
+                          actor,
+                          event || "Configuration updated",
+                          Object.keys(patch.workspaceConfig || patch).join(
+                            ", ",
+                          ),
+                        ),
+                      ].slice(-300),
+                    };
+                    return run(async () => {
+                      if (enabled)
+                        await backend.entitlements.replace(active.id, enabled);
+                      await backend.organisations.update(active.id, {
+                        ...fields,
+                        workspaceConfig,
+                      });
+                    });
                   }}
                   page={customerPage}
                   setPage={setCustomerPage}
@@ -155,48 +205,152 @@ export default function App({ backend: suppliedBackend }) {
                     return saved ? createdRecord : false;
                   }}
                   onUpdate={async (orgId, id, patch) => {
-                    const changed = await run(() => backend.records.update(orgId, id, patch));
-                    if (changed) await log("Updated sample operational record", orgId);
+                    const changed = await run(() =>
+                      backend.records.update(orgId, id, patch),
+                    );
+                    if (changed)
+                      await log("Updated sample operational record", orgId);
                     return changed;
                   }}
                 />
               </>
             ) : (
               <>
-                <div className="heading">
-                  <div>
-                    <small>OWNER CONSOLE</small>
-                    <h1>{page}</h1>
-                    <p>Organisation and platform management · demonstration</p>
-                  </div>
-                  <button
-                    className="primary"
-                    onClick={() => setForm({ type: "create" })}
-                  >
-                    + Add example organisation
-                  </button>
-                </div>
-                {page === "Overview" && (
-                  <OverviewPage controller={controller} />
-                )}
-                {page === "Organisations" && (
-                  <OrganisationsPage controller={controller} />
-                )}
-                {page === "Company Profile" && (
-                  <CompanyProfilePage controller={controller} />
-                )}
-                {page === "Modules" && <ModulesPage controller={controller} />}
-                {page === "Subscriptions" && (
-                  <SubscriptionsPage controller={controller} />
-                )}
-                {page === "Users" && <UsersPage controller={controller} />}
-                {page === "Support" && <SupportPage controller={controller} />}
-                {page === "Activity Logs" && <Activity logs={logs} />}
-                {page === "Settings" && (
-                  <SettingsPage controller={controller} />
-                )}
-                {["Onboarding","Branding Templates","Client Insights","Feature Requests","Sales Leads","Announcements","Infrastructure"].includes(page) && (
-                  <OwnerBusinessPages page={page} controller={controller} data={ownerData} setData={setOwnerData} onOpenServer={() => setServerWorkspace(true)} onOpenOnboarding={() => setOnboarding(true)} />
+                {!ownerPageAllowed(controller.ownerRole, page) ? (
+                  <p role="alert">
+                    This page is unavailable to the selected owner role.
+                  </p>
+                ) : (
+                  <>
+                    <label className="owner-role-preview">
+                      Simulated owner role
+                      <select
+                        aria-label="Simulated owner role"
+                        value={controller.ownerRole}
+                        onChange={(e) => {
+                          controller.setOwnerRole(e.target.value);
+                          controller.setPage("Overview");
+                        }}
+                      >
+                        {ownerRoles.map((r) => (
+                          <option key={r}>{r}</option>
+                        ))}
+                      </select>
+                      <small>
+                        Fictional role preview; not secure production access.
+                      </small>
+                    </label>
+                    <div className="heading">
+                      <div>
+                        <small>OWNER CONSOLE</small>
+                        <h1>{page}</h1>
+                        <p>
+                          Organisation and platform management · demonstration
+                        </p>
+                      </div>
+                      <button
+                        className="primary"
+                        onClick={() => setForm({ type: "create" })}
+                      >
+                        + Add example organisation
+                      </button>
+                    </div>
+                    {page === "Onboarding" && (
+                      <OnboardingWizard
+                        controller={controller}
+                        draft={ownerData.onboardingDraft}
+                        onCreated={(id) =>
+                          setOwnerData((d) => ({
+                            ...d,
+                            onboardingDraft: {
+                              ...d.onboardingDraft,
+                              companyId: id,
+                            },
+                            leads: d.leads.map((l) =>
+                              l.id === d.onboardingDraft?.id
+                                ? { ...l, companyId: id, stage: "Won" }
+                                : l,
+                            ),
+                          }))
+                        }
+                      />
+                    )}
+                    {page === "Owner Access" && (
+                      <OwnerAccess controller={controller} />
+                    )}
+                    {page === "Product Roadmap" && (
+                      <Roadmap
+                        data={ownerData}
+                        setData={(update) => {
+                          if (controller.ownerRole === "Read-only Auditor")
+                            return;
+                          const next =
+                            typeof update === "function"
+                              ? update(ownerData)
+                              : update;
+                          setOwnerData(next);
+                          log("Updated owner " + page);
+                        }}
+                      />
+                    )}
+                    {page === "Overview" && (
+                      <BusinessDashboard
+                        controller={controller}
+                        data={ownerData}
+                      />
+                    )}
+                    {page === "Organisations" && (
+                      <CompanyDirectory controller={controller} />
+                    )}
+                    {page === "Company Profile" && (
+                      <CompanyProfile controller={controller} />
+                    )}
+                    {page === "Modules" && (
+                      <ModulesPage controller={controller} />
+                    )}
+                    {page === "Subscriptions" && (
+                      <SubscriptionsPage controller={controller} />
+                    )}
+                    {page === "Users" && <UsersPage controller={controller} />}
+                    {page === "Support" && (
+                      <SupportPage controller={controller} />
+                    )}
+                    {page === "Activity Logs" && (
+                      <ActivityCentre controller={controller} />
+                    )}
+                    {page === "Settings" && (
+                      <>
+                        <BusinessSettings controller={controller} />
+                        <SettingsPage controller={controller} />
+                      </>
+                    )}
+                    {[
+                      "Branding Templates",
+                      "Client Insights",
+                      "Feature Requests",
+                      "Sales Leads",
+                      "Announcements",
+                      "Infrastructure",
+                    ].includes(page) && (
+                      <OwnerBusinessPages
+                        page={page}
+                        controller={controller}
+                        data={ownerData}
+                        setData={(update) => {
+                          if (controller.ownerRole === "Read-only Auditor")
+                            return;
+                          const next =
+                            typeof update === "function"
+                              ? update(ownerData)
+                              : update;
+                          setOwnerData(next);
+                          log("Updated owner " + page);
+                        }}
+                        onOpenServer={() => setServerWorkspace(true)}
+                        onOpenOnboarding={() => setOnboarding(true)}
+                      />
+                    )}
+                  </>
                 )}
               </>
             ))}
