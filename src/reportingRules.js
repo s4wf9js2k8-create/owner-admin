@@ -130,7 +130,7 @@ export function buildReport(records, orgId, config) {
   const scoped = records.filter(
     (r) =>
       r.orgId === orgId &&
-      !["report-config", "inspection-template"].includes(r.recordType),
+      !["report-config", "inspection-template","supplier","purchase-order"].includes(r.recordType),
   );
   const rows = scoped
     .filter((r) => r.module === config.source)

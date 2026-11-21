@@ -168,6 +168,8 @@ test("company settings, scope navigation, dashboard reset, header search and aud
 test("approved timesheet correction changes weekly hours and viewer writes remain blocked", async ({
   page,
 }) => {
+  // This scenario reviews the dated November fixture week.
+  await page.clock.setFixedTime(new Date("2026-11-13T12:00:00Z"));
   await open(page);
   await page
     .getByLabel("Sample team member", { exact: true })

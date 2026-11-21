@@ -15,7 +15,7 @@ Updated 13 November 2026. A checked batch item means that specific interaction i
 - [x] Daily Operations: dated opening/closing checks, staff attribution, timestamps, supervisor approvals, history, linked operational overview and acknowledged handovers.
 - [x] Inspections: reusable question templates, asset/recorded-location selection, eligible inspector, required responses and browser-local evidence, draft/submission/review, failed-result corrective maintenance and asset history.
 - [ ] Fleet Management: detailed profile tabs, per-item daily checks and driver-specific qualification fixtures. Existing vehicle cards and basic checks are preserved.
-- [ ] Inventory: returns, transfers, adjustments, purchase orders and suppliers. Existing issue/allocation/receive workflows are preserved.
+- [x] Inventory: receive/issue/allocation, returns, transfers, reasoned adjustments, suppliers, purchase orders and partial deliveries; linked stock/job/order transactions publish atomically. See WORKSPACE-RECOVERY.md.
 - [ ] CRM: full profile tabs, linked follow-up tasks and quote activity timeline. Existing customers/contacts/notes/quote links are preserved.
 
 **Next module: Fleet Management**, then Inventory and CRM. Stage 3 is not complete.
@@ -27,7 +27,7 @@ Updated 13 November 2026. A checked batch item means that specific interaction i
 - [ ] Financial extensions: product/service catalogue, contact-ID registry, advanced tax rules and refunds. Company address/contact branding is now configurable.
 - [ ] Events and Bookings — next Stage 4 batch: calendar, linked eligible staff/equipment, CRM reservations and resource/capacity checks.
 - [ ] Appointments — scheduling views, rescheduling, outcomes, follow-up tasks and CRM history.
-- [ ] Documents — local files, stable record links and profile access.
+- [x] Documents — browser-local files, image previews/downloads, versions, classification, stable links and asset/staff profile access.
 - [ ] Business-record Archives — archive/restore eligible records without losing their links. Existing historical collection catalogue remains distinct.
 - [ ] Forms — publish/archive lifecycle, conditional sections and associated-record responses.
 
@@ -63,14 +63,14 @@ The core Stage 5 browser-demonstration workflows are implemented. Reporting/pers
 - [ ] Timesheets — allocations and configurable overtime. Central correction requests and approval are implemented.
 - [ ] Leave — balances and complete calendar.
 - [ ] Training — sessions, assessments, local evidence files.
-- [ ] Inventory — returns/transfers, purchase orders, suppliers and atomic movements.
+- [x] Inventory — returns/transfers, suppliers, purchase orders/deliveries and atomic stock/job movements.
 - [ ] Health & safety — risk scoring, reviews and linked corrective workflow.
 - [ ] Fleet — insurance, service history and driver fixtures.
 - [ ] CRM — complete linked job, appointment and document tabs.
 - [ ] Quotes/invoices — advanced financial extensions noted above; the core financial document workflow is implemented.
 - [ ] Events/bookings — calendar, ticket categories, eligible staff/equipment.
 - [ ] Appointments/resources — shared resource registry and conflict prevention.
-- [ ] Documents — actual browser-local files, previews/downloads and record links.
+- [x] Documents — actual browser-local files, image previews/downloads, versions and record links.
 - [ ] Archives — provenance, historical dates and digital references.
 - [ ] Forms — conditional sections and workflow triggers.
 - [ ] Donations — linked donors/events and reconciliation.
