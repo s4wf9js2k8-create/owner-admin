@@ -195,6 +195,7 @@ export default function SupportPage({ controller: c }) {
             <button
               className="owner-row"
               key={t.id}
+              aria-pressed={ticket?.id === t.id}
               onClick={() => c.setTicketId(t.id)}
             >
               <strong>{t.subject}</strong>

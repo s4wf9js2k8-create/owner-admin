@@ -26,6 +26,54 @@
   margin: 6px 0;
   padding: 10px;
 }
+.owner-business-dashboard button,
+.owner-support button,
+.owner-onboarding button,
+.owner-company-directory button,
+.owner-commercial-controls button,
+.owner-roadmap button {
+  border: 1px solid #bdccc7;
+  border-radius: 4px;
+  background: #fff;
+  color: #244c3a;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+.owner-business-dashboard button:hover,
+.owner-support button:hover,
+.owner-onboarding button:hover,
+.owner-company-directory button:hover,
+.owner-commercial-controls button:hover,
+.owner-roadmap button:hover {
+  background: #edf3ef;
+  border-color: #739483;
+}
+.owner-business-dashboard .panel {
+  margin-top: 0;
+}
+.owner-business-dashboard .panel strong {
+  display: inline;
+  font-size: inherit;
+  margin: 0;
+  color: inherit;
+}
+.owner-business-dashboard .owner-row,
+.owner-support .owner-row {
+  background: #f4f7f5;
+  color: #203d2d;
+  border-color: #dce6df;
+  margin: 6px 0;
+}
+.owner-business-dashboard .owner-row small,
+.owner-support .owner-row small {
+  color: #52675b;
+}
+.owner-support .owner-row[aria-pressed="true"] {
+  border-left: 4px solid #315e46;
+  background: #e6f0e9;
+}
 .owner-status-strip {
   display: flex;
   gap: 12px;
