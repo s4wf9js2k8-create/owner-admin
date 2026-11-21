@@ -1,3 +1,4 @@
+import { dashboardWidgetsFor } from "./rules";
 import React, { useState } from "react";
 import { modules, sectors, toggleModule } from "../model";
 import { demoRoleDefaults } from "../customerWorkflows";
@@ -20,8 +21,15 @@ export default function OnboardingWizard({ controller: c, draft, onCreated }) {
       contactEmail: draft?.email || "",
       contactPhone: draft?.phone || "",
       description: draft?.notes || "",
-      sector: "engineering",
-      industry: "Engineering",
+      sector:
+        draft?.sector === "Charity"
+          ? "charity"
+          : draft?.sector === "Visitor attraction"
+            ? "visitor"
+            : "engineering",
+      industry: ["Charity", "Visitor attraction"].includes(draft?.sector)
+        ? draft.sector
+        : "Engineering",
       modules: [...sectors.engineering.modules],
       plan: c.flags.business?.defaultPlan || c.plans[0]?.name,
       color: "#315b77",
@@ -82,6 +90,7 @@ export default function OnboardingWizard({ controller: c, draft, onCreated }) {
         workspaceConfig: {
           welcomeText: v.welcomeText,
           dashboardPreset: v.dashboard,
+          dashboardPrefs: { widgets: dashboardWidgetsFor(v.dashboard) },
           roles: Object.fromEntries(
             v.roles.map((r) => [r, demoRoleDefaults[r]]),
           ),
@@ -186,6 +195,12 @@ export default function OnboardingWizard({ controller: c, draft, onCreated }) {
                     industry,
                     sector,
                     modules: recommended,
+                    dashboard:
+                      sector === "charity"
+                        ? "Community"
+                        : sector === "visitor"
+                          ? "Visitor"
+                          : "Engineering",
                     color: sectors[sector].color,
                   });
                 }}

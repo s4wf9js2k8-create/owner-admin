@@ -102,7 +102,9 @@ export function useConsoleController(backend) {
     if (!customer && !ownerCanManage(ownerRole)) return deny();
     if (
       !flags.customerPreview ||
-      !orgs.some((o) => o.id === id && o.status !== "Archived")
+      !orgs.some(
+        (o) => o.id === id && !["Archived", "Suspended"].includes(o.status),
+      )
     )
       return;
     setSelected(id);
@@ -121,7 +123,7 @@ export function useConsoleController(backend) {
       await log("Updated sample ticket " + ticket.subject, ticket.orgId);
   };
   const reset = async () => {
-    if (await run(() => backend.reset())) {
+    if (await rawRun(() => backend.reset())) {
       setSelected(backend.getSnapshot().orgs[0]?.id);
       setPage("Overview");
       setCustomer(false);
@@ -143,10 +145,13 @@ export function useConsoleController(backend) {
         Viewer: "All teams",
       });
       setMessage("Fictional demo reset. All session changes cleared.");
+      return true;
     }
+    return false;
   };
   return {
     backend,
+    denyOwnerAction: deny,
     ownerRole,
     setOwnerRole,
     run,

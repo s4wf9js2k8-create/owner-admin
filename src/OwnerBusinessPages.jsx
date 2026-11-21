@@ -29,6 +29,7 @@ export const ownerSeed = {
   requests: [
     {
       id: "request-1",
+      orgId: "demo-engineering",
       title: "Custom approval steps",
       org: "Example engineering customer",
       priority: "High",
@@ -37,6 +38,7 @@ export const ownerSeed = {
     },
     {
       id: "request-2",
+      orgId: "demo-charity",
       title: "Recurring rota templates",
       org: "Example community trust",
       priority: "Normal",
@@ -45,6 +47,7 @@ export const ownerSeed = {
     },
     {
       id: "request-3",
+      orgId: "demo-visitor",
       title: "Exportable asset QR labels",
       org: "Example visitor site",
       priority: "Normal",
@@ -687,6 +690,43 @@ function Requests({ data, setData, controller }) {
                     </select>
                   </label>
                 </div>
+                <label>
+                  Record customer interest
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      if (!id) return;
+                      setData((d) => ({
+                        ...d,
+                        requests: d.requests.map((x) =>
+                          x.id === r.id
+                            ? {
+                                ...x,
+                                interestedCompanyIds: [
+                                  ...new Set([
+                                    ...(x.interestedCompanyIds || []),
+                                    id,
+                                  ]),
+                                ],
+                              }
+                            : x,
+                        ),
+                      }));
+                    }}
+                  >
+                    <option value="">Choose company</option>
+                    {controller.orgs.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <small>
+                  {(r.interestedCompanyIds || []).length} distinct interested
+                  companies
+                </small>
                 <button
                   onClick={() =>
                     setData((d) => ({
@@ -729,18 +769,26 @@ function Requests({ data, setData, controller }) {
   );
 }
 function Announcements({ data, setData, controller }) {
+  const [editingId, setEditingId] = useState(""),
+    [companyIds, setCompanyIds] = useState([]),
+    [announcementError, setAnnouncementError] = useState("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [audience, setAudience] = useState("All companies");
   const add = async (e, draft) => {
     e.preventDefault();
     if (!title.trim() || !body.trim()) return;
-    const id = crypto.randomUUID();
+    const id = editingId || crypto.randomUUID();
+    if (!draft && audience === "Selected companies" && !companyIds.length) {
+      setAnnouncementError("Select at least one customer before publishing.");
+      return;
+    }
     if (!draft) {
       const targets = controller.orgs.filter(
         (o) =>
           o.status !== "Archived" &&
           (audience === "All companies" ||
+            (audience === "Selected companies" && companyIds.includes(o.id)) ||
             (audience === "Pilot customers" && o.plan === "Pilot") ||
             (audience === "Professional customers" &&
               o.plan === "Professional") ||
@@ -776,12 +824,16 @@ function Announcements({ data, setData, controller }) {
           title: title.trim(),
           body: body.trim(),
           audience,
+          companyIds,
           status: draft ? "Draft" : "Published (demo)",
           date: new Date().toLocaleDateString("en-GB"),
         },
-        ...d.announcements,
+        ...d.announcements.filter((a) => a.id !== id),
       ],
     }));
+    setEditingId("");
+    setCompanyIds([]);
+    setAnnouncementError("");
     setTitle("");
     setBody("");
   };
@@ -825,6 +877,7 @@ function Announcements({ data, setData, controller }) {
               >
                 {[
                   "All companies",
+                  "Selected companies",
                   "Pilot customers",
                   "Professional customers",
                   "Enterprise customers",
@@ -833,6 +886,34 @@ function Announcements({ data, setData, controller }) {
                 ))}
               </select>
             </label>
+            <label>
+              Relevant companies
+              <select
+                multiple
+                value={companyIds}
+                onChange={(e) =>
+                  setCompanyIds(
+                    [...e.target.selectedOptions].map((o) => o.value),
+                  )
+                }
+              >
+                {controller.orgs.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <details>
+              <summary>Preview announcement</summary>
+              <h3>{title}</h3>
+              <p>{body}</p>
+            </details>
+            {announcementError && <p role="alert">{announcementError}</p>}
+            <p>
+              Scheduled delivery is unavailable until server scheduling is
+              implemented.
+            </p>
             <div className="owner-composer-actions">
               <button type="submit">Save draft</button>
               <button
@@ -865,12 +946,8 @@ function Announcements({ data, setData, controller }) {
                       setTitle(a.title);
                       setBody(a.body);
                       setAudience(a.audience);
-                      setData((d) => ({
-                        ...d,
-                        announcements: d.announcements.filter(
-                          (x) => x.id !== a.id,
-                        ),
-                      }));
+                      setEditingId(a.id);
+                      setCompanyIds(a.companyIds || []);
                     }}
                   >
                     Edit draft

@@ -6,14 +6,20 @@ export default function SupportPage({ controller: c }) {
     [priority, setPriority] = useState("All"),
     [queue, setQueue] = useState("All"),
     [search, setSearch] = useState(""),
-    [message, setMessage] = useState("");
+    [message, setMessage] = useState(""),
+    [assigneeFilter, setAssigneeFilter] = useState(""),
+    [moduleFilter, setModuleFilter] = useState(""),
+    [fromDate, setFromDate] = useState("");
   const { ticket, tickets, orgs, active } = c,
     rows = tickets.filter(
       (t) =>
         (!company || t.orgId === company) &&
         (priority === "All" || t.priority === priority) &&
         (queue === "All" || t.status === queue) &&
-        t.subject.toLowerCase().includes(search.toLowerCase()),
+        t.subject.toLowerCase().includes(search.toLowerCase()) &&
+        (!assigneeFilter || t.assignee === assigneeFilter) &&
+        (!moduleFilter || t.module === moduleFilter) &&
+        (!fromDate || t.createdAt?.slice(0, 10) >= fromDate),
     );
   const create = async (values) => {
     let t;
@@ -90,6 +96,10 @@ export default function SupportPage({ controller: c }) {
       </div>
       <details>
         <summary>Supported response metrics</summary>
+        <p>
+          Configured planning target: {c.flags.business?.responseTarget || 24}{" "}
+          hours. This is not a measured SLA.
+        </p>
         <p>Average first recorded response: {average(responses)}</p>
         <p>Average recorded resolution: {average(resolutions)}</p>
         <p>
@@ -139,6 +149,44 @@ export default function SupportPage({ controller: c }) {
               <option key={s}>{s}</option>
             ))}
           </select>
+        </label>
+      </div>
+      <div className="customer-tools">
+        <label>
+          Assigned person filter
+          <select
+            value={assigneeFilter}
+            onChange={(e) => setAssigneeFilter(e.target.value)}
+          >
+            <option value="">All assigned people</option>
+            {[...new Set(tickets.map((t) => t.assignee).filter(Boolean))].map(
+              (a) => (
+                <option key={a}>{a}</option>
+              ),
+            )}
+          </select>
+        </label>
+        <label>
+          Module filter
+          <select
+            value={moduleFilter}
+            onChange={(e) => setModuleFilter(e.target.value)}
+          >
+            <option value="">All modules</option>
+            {[...new Set(tickets.map((t) => t.module).filter(Boolean))].map(
+              (m) => (
+                <option key={m}>{m}</option>
+              ),
+            )}
+          </select>
+        </label>
+        <label>
+          Created from date
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+          />
         </label>
       </div>
       <div className="owner-support-layout">
@@ -315,6 +363,7 @@ export default function SupportPage({ controller: c }) {
           </article>
         )}
       </div>
+      {!ticket && <Empty>No sample ticket selected.</Empty>}
       {creating && (
         <Modal title="Create support ticket" onClose={() => setCreating(false)}>
           <form

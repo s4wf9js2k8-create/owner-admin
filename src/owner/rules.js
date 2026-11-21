@@ -71,3 +71,22 @@ export function reorder(values, id, delta) {
   [result[a], result[b]] = [result[b], result[a]];
   return result;
 }
+
+export const dashboardWidgetsFor = (preset) =>
+  ({
+    Engineering: ["attention", "staff", "work", "shifts"],
+    Operations: ["staff", "shifts", "attention", "work"],
+    Community: ["events", "shifts", "staff", "work"],
+    Visitor: ["events", "visitors", "staff", "bookings"],
+  })[preset] || ["staff", "shifts", "attention", "work"];
+
+export function monthlyEquivalent(org, plans) {
+  const value = illustrativeAmount(org, plans);
+  return value === null ? null : value / (org.cycle === "Annual" ? 12 : 1);
+}
+
+export const ownerCanWritePage = (role, page) =>
+  ownerCanManage(role) ||
+  (role === "Support Agent" &&
+    ["Support", "Feature Requests"].includes(page)) ||
+  (role === "Sales Representative" && page === "Sales Leads");

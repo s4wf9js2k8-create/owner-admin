@@ -23,7 +23,73 @@ export default function CompanyProfile({ controller: c }) {
           </button>
         ))}
       </div>
-      {tab === "Overview" && <OriginalProfile controller={c} />}{" "}
+      {tab === "Overview" && (
+        <>
+          <div className="panel">
+            <p>
+              {o.industry || "Industry template"} · Contact{" "}
+              {o.contactPerson || o.admins[0]?.name || "not recorded"}
+            </p>
+            <p>
+              {o.contactEmail || "Email not recorded"} ·{" "}
+              {o.contactPhone || "Telephone not recorded"}
+            </p>
+            <p>
+              Created:{" "}
+              {o.createdAt
+                ? new Date(o.createdAt).toLocaleString("en-GB")
+                : "Legacy date not recorded"}
+            </p>
+            <p>{o.description}</p>
+            <details>
+              <summary>Edit company contact information</summary>
+              <form
+                key={o.id}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  c.update(
+                    o.id,
+                    Object.fromEntries(new FormData(e.currentTarget)),
+                    "Updated company contact information",
+                  );
+                }}
+              >
+                <label>
+                  Primary contact
+                  <input
+                    name="contactPerson"
+                    defaultValue={o.contactPerson || ""}
+                  />
+                </label>
+                <label>
+                  Company email
+                  <input
+                    name="contactEmail"
+                    type="email"
+                    defaultValue={o.contactEmail || ""}
+                  />
+                </label>
+                <label>
+                  Company telephone
+                  <input
+                    name="contactPhone"
+                    defaultValue={o.contactPhone || ""}
+                  />
+                </label>
+                <label>
+                  Company description
+                  <textarea
+                    name="description"
+                    defaultValue={o.description || ""}
+                  />
+                </label>
+                <button>Save company contact</button>
+              </form>
+            </details>
+          </div>
+          <OriginalProfile controller={c} />
+        </>
+      )}{" "}
       {tab === "Modules" && <ModulesPage controller={c} />}{" "}
       {tab === "Subscription" && <SubscriptionsPage controller={c} />}{" "}
       {tab === "Users" && (

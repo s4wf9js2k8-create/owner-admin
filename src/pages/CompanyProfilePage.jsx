@@ -37,7 +37,10 @@ export default function CompanyProfilePage({ controller }) {
           Edit profile
         </button>
         <button
-          disabled={!flags.customerPreview || active.status === "Archived"}
+          disabled={
+            !flags.customerPreview ||
+            ["Archived", "Suspended"].includes(active.status)
+          }
           onClick={() => preview(active.id)}
         >
           Preview customer dashboard

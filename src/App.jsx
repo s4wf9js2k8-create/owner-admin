@@ -7,7 +7,12 @@ import OnboardingWizard from "./owner/OnboardingWizard";
 import OwnerAccess from "./owner/OwnerAccess";
 import BusinessSettings from "./owner/BusinessSettings";
 import Roadmap from "./owner/Roadmap";
-import { ownerRoles, ownerPageAllowed, ownerCanManage } from "./owner/rules";
+import {
+  ownerRoles,
+  ownerPageAllowed,
+  ownerCanManage,
+  ownerCanWritePage,
+} from "./owner/rules";
 import { activityEntry } from "./administrationRules";
 import React, { useState } from "react";
 import OwnerBusinessPages, { ownerSeed } from "./OwnerBusinessPages";
@@ -87,8 +92,7 @@ export default function App({ backend: suppliedBackend }) {
           <div className="toolbar">
             <button
               onClick={async () => {
-                await reset();
-                setOwnerData(ownerSeed);
+                if (await reset()) setOwnerData(ownerSeed);
               }}
             >
               Reset fictional demo
@@ -264,10 +268,9 @@ export default function App({ backend: suppliedBackend }) {
                         onCreated={(id) =>
                           setOwnerData((d) => ({
                             ...d,
-                            onboardingDraft: {
-                              ...d.onboardingDraft,
-                              companyId: id,
-                            },
+                            onboardingDraft: d.onboardingDraft?.id
+                              ? { ...d.onboardingDraft, companyId: id }
+                              : undefined,
                             leads: d.leads.map((l) =>
                               l.id === d.onboardingDraft?.id
                                 ? { ...l, companyId: id, stage: "Won" }
@@ -284,8 +287,8 @@ export default function App({ backend: suppliedBackend }) {
                       <Roadmap
                         data={ownerData}
                         setData={(update) => {
-                          if (controller.ownerRole === "Read-only Auditor")
-                            return;
+                          if (!ownerCanWritePage(controller.ownerRole, page))
+                            return controller.denyOwnerAction();
                           const next =
                             typeof update === "function"
                               ? update(ownerData)
@@ -341,8 +344,8 @@ export default function App({ backend: suppliedBackend }) {
                         controller={controller}
                         data={ownerData}
                         setData={(update) => {
-                          if (controller.ownerRole === "Read-only Auditor")
-                            return;
+                          if (!ownerCanWritePage(controller.ownerRole, page))
+                            return controller.denyOwnerAction();
                           const next =
                             typeof update === "function"
                               ? update(ownerData)

@@ -195,3 +195,9 @@
     max-height: 260px;
   }
 }
+.shell .topbar {
+  background: var(--owner-nav, #374f60);
+}
+.shell aside {
+  background: var(--owner-nav, #1b2731);
+}

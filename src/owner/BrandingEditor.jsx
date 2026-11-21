@@ -1,3 +1,4 @@
+import { dashboardWidgetsFor } from "./rules";
 import React, { useState } from "react";
 import { sectors } from "../model";
 export default function BrandingEditor({ controller: c }) {
@@ -16,6 +17,7 @@ export default function BrandingEditor({ controller: c }) {
       <label>
         Organisation
         <select
+          aria-label="Organisation"
           value={c.selected}
           onChange={(e) => {
             c.setSelected(e.target.value);
@@ -50,6 +52,10 @@ export default function BrandingEditor({ controller: c }) {
                     welcomeText: welcome,
                     secondaryColor: secondary,
                     dashboardPreset: f.preset,
+                    dashboardPrefs: {
+                      ...o.workspaceConfig?.dashboardPrefs,
+                      widgets: dashboardWidgetsFor(f.preset),
+                    },
                     navLabels: Object.fromEntries(
                       o.modules.map((m, i) => [m, f["label" + i] || m]),
                     ),
@@ -149,6 +155,9 @@ export default function BrandingEditor({ controller: c }) {
         </form>
         <article className="panel">
           <h3>Live workspace appearance</h3>
+          <button onClick={() => c.preview(o.id)}>
+            Open selected customer workspace
+          </button>
           <div
             className="owner-brand-sample"
             style={{ borderColor: color, background: "#f5f8f8" }}

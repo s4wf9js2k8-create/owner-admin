@@ -15,7 +15,10 @@ export default function SubscriptionsPage({ controller }) {
   } = controller;
   return (
     <>
-      <CommercialControls controller={controller} />
+      <CommercialControls
+        key={active.id + active.plan + active.cycle}
+        controller={controller}
+      />
       <Panel title="Illustrative packages">
         <p>
           Sample GBP prices only, not commercial offers. No charges, invoices or

@@ -85,7 +85,12 @@ export default function CompanyDirectory({ controller: c }) {
               <div>
                 <button onClick={() => c.profile(o.id)}>Profile</button>
                 {c.flags.customerPreview && o.status !== "Archived" && (
-                  <button onClick={() => c.preview(o.id)}>Preview</button>
+                  <button
+                    disabled={o.status === "Suspended"}
+                    onClick={() => c.preview(o.id)}
+                  >
+                    Preview
+                  </button>
                 )}
               </div>
             </article>
