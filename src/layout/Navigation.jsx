@@ -136,10 +136,26 @@ const customerGroups = (org, role, roleModules, actions = []) => {
   ].filter(([, items]) => items.length);
 };
 const ownerGroups = [
-  ["OWNER CONSOLE", pages.slice(0, 8)],
-  ["BUSINESS OPERATIONS", pages.slice(8, -1)],
-  ["ACCOUNT", [pages[pages.length - 1]]],
-];
+  ["OVERVIEW", ["Overview", "Client Insights", "Activity Logs"]],
+  [
+    "CUSTOMERS",
+    [
+      "Organisations",
+      "Company Profile",
+      "Onboarding",
+      "Branding Templates",
+      "Users",
+    ],
+  ],
+  ["COMMERCIAL", ["Sales Leads", "Subscriptions"]],
+  ["CUSTOMER SERVICE", ["Support", "Feature Requests", "Announcements"]],
+  ["PRODUCT", ["Modules", "Product Roadmap"]],
+  ["PLATFORM", ["Infrastructure"]],
+  ["ADMINISTRATION", ["Owner Access", "Settings"]],
+].map(([group, names]) => [
+  group,
+  names.map((name) => pages.find(([page]) => page === name)),
+]);
 export default function Navigation({ controller }) {
   const {
     menuButton,
