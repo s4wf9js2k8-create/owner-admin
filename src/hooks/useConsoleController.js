@@ -1,3 +1,4 @@
+import { toggleModule } from "../model";
 import {
   ownerCanManage,
   ownerCanSupport,
@@ -65,13 +66,22 @@ export function useConsoleController(backend) {
   };
   const update = async (id, patch, event = "Updated example organisation") => {
     if (!customer && !ownerCanManage(ownerRole)) return deny();
-    const saved = await run(() =>
-      "modules" in patch
-        ? backend.entitlements.replace(id, patch.modules)
-        : "admins" in patch
-          ? backend.memberships.replace(id, patch.admins)
-          : backend.organisations.update(id, patch),
-    );
+    const saved = await run(async () => {
+      const { modules: enabled, admins, ...fields } = patch;
+      if (enabled) await backend.entitlements.replace(id, enabled);
+      if (admins) await backend.memberships.replace(id, admins);
+      if (fields.plan) {
+        const plan = plans.find((p) => p.name === fields.plan);
+        let combined = backend
+          .getSnapshot()
+          .orgs.find((o) => o.id === id).modules;
+        for (const name of plan?.includedModules || [])
+          if (!combined.includes(name)) combined = toggleModule(combined, name);
+        await backend.entitlements.replace(id, combined);
+      }
+      if (Object.keys(fields).length)
+        await backend.organisations.update(id, fields);
+    });
     if (saved) await log(event, id);
     return saved;
   };

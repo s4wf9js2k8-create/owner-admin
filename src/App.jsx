@@ -1,3 +1,4 @@
+import BrandingEditor from "./owner/BrandingEditor";
 import BusinessDashboard from "./owner/BusinessDashboard";
 import CompanyDirectory from "./owner/CompanyDirectory";
 import CompanyProfile from "./owner/CompanyProfile";
@@ -6,7 +7,7 @@ import OnboardingWizard from "./owner/OnboardingWizard";
 import OwnerAccess from "./owner/OwnerAccess";
 import BusinessSettings from "./owner/BusinessSettings";
 import Roadmap from "./owner/Roadmap";
-import { ownerRoles, ownerPageAllowed } from "./owner/rules";
+import { ownerRoles, ownerPageAllowed, ownerCanManage } from "./owner/rules";
 import { activityEntry } from "./administrationRules";
 import React, { useState } from "react";
 import OwnerBusinessPages, { ownerSeed } from "./OwnerBusinessPages";
@@ -250,6 +251,7 @@ export default function App({ backend: suppliedBackend }) {
                       </div>
                       <button
                         className="primary"
+                        disabled={!ownerCanManage(controller.ownerRole)}
                         onClick={() => setForm({ type: "create" })}
                       >
                         + Add example organisation
@@ -293,6 +295,9 @@ export default function App({ backend: suppliedBackend }) {
                         }}
                       />
                     )}
+                    {page === "Branding Templates" && (
+                      <BrandingEditor key={active.id} controller={controller} />
+                    )}
                     {page === "Overview" && (
                       <BusinessDashboard
                         controller={controller}
@@ -325,7 +330,6 @@ export default function App({ backend: suppliedBackend }) {
                       </>
                     )}
                     {[
-                      "Branding Templates",
                       "Client Insights",
                       "Feature Requests",
                       "Sales Leads",

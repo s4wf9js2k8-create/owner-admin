@@ -1,3 +1,4 @@
+import CommercialControls from "../owner/CommercialControls";
 import React from "react";
 import { Panel, Table, Status, Empty } from "../components";
 export default function SubscriptionsPage({ controller }) {
@@ -14,6 +15,7 @@ export default function SubscriptionsPage({ controller }) {
   } = controller;
   return (
     <>
+      <CommercialControls controller={controller} />
       <Panel title="Illustrative packages">
         <p>
           Sample GBP prices only, not commercial offers. No charges, invoices or

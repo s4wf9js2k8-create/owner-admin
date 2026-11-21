@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { Panel, Status } from "../components";
-import { illustrativeAmount, reorder, ownerPageAllowed } from "./rules";
+import {
+  illustrativeAmount,
+  reorder,
+  ownerPageAllowed,
+  ownerCanManage,
+} from "./rules";
 const widgets = [
   "Customer status",
   "Support priorities",
@@ -38,7 +43,10 @@ export default function BusinessDashboard({ controller, data }) {
               "Bespoke Business Software & Management Solutions"}
           </p>
         </div>
-        <button onClick={() => setEditing(!editing)}>
+        <button
+          disabled={!ownerCanManage(ownerRole)}
+          onClick={() => setEditing(!editing)}
+        >
           Customise business dashboard
         </button>
       </div>

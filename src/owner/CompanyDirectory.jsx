@@ -39,6 +39,13 @@ export default function CompanyDirectory({ controller: c }) {
           </select>
         </label>
       </div>
+      {!c.orgs.some(
+        (o) =>
+          (o.name + " " + sectors[o.sector].label)
+            .toLowerCase()
+            .includes(c.query.toLowerCase()) &&
+          (c.statusFilter === "All" || o.status === c.statusFilter),
+      ) && <p>No organisations match your search.</p>}
       <div className="owner-company-directory">
         {c.orgs
           .filter(
