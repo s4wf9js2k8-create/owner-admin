@@ -932,7 +932,7 @@ export function seedRecords(orgs) {
             .map((r) => r.campaign || "General fund"),
         ),
       ]) {
-        const id = o.id + "-campaign-" + title;
+        const id = o.id + "-campaign-" + module + "-" + title;
         seeded.push({
           id,
           orgId: o.id,

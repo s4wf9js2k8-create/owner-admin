@@ -376,3 +376,44 @@ test("vehicle registration creates one linked equipment record in the same publi
     r.id,
   );
 });
+
+test("all fictional fixture record IDs are unique, including fundraising aliases", async () => {
+  const { fictionalFixtures } = await import("../src/backend/fictional.js");
+  const { records } = fictionalFixtures();
+  assert.equal(
+    new Set(records.map((r) => r.id)).size,
+    records.length,
+    "Module aliases must never share record identities",
+  );
+  for (const row of records.filter((r) => r.campaignId)) {
+    const campaign = records.find((r) => r.id === row.campaignId);
+    assert.equal(campaign?.recordType, "campaign");
+    assert.equal(campaign.orgId, row.orgId);
+    assert.equal(campaign.module, row.module);
+  }
+});
+test("editing a seeded campaign changes only the selected fundraising module", async () => {
+  const b = createFictionalBackend(),
+    campaigns = b
+      .getSnapshot()
+      .records.filter(
+        (r) =>
+          r.orgId === "demo-charity" &&
+          r.recordType === "campaign" &&
+          r.title === "General fund",
+      );
+  assert.equal(campaigns.length, 2);
+  const modern = campaigns.find(
+      (r) => r.module === "Donations and fundraising",
+    ),
+    legacy = campaigns.find((r) => r.module === "Donations");
+  await b.records.update("demo-charity", modern.id, { target: 4200 });
+  assert.equal(
+    b.getSnapshot().records.find((r) => r.id === modern.id).target,
+    4200,
+  );
+  assert.equal(
+    b.getSnapshot().records.find((r) => r.id === legacy.id).target,
+    2500,
+  );
+});
