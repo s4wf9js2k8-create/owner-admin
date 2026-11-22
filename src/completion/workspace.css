@@ -259,3 +259,64 @@
 .asset-qr-label a {
   overflow-wrap: anywhere;
 }
+/* Keep the demo controls accessible without dominating operational pages. */
+.customer-view main > section {
+  padding-top: 12px;
+}
+.customer-view main > section > .toolbar {
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.customer-view .demo-strip {
+  margin-bottom: 12px;
+}
+.customer-view .customer-context {
+  margin-bottom: 8px;
+}
+.customer-view .customer-persona-row {
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+.customer-view .customer-shell .customer-heading {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+}
+.customer-view .customer-shell .customer-heading h1 {
+  font-size: 20px;
+  letter-spacing: 0;
+}
+.customer-view .customer-heading p {
+  margin: 3px 0;
+  font-size: 12px;
+}
+.completion-workspace .customer-page-intro {
+  margin-bottom: 12px;
+  gap: 12px;
+}
+.completion-workspace h2 {
+  font-size: 23px;
+}
+.completion-workspace .vehicle-card,
+.completion-workspace .purpose-card {
+  border-radius: 4px;
+}
+.completion-workspace .customer-page-intro p {
+  margin: 5px 0;
+}
+@media (max-width: 600px) {
+  .customer-view main > section > .toolbar button {
+    font-size: 12px;
+    padding: 9px 10px;
+    min-height: 42px;
+  }
+  .customer-view .customer-persona-row small {
+    font-size: 10px;
+  }
+  .customer-view .customer-context span {
+    font-size: 10px;
+  }
+  .completion-workspace h2 {
+    font-size: 21px;
+  }
+}

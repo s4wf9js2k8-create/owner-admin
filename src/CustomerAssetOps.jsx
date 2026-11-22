@@ -198,6 +198,8 @@ export default function CustomerAssetOps({
         raw.asset || assets.find((a) => a.id === raw.assetRefId)?.asset || "",
       assetRefId: raw.assetRefId || "",
       templateId: templateChoice,
+      templateVersion:
+        templates.find((t) => t.id === templateChoice)?.version || 1,
       templateName: templates.find((t) => t.id === templateChoice)?.title || "",
       inspectionQuestions:
         templates.find((t) => t.id === templateChoice)?.questions || [],

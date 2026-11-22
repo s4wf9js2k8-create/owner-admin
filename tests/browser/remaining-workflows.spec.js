@@ -379,3 +379,56 @@ test("owner package editor updates allowances, add-on totals and subscription pe
   ).toBeVisible();
   await overflow(page);
 });
+
+test("editing an inspection template advances its version and retains the previous questions", async ({
+  page,
+}) => {
+  await enter(page);
+  await nav(page, "Inspections");
+  await page.getByRole("button", { name: "Build inspection template" }).click();
+  await page
+    .getByLabel("Template name", { exact: true })
+    .fill("Initial safety worksheet");
+  await page.getByRole("button", { name: "Add inspection question" }).click();
+  await page
+    .getByLabel("Question text", { exact: true })
+    .fill("Original guard question");
+  await page
+    .getByRole("button", { name: "Save inspection template", exact: true })
+    .click();
+  const edit = page
+    .locator(".inspection-template-tools")
+    .getByRole("button", { name: /^Edit / })
+    .first();
+  await edit.click();
+  const before = await page
+    .getByLabel("Question text", { exact: true })
+    .first()
+    .inputValue();
+  await page
+    .getByLabel("Template name", { exact: true })
+    .fill("Revised routine inspection");
+  await page
+    .getByLabel("Question text", { exact: true })
+    .first()
+    .fill("Revised safety question");
+  await page
+    .getByRole("button", { name: "Save inspection template", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Edit Revised routine inspection · v2",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByText("Inspection template version history", { exact: true })
+    .click();
+  await expect(page.locator(".inspection-template-tools")).toContainText(
+    before,
+  );
+  await expect(page.locator(".inspection-template-tools")).toContainText(
+    "Version 1",
+  );
+  await overflow(page);
+});

@@ -56,7 +56,7 @@ export function weeklyHours(sessions, week, overtimeThreshold = 40) {
     ),
   }));
 }
-export function timesheetCsv(rows) {
+export function timesheetCsv(rows, overtimeThreshold = 40) {
   const escape = (value) => '"' + String(value).replaceAll('"', '""') + '"';
   return [
     [
@@ -69,7 +69,7 @@ export function timesheetCsv(rows) {
       "Sat",
       "Sun",
       "Total hours",
-      "Over 40 hours",
+      "Over " + overtimeThreshold + " hours",
       "Pending sessions",
     ],
     ...rows.map((r) => [

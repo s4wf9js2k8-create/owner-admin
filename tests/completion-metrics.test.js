@@ -99,3 +99,17 @@ test("Excel XML export preserves filtered selected columns, escaping and data-on
   assert.match(xml, /<Data ss:Type="String">4<\/Data>/);
   assert.doesNotMatch(xml, /Formula|Department/);
 });
+
+test("timesheet CSV labels the configured overtime threshold", async () => {
+  const { timesheetCsv } = await import("../src/timeReporting.js");
+  assert.match(timesheetCsv([], 37.5), /Over 37.5 hours/);
+  assert.doesNotMatch(timesheetCsv([], 37.5), /Over 40 hours/);
+});
+
+test("inspection template versions advance new, legacy and previously versioned templates", async () => {
+  const { nextInspectionTemplateVersion } =
+    await import("../src/inspectionRules.js");
+  assert.equal(nextInspectionTemplateVersion(null), 1);
+  assert.equal(nextInspectionTemplateVersion({ title: "Legacy" }), 2);
+  assert.equal(nextInspectionTemplateVersion({ version: 3 }), 4);
+});

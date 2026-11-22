@@ -1,3 +1,4 @@
+import { nextInspectionTemplateVersion } from "./inspectionRules";
 import React, { useState } from "react";
 import { Modal, Empty } from "./components";
 export default function InspectionTemplates({
@@ -57,7 +58,7 @@ export default function InspectionTemplates({
         options: (q.options || []).map((v) => v.trim()).filter(Boolean),
       })),
       status: "Complete",
-      version: (editing?.version || 0) + 1,
+      version: nextInspectionTemplateVersion(editing),
       versions: [
         ...(editing?.versions || []),
         ...(editing
@@ -117,6 +118,22 @@ export default function InspectionTemplates({
             Edit {t.title} · v{t.version || 1}
           </button>
         ))}
+      <details>
+        <summary>Inspection template version history</summary>
+        {templates.map((t) => (
+          <div key={t.id}>
+            <h3>
+              {t.title} · current v{t.version || 1}
+            </h3>
+            {(t.versions || []).map((v, i) => (
+              <p key={i}>
+                Version {v.version} · {v.at} · {v.title} ·{" "}
+                {v.questions.map((q) => q.label).join("; ")}
+              </p>
+            ))}
+          </div>
+        ))}
+      </details>
       {open && (
         <Modal
           title="Inspection template builder"

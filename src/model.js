@@ -901,6 +901,27 @@ export function seedRecords(orgs) {
     }
   }
   for (const o of orgs) {
+    const people = seeded.filter(
+      (r) => r.orgId === o.id && r.module === "Staff & volunteers",
+    );
+    if (people.length)
+      for (const [index, row] of seeded
+        .filter(
+          (r) =>
+            r.orgId === o.id &&
+            ["Tasks & projects", "Tasks", "Projects"].includes(r.module),
+        )
+        .entries()) {
+        const person = people[index % people.length];
+        row.owner = person.title;
+        row.ownerId = person.id;
+        if (row.recordType === "project") {
+          row.leadId = person.id;
+          row.memberIds = people.map((p) => p.id);
+        } else row.personId = person.id;
+      }
+  }
+  for (const o of orgs) {
     for (const module of o.modules.filter(
       (m) => m === "Donations and fundraising" || m === "Donations",
     ))

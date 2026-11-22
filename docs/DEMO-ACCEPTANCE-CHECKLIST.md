@@ -63,3 +63,5 @@ Remote CI, merge and deployment/live verification are tracked in [PR #35](https:
 - [ ] Durable authentication/authorisation, hosted storage, external delivery, background schedules, live telemetry and backup operations in the public app.
 
 See FULL-APPLICATION-AUDIT.md and PAGE-CHECKLIST.md for the page inventory. No EVLT resource, Vercel hosting, paid infrastructure, real customer data, payment provider or external messaging is involved. Refresh and Reset Demo restore the connected fictional fixtures.
+
+Follow-up hardening: legacy template version numbering and configurable overtime CSV labels have regression coverage; fictional persona/task/project IDs now share staff records. Lint, 135 unit tests and build passed; the final suite is 249 browser cases. PR #35 records its executed result. Earlier counts above describe the initial completed run, and are not substituted for checks on the final head.

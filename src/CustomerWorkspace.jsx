@@ -155,18 +155,16 @@ export default function CustomerWorkspace({
   });
   const choices = [
     ...new Set(
-      [
-        ...(["Staff", "Volunteer"].includes(customerRole)
-          ? []
-          : visibleRecords
-              .filter((r) => isTaskModule(r.module))
-              .map((r) => r.owner)),
-        ...visibleRecords
-          .filter((r) =>
-            ["Staff & volunteers", "Volunteers", "Staff"].includes(r.module),
-          )
-          .map((r) => r.title),
-      ].filter(Boolean),
+      visibleRecords
+        .filter((r) =>
+          ["Staff & volunteers", "Staff", "Volunteers"].includes(r.module),
+        )
+        .sort(
+          (a, b) =>
+            (a.module === "Staff & volunteers" ? 0 : 1) -
+            (b.module === "Staff & volunteers" ? 0 : 1),
+        )
+        .map((r) => r.title),
     ),
   ];
   const [actor, setActor] = useState(choices[0] || "Sample team member");

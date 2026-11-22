@@ -74,7 +74,7 @@ export default function App({ backend: suppliedBackend }) {
     return <CompanyOnboarding onClose={() => setOnboarding(false)} />;
   return (
     <div
-      className="shell"
+      className={"shell " + (customer ? "customer-view" : "owner-view")}
       style={{ "--brand": customer && active ? active.color : "#1e3a1e" }}
     >
       <a className="skip-link" href="#main">
