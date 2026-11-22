@@ -1,5 +1,8 @@
 # Full application audit — Stage 7
 
+Latest functional release: [PR #35](https://github.com/s4wf9js2k8-create/owner-admin/pull/35) and [PR #36](https://github.com/s4wf9js2k8-create/owner-admin/pull/36), merged as `266dd08` and `5671507`. **137 unit tests, 252 browser cases and 18 PostgreSQL integration tests passed in CI; 93 browser workflows passed against the deployed GitHub Pages site.** The public JS/CSS bytes match the built artifact. See [release report](RELEASE-2026-11-22.md) and [current checklist](PAGE-CHECKLIST.md). Earlier counts below are historical evidence for earlier commits, not replacements for final-head verification.
+
+
 Audit started 22 November 2026 on main `806a9c1` (PRs #25–#32 reviewed). This is a public, session-only fictional demonstration, not a production readiness review. Source inspection and the existing browser regression suite are the baseline. Screenshots/navigation observations were collected for every owner destination and enabled customer module across all four sample organisations, then repeated after implementation at desktop, phone and tablet widths. Release verification is recorded below after execution.
 
 Classifications: **COMPLETE** means the currently advertised core demo workflow is connected and covered by passing tests; **PARTIAL** means important specification features are missing; **PLACEHOLDER**, **BROKEN** and **REDUNDANT** identify non-useful, failed or duplicate destinations. Production-only services are explicitly unavailable, rather than counted as implemented.

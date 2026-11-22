@@ -1,5 +1,8 @@
 # Demonstration acceptance checklist
 
+Latest functional release: [PR #35](https://github.com/s4wf9js2k8-create/owner-admin/pull/35) and [PR #36](https://github.com/s4wf9js2k8-create/owner-admin/pull/36), merged as `266dd08` and `5671507`. **137 unit tests, 252 browser cases and 18 PostgreSQL integration tests passed in CI; 93 browser workflows passed against the deployed GitHub Pages site.** The public JS/CSS bytes match the built artifact. See [release report](RELEASE-2026-11-22.md) and [current checklist](PAGE-CHECKLIST.md). Earlier counts below are historical evidence for earlier commits, not replacements for final-head verification.
+
+
 Updated 22 November 2026. This checklist records the current fictional, browser-session demonstration; it is not a production launch checklist. The page inventory, classifications, remaining defects and scope are in [FULL-APPLICATION-AUDIT.md](FULL-APPLICATION-AUDIT.md).
 
 ## Verified baseline
