@@ -1,6 +1,6 @@
 # Full application audit — Stage 7
 
-Audit started 22 November 2026 on main `806a9c1` (PRs #25–#32 reviewed). This is a public, session-only fictional demonstration, not a production readiness review. Source inspection and the existing browser regression suite are the baseline. Desktop screenshots/navigation observations are collected separately for every owner destination and every enabled module in all four sample organisations. Release verification is recorded below after execution.
+Audit started 22 November 2026 on main `806a9c1` (PRs #25–#32 reviewed). This is a public, session-only fictional demonstration, not a production readiness review. Source inspection and the existing browser regression suite are the baseline. Screenshots/navigation observations were collected for every owner destination and enabled customer module across all four sample organisations, then repeated after implementation at desktop, phone and tablet widths. Release verification is recorded below after execution.
 
 Classifications: **COMPLETE** means the currently advertised core demo workflow is connected and covered by passing tests; **PARTIAL** means important specification features are missing; **PLACEHOLDER**, **BROKEN** and **REDUNDANT** identify non-useful, failed or duplicate destinations. Production-only services are explicitly unavailable, rather than counted as implemented.
 
@@ -14,7 +14,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Clock in/out; open urgent work. Secondary: Configure widgets and presets.
 - Connected modules: Attendance, rotas, tasks, inspections, stock.
 - Defects/missing: Booking widgets now exclude resource definitions/completed appointments; finer widget filters remain.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `operational-redesign; administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### My Work — PARTIAL
@@ -23,7 +23,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Filter assignments; open work. Secondary: Complete supported task types.
 - Connected modules: Tasks, maintenance, staff, schedule.
 - Defects/missing: Some related assignment names remain legacy text; schedule integration needs expansion.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `customer-overhaul`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Calendar — PARTIAL
@@ -32,7 +32,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Choose day/month; open activity. Secondary: Browse upcoming dates.
 - Connected modules: All dated records.
 - Defects/missing: Exact-record links and cancelled/resource-row exclusion implemented; external calendar/time-zone integrations remain unavailable.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `customer-overhaul`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Tasks & Projects (Tasks / Projects aliases) — PARTIAL
@@ -41,7 +41,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Create/edit tasks; checklist; time; status. Secondary: Board/list/calendar; project views; comments.
 - Connected modules: Staff, projects, approvals, automations.
 - Defects/missing: Project resources, dependencies and full budgets remain; team field still text.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `customer-overhaul; administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Staff & Volunteers (Staff / Volunteers aliases) — PARTIAL
@@ -50,7 +50,8 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Create/edit people; profile tabs. Secondary: Open qualifications, schedule, work, files.
 - Connected modules: Qualifications, attendance, leave, rotas, work.
 - Defects/missing: Events and appointments now linked in Schedule; individual permission editing remains.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
 - Coverage: `operational-redesign; staff-eligibility`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Attendance & Timesheets (Attendance & Hours alias) — PARTIAL
@@ -59,7 +60,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Clock in/out; review hours. Secondary: Correction requests; CSV; weekly summary.
 - Connected modules: Staff, approvals, reporting.
 - Defects/missing: Project/job allocation and configurable overtime incomplete; aliases duplicate navigation.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `operational-redesign; staff-eligibility`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Shift Rotas (Schedules alias) — PARTIAL
@@ -68,7 +69,8 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Create/edit validated shifts. Secondary: Week/day views; coverage warnings.
 - Connected modules: Staff, qualifications, leave, availability.
 - Defects/missing: Event/appointment commitments now visible separately from shifts; competency minima, templates and swaps incomplete.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
 - Coverage: `staff-eligibility; operational-redesign`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Leave & Availability — PARTIAL
@@ -77,7 +79,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Request, approve/reject/cancel leave. Secondary: Record unavailable dates.
 - Connected modules: Staff, eligibility, approvals.
 - Defects/missing: Complete calendar and accrual/balance logic incomplete.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `staff-eligibility; administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Training & Qualifications — PARTIAL
@@ -86,7 +88,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Record training; expiry; approval. Secondary: Filter staff/qualifications.
 - Connected modules: Staff, eligibility, notifications.
 - Defects/missing: Training sessions, assessments and evidence upload incomplete.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `staff-eligibility`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Assets & Equipment (Assets alias) — PARTIAL
@@ -95,7 +97,8 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Create asset; inspect; report defect. Secondary: Custodian, condition, maintenance/files tabs.
 - Connected modules: Staff, maintenance, inspections, documents.
 - Defects/missing: Purchase details/QR deep links incomplete; duplicate alias navigation remains.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
 - Coverage: `operational-redesign; stock-recovery`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Maintenance & Work Orders (Maintenance / Work orders / Job records aliases) — PARTIAL
@@ -104,7 +107,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Assign engineer; checklist; parts; labour; complete. Secondary: Supervisor review; asset/inspection navigation.
 - Connected modules: Assets, inspections, stock, staff, approvals.
 - Defects/missing: Completion gate and recurring templates incomplete; Job records overlaps active maintenance.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `operational-redesign; stock-recovery`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Inspections & Checklists (Inspections alias) — PARTIAL
@@ -113,7 +116,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Build template; run; submit; review. Secondary: Local evidence; corrective maintenance.
 - Connected modules: Assets, staff/qualifications, maintenance, automations.
 - Defects/missing: Template version editing and recurrence incomplete.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `stage3-operations; administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Health & Safety — PARTIAL
@@ -122,7 +125,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Report hazard; assign competent responsible person. Secondary: Edit risk/action/status.
 - Connected modules: Staff and training.
 - Defects/missing: Scored risk assessments and linked corrective work incomplete.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Fleet Management — PARTIAL
@@ -131,7 +134,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Register vehicle; mileage; pass/defect check. Secondary: Driver selection; defects; linked repair.
 - Connected modules: Staff, qualifications, maintenance.
 - Defects/missing: Per-item check workflow, insurance/service history and eligible driver fixtures missing.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Inventory & Stock — COMPLETE
@@ -140,7 +143,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Receive/issue/return/transfer/adjust; deliveries. Secondary: Suppliers, orders, movement history.
 - Connected modules: Maintenance, assets, suppliers.
 - Defects/missing: Core advertised demo movements validated atomically; no real procurement/storage.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `stock-recovery`. Completion: COMPLETE; no assertion that every requested extension is delivered.
 
 ### Customers & CRM — PARTIAL
@@ -149,7 +152,8 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Create customer; stage/account manager; activity. Secondary: Financial links and follow-up date.
 - Connected modules: Staff, contacts, tasks, jobs, quotes/invoices/payments, bookings, appointments and documents.
 - Defects/missing: Directory, profile tabs, contact IDs, calls/notes/opportunity activity, assigned tasks, quote initiation and combined commercial/scheduling/job/document links implemented. Remaining: richer opportunity valuations and customer merge/deduplication tools.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
 - Coverage: `bespoke-pages; financial-workflows`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Quotations — PARTIAL
@@ -158,7 +162,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Create/edit/duplicate; approve/send/accept. Secondary: Print; convert to invoice.
 - Connected modules: CRM, staff, jobs.
 - Defects/missing: Contacts now use stable IDs and CRM quotations preselect customer; catalogue/tax extensions incomplete.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `financial-workflows`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Invoices — PARTIAL
@@ -167,7 +171,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Convert quote; issue; record partial/full payment. Secondary: Credit note; print/history.
 - Connected modules: CRM, quotes, reports.
 - Defects/missing: Booking-generated drafts and contact IDs implemented; advanced credits/refunds incomplete.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `financial-workflows`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Events (Events & bookings alias) — PARTIAL
@@ -176,7 +180,8 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Create event; reserve; waitlist; check-in. Secondary: Cancel booking and recompute totals.
 - Connected modules: Staff, assets/resources, CRM, tasks, rotas, documents, reporting and booking IDs.
 - Defects/missing: Month/week planner; existing staff and equipment; optional recorded competency; end times and save-time conflicts; linked preparation tasks/documents. Remaining: ticket categories, finer event statuses and a structured event checklist beyond linked tasks.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
 - Coverage: `connected-business`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Bookings (event booking desk) — PARTIAL
@@ -185,7 +190,8 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Reserve, waitlist, check-in, cancel. Secondary: Promote waitlist with capacity guard.
 - Connected modules: Events, CRM, invoices, reports and live capacity.
 - Defects/missing: CRM/price/invoice linkage and adapter capacity checks implemented; waitlist/check-in/cancellation preserve history. Remaining: individual attendee identities/ticket types; cancellations do not automatically create financial credits.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
 - Coverage: `connected-business`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Appointments / Resource Bookings — PARTIAL
@@ -194,7 +200,8 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Create appointment; change generic status. Secondary: Eligible staff and optional customer selector.
 - Connected modules: Staff, leave/qualifications, CRM, resources, tasks, calendar, notifications and reporting.
 - Defects/missing: Day/week diary, stable room/resource IDs, conflicts, rescheduling, completion outcome, follow-up tasks and history implemented. Remaining: recurrent appointments and external calendar adapters.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
 - Coverage: `bespoke-pages; staff-eligibility`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Documents — COMPLETE
@@ -203,7 +210,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Select local file; create/edit/link/version. Secondary: Preview/download; classification; approval.
 - Connected modules: Staff, assets, jobs, customers, events, inspections.
 - Defects/missing: Browser-memory storage only; no permanent cloud upload; linked-record profile access varies.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `stock-recovery`. Completion: COMPLETE; no assertion that every requested extension is delivered.
 
 ### Archives & Collections (Archives alias) — PARTIAL
@@ -212,7 +219,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Accession item; view condition/location. Secondary: Search and condition changes.
 - Connected modules: Independent collection records.
 - Defects/missing: Provenance/dates/export and separate business-record archive/restore missing.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Forms & Surveys — PARTIAL
@@ -221,7 +228,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Create template; reorder fields; submit. Secondary: Preview responses.
 - Connected modules: Standalone session templates/responses.
 - Defects/missing: Publish/archive lifecycle, conditional fields and related-record links missing.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `connected-business`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Donations & Fundraising (Donations alias) — PARTIAL
@@ -230,7 +237,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Record donation; browse campaign. Secondary: View contribution details.
 - Connected modules: Campaign names.
 - Defects/missing: Targets/donor/event links incomplete; no payment processing or Gift Aid claims.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Visitor Statistics — PARTIAL
@@ -239,7 +246,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Record count; browse chart. Secondary: Open recorded day.
 - Connected modules: Reporting.
 - Defects/missing: Category/period aggregation and event reconciliation incomplete.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Daily Operations — PARTIAL
@@ -248,7 +255,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Complete/approve opening and closing checks. Secondary: Create/acknowledge linked handover.
 - Connected modules: Staff, attendance, shifts, work, maintenance.
 - Defects/missing: Reusable recurring templates and bulk-day preparation remain.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `stage3-operations`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Reports & Analytics (Reporting / Insights aliases) — PARTIAL
@@ -257,7 +264,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Filter/build/save reports; CSV/print. Secondary: Comparisons and chart drilldown.
 - Connected modules: Current enabled module records.
 - Defects/missing: Confirmed places, checked-in visitors and illustrative booking value now derive from reservations using event dates. CSV and grouped dates share the same derivation. Overtime/project metrics, Excel and scheduling remain unavailable.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `stage5-workspaces`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Notifications — COMPLETE
@@ -266,7 +273,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Open record; read/dismiss; mark all read. Secondary: Categories/reminders/preferences.
 - Connected modules: Tasks, stock, qualifications, approvals, bookings.
 - Defects/missing: Session state only; no external delivery/background processing claimed.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `stage5-workspaces`. Completion: COMPLETE; no assertion that every requested extension is delivered.
 
 ### Staff Communications — COMPLETE
@@ -275,7 +282,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Draft/publish/archive; acknowledge. Secondary: Department/person targeting; handover links.
 - Connected modules: Staff, roles, Daily Operations.
 - Defects/missing: No email/chat delivery; audience and acknowledgement are fictional/session-only.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `stage5-workspaces`. Completion: COMPLETE; no assertion that every requested extension is delivered.
 
 ### Approvals — COMPLETE
@@ -284,7 +291,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Approve/reject/request changes; comments. Secondary: Assign approver; open source.
 - Connected modules: Leave, timesheets, jobs, inspection, document, quote.
 - Defects/missing: Supported demo transitions only; no durable authorisation boundary.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `administration-finish`. Completion: COMPLETE; no assertion that every requested extension is delivered.
 
 ### Automations — COMPLETE
@@ -293,7 +300,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Create/enable/disable/evaluate rules. Secondary: History and errors.
 - Connected modules: Inspections, maintenance, tasks.
 - Defects/missing: Supported trigger set only; no closed-browser server schedule.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `administration-finish`. Completion: COMPLETE; no assertion that every requested extension is delivered.
 
 ### Global Search — PARTIAL
@@ -302,7 +309,8 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Search/filter/open record; quick command. Secondary: Save search; keyboard dialog.
 - Connected modules: All accessible records.
 - Defects/missing: Event and reservation focus now resolves the correct event; appointment/resource results and quick creation are wired. Resource definitions are excluded from record search. Older form quick-creation consistency remains partial.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
 - Coverage: `administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Activity History — COMPLETE
@@ -311,7 +319,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Filter and open source. Secondary: Actor/date/action scope.
 - Connected modules: Record activity and company settings.
 - Defects/missing: Bounded, mutable session history; not a legal audit ledger.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `administration-finish`. Completion: COMPLETE; no assertion that every requested extension is delivered.
 
 ### Company Settings / Roles — PARTIAL
@@ -320,7 +328,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Primary actions: Edit profile, modules, roles and workflows. Secondary: Branding, widgets, notifications, locations.
 - Connected modules: Navigation, eligibility, approvals, dashboard.
 - Defects/missing: Production enforcement and granular per-person exceptions remain.
-- Mobile: baseline responsive presentation; stage-specific verification pending.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ## Owner page-by-page inventory
@@ -492,17 +500,21 @@ Packages and subscriptions, server monitoring/backups, accounts/permissions and 
 - [x] Day/week appointment diary, resource registry/conflicts, rescheduling/outcomes/follow-up.
 - [x] Customer profile tabs, stable contact IDs, combined activity and linked operational records.
 - [x] Staff/rota/asset/calendar/search/report connections for the new scheduling workflows.
-- [ ] Responsive/accessibility/error/empty-state verification.
-- [ ] Final regression, PR, merge, Pages and live workflow verification.
+- [x] Responsive page sweeps at all three widths, workflow overflow checks, group keyboard/focus behavior, dialog Escape/focus, validation/error states, and reduced-motion support.
+Release tracking: [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull/33) contains the final full-suite CI result, merge commit, Pages deployment run and deployed workflow checks. These external release states are not inferred from source completion.
 
 ## Verification and remaining work
 
 Baseline evidence: `npm ci`, lint, 102 unit tests, build and **195 browser tests passed** before changes. A scripted sweep inspected 122 destinations (18 owner and 104 customer page visits across the four organisations), captured desktop screenshots, and reported zero page errors or root horizontal overflow. This is automated navigation evidence, not a claim that every advanced control was manually inspected.
 
-Stage 7 adds a coherent scheduling/commercial integration batch, not completion of all stages. The seven scenario implementations are in `tests/browser/stage7-scheduling.spec.js`; new rule/adapter cases are in `tests/scheduling.test.js`. Final executed counts and mobile/Pages evidence are recorded below once release checks finish. No application code is modified while the final regression suite runs.
+Stage 7 adds a coherent scheduling/commercial integration batch, not completion of all stages. The seven scenario implementations are in `tests/browser/stage7-scheduling.spec.js`; new rule/adapter cases are in `tests/scheduling.test.js`. Local acceptance: lint, **117 unit tests**, build, **18 PostgreSQL integration tests**, and **21 expanded scheduling/commercial browser workflows** passed. The 15 scheduling rule/adapter cases also passed under `TZ=Europe/London`. Final full-suite CI and Pages evidence are recorded in [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull/33). No application code is modified while the final regression suite runs.
 
 Performance: the initial main JavaScript chunk fell from 560.01 kB / 152.48 kB gzip to approximately 423.30 kB / 123.14 kB gzip by loading specialist customer modules on demand; no dependencies added.
 
 Remaining highest-priority functional areas: full Fleet checks/history/driver fixtures; business-record archive/restore; published/conditional/linked forms; structured safety assessments; full project resources/dependencies; training sessions; donation donor/target links; visitor aggregations. Earlier owner billing/accounts/settings extensions remain in STAGE6-CHECKLIST.md. Complete requests A–D and F are covered in part by existing scenario suites; a single uninterrupted employee-to-payroll scenario and all advanced financial/maintenance supervisor gates are not claimed implemented.
 
 Collection archives remain distinct from documents, and persistent/external production services remain explicitly unavailable. Earlier unchecked requirements in PAGE-CHECKLIST.md remain unfinished.
+
+### Post-implementation viewport sweep
+
+The updated navigation/screenshot sweep completed **126 page visits at each of 390px, 820px and 1440px** (378 visits total), with no recorded page errors and no root horizontal overflow. This includes owner pages, all enabled customer pages and newly enabled CRM/asset records; bounded horizontal scroll inside existing tables/rotas is intentional. Relevant desktop/mobile screenshots were reviewed for events, the appointment diary and CRM. The sweep is a navigation/layout observation, not a replacement for the workflow tests.

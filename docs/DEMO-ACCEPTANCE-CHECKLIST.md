@@ -29,12 +29,11 @@ The checked implementation rows refer to the source-frozen batch. Final automate
 
 ## Final release verification
 
-- [ ] Lint, unit tests, build and the full browser suite pass on the final branch.
-- [ ] Desktop 1440px, phone 390px and tablet 820px workflows pass, including empty/error/reset states and no root overflow.
-- [ ] PostgreSQL integration suite passes where Docker is available, including CI.
-- [ ] PR checks pass; merge according to repository rules.
-- [ ] Existing GitHub Pages deployment succeeds for the merged commit.
-- [ ] Public HTML/asset hashes and deployed end-to-end owner/customer workflows verified.
+- [x] Dependency installation, lint, 117 unit tests and build passed; the 15 scheduling rule cases also passed under Europe/London.
+- Full 216-case browser regression outcome: see final CI in PR #33 before merge.
+- [x] All 21 expanded workflows pass at desktop 1440px, phone 390px and tablet 820px, including error/reset/keyboard checks. The per-width 126-page sweep reported no page errors/root overflow (378 visits).
+- [x] PostgreSQL integration suite: 18 passing locally with Docker, also exercised by PR CI.
+Release state is recorded in [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull/33): required CI checks, merge SHA, existing GitHub Pages build/deployment, public HTML/assets and live owner/customer workflow results. No deployment or live checks are claimed from source-only verification.
 
 ## Explicitly not accepted as finished
 

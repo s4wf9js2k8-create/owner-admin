@@ -163,6 +163,7 @@ export default function FinancialWorkspace({
         reference: editor.reference.trim(),
         title: editor.reference.trim(),
         customerId: editor.customerId,
+        contactId: editor.contactId || "",
         contact: editor.contact,
         ownerId: editor.ownerId || "",
         creationDate: editor.creationDate,
@@ -438,7 +439,11 @@ export default function FinancialWorkspace({
               customer(r)?.contact ||
               "Contact not specified"}
           </p>
-          <p>{customer(r)?.email || ""}</p>
+          <p>
+            {customer(r)?.contacts?.find((c) => c.id === r.contactId)?.email ||
+              customer(r)?.email ||
+              ""}
+          </p>
         </div>
         <div>
           <p>Created: {r.creationDate || "Legacy date not recorded"}</p>

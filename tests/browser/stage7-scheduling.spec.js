@@ -31,6 +31,9 @@ async function event(
   await go(page, "Events & bookings");
   await page.getByRole("button", { name: "New event", exact: true }).click();
   const dialog = page.getByRole("dialog");
+  await expect(
+    dialog.getByLabel("Assigned staff", { exact: true }),
+  ).toBeDisabled();
   await dialog.getByLabel("Event name", { exact: true }).fill(title);
   await dialog.getByLabel("Starts", { exact: true }).fill("2026-12-16T10:00");
   await dialog.getByLabel("Ends", { exact: true }).fill("2026-12-16T12:00");

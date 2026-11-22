@@ -1,6 +1,6 @@
 import React from "react";
 import { eligibleStaff } from "../staffEligibility";
-import { calendarDays, resourceRecords } from "./rules";
+import { calendarDays, resourceRecords, validDateTime } from "./rules";
 export function StaffAssignment({
   records,
   orgId,
@@ -16,14 +16,18 @@ export function StaffAssignment({
   kind = "bookings",
   disabled = false,
 }) {
-  const { eligible, excluded } = eligibleStaff(records, orgId, {
-    kind,
-    requiredQualification,
-    date: startTime,
-    startTime,
-    endTime,
-    excludedRecordId,
-  });
+  const timesReady =
+    validDateTime(startTime) && validDateTime(endTime) && endTime > startTime;
+  const { eligible, excluded } = timesReady
+    ? eligibleStaff(records, orgId, {
+        kind,
+        requiredQualification,
+        date: startTime,
+        startTime,
+        endTime,
+        excludedRecordId,
+      })
+    : { eligible: [], excluded: [] };
   return (
     <div className="schedule-staff-picker">
       <label>
@@ -32,7 +36,7 @@ export function StaffAssignment({
           aria-label={label}
           multiple={multiple}
           required={required}
-          disabled={disabled}
+          disabled={disabled || !timesReady}
           value={multiple ? value : value[0] || ""}
           onChange={(e) =>
             onChange(
@@ -51,6 +55,9 @@ export function StaffAssignment({
           ))}
         </select>
       </label>
+      {!timesReady && (
+        <p>Set valid start and end times before choosing staff.</p>
+      )}
       <small>
         {eligible.length} eligible for the selected times.{" "}
         {multiple
