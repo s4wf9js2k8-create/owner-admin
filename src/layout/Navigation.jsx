@@ -118,6 +118,9 @@ const customerGroups = (org, role, roleModules, actions = []) => {
           ? [["Approvals", ClipboardCheck]]
           : []),
         ["Activity history", ScrollText],
+        ...(actions.includes("Approve") || actions.includes("Export")
+          ? [["Business archives", Folder]]
+          : []),
       ],
     ],
     ["TEAM", by(peopleTypes)],

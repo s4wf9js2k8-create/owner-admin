@@ -26,7 +26,7 @@ export function approvalType(r) {
     return "Quotation";
   if (
     type === "maintenance" &&
-    r.status === "Complete" &&
+    (r.status === "Complete" || r.completionRequestedAt) &&
     r.review !== "Approved"
   )
     return "Maintenance completion";
@@ -95,6 +95,9 @@ export function decideApproval(record, request, org, records) {
     (requester === actor.id ||
       [
         ...(record.staffIds || []),
+        ...(record.memberIds || []),
+        ...(record.attendeeIds || []),
+        record.driverId,
         record.personId,
         record.ownerId,
         record.engineerId,
@@ -158,6 +161,7 @@ export function decideApproval(record, request, org, records) {
     };
   else if (type === "maintenance")
     patch = {
+      completionRequestedAt: "",
       review: approved ? "Approved" : "Requires changes",
       status: approved ? "Complete" : "In progress",
       workStage: approved ? "Completed" : "In progress",
@@ -372,6 +376,9 @@ export function recordInScope(record, scope = {}, person, records = []) {
     (record.id === person?.id && moduleInfo(record.module).type === "people") ||
     ([
       ...(record.staffIds || []),
+      ...(record.memberIds || []),
+      ...(record.attendeeIds || []),
+      record.driverId,
       record.createdById,
       record.personId,
       record.ownerId,
@@ -388,6 +395,9 @@ export function recordInScope(record, scope = {}, person, records = []) {
       moduleInfo(p.module).type === "people" &&
       ([
         ...(record.staffIds || []),
+        ...(record.memberIds || []),
+        ...(record.attendeeIds || []),
+        record.driverId,
         record.personId,
         record.ownerId,
         record.engineerId,

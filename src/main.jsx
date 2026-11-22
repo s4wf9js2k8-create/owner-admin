@@ -21,3 +21,5 @@ import "./administration.css";
 import "./owner/stage6.css";
 
 import "./scheduling/workspace.css";
+
+import "./completion/workspace.css";

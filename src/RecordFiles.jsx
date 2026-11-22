@@ -9,6 +9,21 @@ export function LinkedRecordFiles({ record, records, onNavigate }) {
   return (
     <section>
       <h3>Linked documents</h3>
+      {records
+        .filter(
+          (r) =>
+            r.recordType === "form-response" &&
+            (r.relatedRecordId === record.id ||
+              r.relatedIds?.includes(record.id)),
+        )
+        .map((r) => (
+          <button
+            key={r.id}
+            onClick={() => onNavigate(r.module, { recordId: r.id })}
+          >
+            {r.formTitle || r.title} · Form submission
+          </button>
+        ))}
       {docs.length ? (
         docs.map((r) => (
           <button

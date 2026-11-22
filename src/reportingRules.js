@@ -197,6 +197,13 @@ export function buildReport(records, orgId, config) {
         "supplier",
         "purchase-order",
         "resource",
+        "form-template",
+        "training-session",
+        "campaign",
+        "product",
+        "operations-template",
+        "maintenance-template",
+        "shift-template",
       ].includes(r.recordType),
   );
   const rows = scoped
@@ -321,4 +328,56 @@ export function reportCsv(report, config, records) {
     }),
   ];
   return "\ufeff" + lines.map((row) => row.map(escape).join(",")).join("\r\n");
+}
+
+/** Excel 2003 XML, a supported Excel format. Values stay typed data, never formulas. */
+export function reportSpreadsheet(report, config, records) {
+  const csv = reportCsv(report, config, records).replace(/^\uFEFF/, ""),
+    lines = [];
+  let row = [],
+    value = "",
+    quoted = false;
+  for (let i = 0; i < csv.length; i++) {
+    const ch = csv[i];
+    if (ch === '"') {
+      if (quoted && csv[i + 1] === '"') {
+        value += '"';
+        i++;
+      } else quoted = !quoted;
+    } else if (ch === "," && !quoted) {
+      row.push(value);
+      value = "";
+    } else if (ch === "\r" && !quoted && csv[i + 1] === "\n") {
+      row.push(value);
+      lines.push(row);
+      row = [];
+      value = "";
+      i++;
+    } else value += ch;
+  }
+  row.push(value);
+  lines.push(row);
+  const esc = (v) =>
+    String(v)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+  return (
+    '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Report"><Table>' +
+    lines
+      .map(
+        (r) =>
+          "<Row>" +
+          r
+            .map(
+              (v) =>
+                '<Cell><Data ss:Type="String">' + esc(v) + "</Data></Cell>",
+            )
+            .join("") +
+          "</Row>",
+      )
+      .join("") +
+    "</Table></Worksheet></Workbook>"
+  );
 }

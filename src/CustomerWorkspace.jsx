@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { isTaskModule, moduleInfo } from "./customerModules";
 const InventoryWorkspace = React.lazy(() => import("./InventoryWorkspace"));
 const DocumentWorkspace = React.lazy(() => import("./DocumentWorkspace"));
@@ -7,7 +7,7 @@ const NotificationInbox = React.lazy(() => import("./NotificationInbox"));
 const CommunicationsWorkspace = React.lazy(
   () => import("./CommunicationsWorkspace"),
 );
-import { recordInScope } from "./administrationRules";
+import { recordInScope, approvalToken } from "./administrationRules";
 const CompanyConfiguration = React.lazy(() => import("./CompanyConfiguration"));
 const ApprovalsPage = React.lazy(() =>
   import("./AdministrationPages").then((m) => ({ default: m.ApprovalsPage })),
@@ -33,7 +33,22 @@ const AppointmentsWorkspace = React.lazy(
 const CustomerDirectory = React.lazy(
   () => import("./scheduling/CustomerDirectory"),
 );
-import CustomerFormsOps, { initialFormTemplates } from "./CustomerFormsOps";
+const CustomerFormsOps = React.lazy(
+  () => import("./completion/FormsWorkspace"),
+);
+const VisitorWorkspace = React.lazy(
+  () => import("./completion/VisitorWorkspace"),
+);
+const FundraisingWorkspace = React.lazy(
+  () => import("./completion/FundraisingWorkspace"),
+);
+const SafetyWorkspace = React.lazy(
+  () => import("./completion/SafetyWorkspace"),
+);
+const FleetWorkspace = React.lazy(() => import("./completion/FleetWorkspace"));
+const ArchivesWorkspace = React.lazy(
+  () => import("./completion/ArchivesWorkspace"),
+);
 const CustomerCommercialOps = React.lazy(
   () => import("./CustomerCommercialOps"),
 );
@@ -58,6 +73,7 @@ const universal = [
   "Approvals",
   "Automations",
   "Activity history",
+  "Business archives",
 ];
 export default function CustomerWorkspace({
   org,
@@ -72,10 +88,14 @@ export default function CustomerWorkspace({
   customerRoles,
   roleModules,
   roleTeams,
+  externalFocus,
+  notificationStore,
+  setNotificationStore,
 }) {
   const [accessMessage, setAccessMessage] = useState("");
-  const [notificationUsers, setNotificationUsers] = useState({});
-  const [formTemplates, setFormTemplates] = useState(initialFormTemplates);
+  const [fallbackNotifications, setFallbackNotifications] = useState({});
+  const notificationUsers = notificationStore || fallbackNotifications,
+    setNotificationUsers = setNotificationStore || setFallbackNotifications;
   const [prefs, setLocalPrefs] = useState(
     org.workspaceConfig?.dashboardPrefs || {
       home: "Dashboard",
@@ -103,6 +123,10 @@ export default function CustomerWorkspace({
   const [createRequest, setCreateRequest] = useState(0);
   const [createContext, setCreateContext] = useState({});
   const [focus, setFocus] = useState(null);
+  useEffect(() => {
+    if (externalFocus?.orgId === org.id && externalFocus.id)
+      setFocus({ page: externalFocus.page, id: externalFocus.id });
+  }, [externalFocus, org.id]);
   const roleActions =
     customerRoles[customerRole] || demoRoleDefaults[customerRole] || [];
   const canView = roleActions.includes("View");
@@ -182,7 +206,7 @@ export default function CustomerWorkspace({
     ? actor
     : choices[0] || "Sample team member";
   const currentPerson = people.find((p) => p.title === activeActor);
-  const actorKey = currentPerson?.id || activeActor;
+  const actorKey = org.id + ":" + (currentPerson?.id || activeActor);
   const userInbox = notificationUsers[actorKey] || {
     read: [],
     dismissed: [],
@@ -208,7 +232,7 @@ export default function CustomerWorkspace({
       customerRole === "Administrator" ||
       Boolean(org.workspaceConfig?.roleScopes?.[customerRole]?.sensitive),
   };
-  const accessibleRecords = visibleRecords
+  const permittedRecords = visibleRecords
     .filter((r) => recordInScope(r, scope, currentPerson, records))
     .filter(
       (r) =>
@@ -217,6 +241,7 @@ export default function CustomerWorkspace({
         (r.status === "Published" &&
           noticeRelevant(r, currentPerson?.id, currentPerson?.team)),
     );
+  const accessibleRecords = permittedRecords.filter((r) => !r.archivedAt);
   const allowedPage = (target) =>
     target === "Settings" || target === "Automations"
       ? canManage
@@ -239,6 +264,11 @@ export default function CustomerWorkspace({
       return;
     }
     setAccessMessage("");
+    if (
+      options.recordId &&
+      permittedRecords.some((r) => r.id === options.recordId && r.archivedAt)
+    )
+      target = "Business archives";
     if (options.recordId) setFocus({ page: target, id: options.recordId });
     else setFocus(null);
     if (options.create) {
@@ -252,13 +282,14 @@ export default function CustomerWorkspace({
     return Promise.resolve(false);
   };
   const safeUpdate = (orgId, id, patch) => {
-    const record = accessibleRecords.find(
+    const record = permittedRecords.find(
       (r) => r.orgId === orgId && r.id === id,
     );
     if (
       orgId !== org.id ||
       !record ||
       (!canEdit &&
+        !(patch._workflow?.kind === "formSubmit" && canCreate) &&
         !(
           canApprove &&
           (patch._approval ||
@@ -266,6 +297,40 @@ export default function CustomerWorkspace({
         ))
     )
       return deny("This record or action is unavailable to the selected role.");
+    if (patch._workflow) {
+      const kind = patch._workflow.kind;
+      for (const key of [
+        "driverId",
+        "personId",
+        "relatedRecordId",
+        "assetRefId",
+      ]) {
+        const target = patch._workflow[key];
+        if (target && !permittedRecords.some((r) => r.id === target))
+          return deny("The linked record is outside your access.");
+      }
+      if (patch._workflow.createWork && !canCreate)
+        return deny(
+          "Creating corrective maintenance requires Create permission.",
+        );
+      if (
+        ["archive", "restore", "assessTraining"].includes(kind) &&
+        !canApprove
+      )
+        return deny("This workflow requires approval permission.");
+      if (
+        ["formSubmit", "correctiveSafety", "generateSchedule"].includes(kind) &&
+        !canCreate
+      )
+        return deny("Creating linked records requires Create permission.");
+      if (
+        scope.ownership === "Mine" &&
+        [patch._workflow.driverId, patch._workflow.personId]
+          .filter(Boolean)
+          .some((id) => id !== currentPerson?.id)
+      )
+        return deny("This role can record its own work only.");
+    }
     if (moduleInfo(record.module).type === "people" && !canManageStaff)
       return deny("Managing staff profiles requires Manage staff permission.");
     if (
@@ -293,6 +358,26 @@ export default function CustomerWorkspace({
       !accessibleRecords.some((r) => r.id === patch._stockMovement.orderId)
     )
       return deny("The receiving job is outside your access.");
+    if (
+      record.requiresSupervisorReview &&
+      ["Approved", "Requires changes"].includes(patch.review)
+    ) {
+      if (!record.completionRequestedAt)
+        return deny("Submit work for supervisor approval first.");
+      if (!currentPerson)
+        return deny(
+          "Choose an active staff member using Working as before reviewing.",
+        );
+      return onUpdate(orgId, id, {
+        _actor: actorMeta,
+        _approval: {
+          token: approvalToken(record),
+          actorId: currentPerson.id,
+          decision: patch.review === "Approved" ? "Approve" : "Request changes",
+          comment: "Supervisor completion review",
+        },
+      });
+    }
     return onUpdate(orgId, id, { ...patch, _actor: actorMeta });
   };
   const safeAdd = (payload) => {
@@ -330,6 +415,7 @@ export default function CustomerWorkspace({
   const shared = {
     org: visibleOrg,
     records: accessibleRecords,
+    historyRecords: permittedRecords,
     onNavigate: navigate,
     onUpdate: safeUpdate,
     actor: activeActor,
@@ -401,6 +487,16 @@ export default function CustomerWorkspace({
         canManage={canManage}
       />
     );
+  else if (current === "Business archives")
+    content = (
+      <ArchivesWorkspace
+        {...shared}
+        records={permittedRecords}
+        canEdit={canEdit && canApprove}
+        canExport={canExport}
+        focusId={focusId}
+      />
+    );
   else if (current === "Activity history")
     content = <ActivityPage {...shared} canManage={canManage} />;
   else if (
@@ -411,6 +507,7 @@ export default function CustomerWorkspace({
     content = (
       <ReportingWorkspace
         {...shared}
+        records={permittedRecords}
         onAdd={safeAdd}
         canCreate={canCreate}
         canExport={canExport}
@@ -528,6 +625,48 @@ export default function CustomerWorkspace({
         canCreate={canCreate}
       />
     );
+  else if (moduleInfo(current).type === "visitors")
+    content = (
+      <VisitorWorkspace
+        {...shared}
+        module={current}
+        onAdd={safeAdd}
+        canCreate={canCreate}
+        canExport={canExport}
+      />
+    );
+  else if (moduleInfo(current).type === "donations")
+    content = (
+      <FundraisingWorkspace
+        {...shared}
+        module={current}
+        onAdd={safeAdd}
+        canCreate={canCreate}
+        canExport={canExport}
+        focusId={focusId}
+      />
+    );
+  else if (moduleInfo(current).type === "safety")
+    content = (
+      <SafetyWorkspace
+        {...shared}
+        module={current}
+        onAdd={safeAdd}
+        canCreate={canCreate}
+        canApprove={canApprove}
+        focusId={focusId}
+      />
+    );
+  else if (moduleInfo(current).type === "fleet")
+    content = (
+      <FleetWorkspace
+        {...shared}
+        module={current}
+        onAdd={safeAdd}
+        canCreate={canCreate}
+        focusId={focusId}
+      />
+    );
   else if (moduleInfo(current).type === "bookings")
     content = (
       <AppointmentsWorkspace
@@ -617,8 +756,11 @@ export default function CustomerWorkspace({
         records={accessibleRecords}
         onAdd={safeAdd}
         canCreate={canCreate}
-        templates={formTemplates}
-        setTemplates={setFormTemplates}
+        onUpdate={safeUpdate}
+        onNavigate={navigate}
+        canEdit={canEdit}
+        canExport={canExport}
+        focusId={focusId}
       />
     );
   else if (moduleInfo(current).type === "events")
@@ -722,7 +864,7 @@ export default function CustomerWorkspace({
       {accessMessage && <p role="alert">{accessMessage}</p>}
       <CustomerCommandBar
         org={visibleOrg}
-        records={accessibleRecords}
+        records={permittedRecords}
         onNavigate={navigate}
         canEdit={canCreate}
       />

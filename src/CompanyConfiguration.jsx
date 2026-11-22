@@ -179,14 +179,17 @@ export default function CompanyConfiguration({
               end = fields(f, "end"),
               days = f.getAll("days").map(Number),
               leaveDays = Number(f.get("leaveDays")),
-              minimumShifts = Number(f.get("minimumShifts"));
+              minimumShifts = Number(f.get("minimumShifts")),
+              overtimeHours = Number(f.get("overtimeHours"));
             if (
               end <= start ||
               !days.length ||
               leaveDays < 0 ||
               leaveDays > 365 ||
               minimumShifts < 0 ||
-              minimumShifts > 50
+              minimumShifts > 50 ||
+              overtimeHours < 0 ||
+              overtimeHours > 168
             ) {
               setMessage(
                 "Choose valid working hours, at least one business day and valid allowances.",
@@ -207,6 +210,7 @@ export default function CompanyConfiguration({
               days,
               leaveDays,
               minimumShifts,
+              overtimeHours,
             });
           }}
         >
@@ -273,6 +277,19 @@ export default function CompanyConfiguration({
               </label>
             ))}
           </fieldset>
+          <label>
+            Weekly overtime threshold (hours)
+            <input
+              type="number"
+              name="overtimeHours"
+              min="0"
+              max="168"
+              step=".25"
+              required
+              disabled={!canManage}
+              defaultValue={config.operations?.overtimeHours ?? 40}
+            />
+          </label>
           <div className="form-pair">
             <label>
               Annual leave allowance (business days)

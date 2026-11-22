@@ -12,6 +12,9 @@ import { QualifiedStaffSelect } from "./LinkedSelectors";
 import RotaPlanner from "./RotaPlanner";
 import StaffProfile from "./StaffProfile";
 import { weeklyHours, timesheetCsv } from "./timeReporting";
+import ScheduleTemplates from "./completion/ScheduleTemplates";
+import LeaveCalendar from "./completion/LeaveCalendar";
+import TrainingSessions from "./completion/TrainingSessions";
 import { validateAssignee } from "./staffEligibility";
 
 const day = (v) => v?.slice(0, 10) || "";
@@ -92,7 +95,13 @@ export default function CustomerPeopleOps({
   const [week, setWeek] = useState(weekStart(today()));
   const [shiftStart, setShiftStart] = useState("");
   const [shiftEnd, setShiftEnd] = useState("");
-  const list = records.filter((r) => r.orgId === org.id && r.module === module);
+  const list = records.filter(
+    (r) =>
+      r.orgId === org.id &&
+      r.module === module &&
+      r.recordType !== "training-session" &&
+      r.recordType !== "schedule-template",
+  );
   const people = records.filter(
     (r) => r.orgId === org.id && peopleType(r.module),
   );
@@ -271,6 +280,8 @@ export default function CustomerPeopleOps({
       title: person + " · Sample session",
       detail: "Manual in-app clock-in",
       person,
+      personId: people.find((p) => p.title === person)?.id || "",
+      location: org.workspaceConfig?.operations?.locations?.[0] || "Main site",
       startTime: new Date().toISOString().slice(0, 16),
       endTime: "",
       status: "In progress",
@@ -280,7 +291,11 @@ export default function CustomerPeopleOps({
   const timesheetPage = () => {
     const open = list.filter((r) => r.startTime && !r.endTime);
     const approved = list.filter((r) => r.approval === "Approved");
-    const totals = weeklyHours(list, week);
+    const totals = weeklyHours(
+      list,
+      week,
+      Number(org.workspaceConfig?.operations?.overtimeHours ?? 40),
+    );
     const exportWeek = () => {
       const url = URL.createObjectURL(
         new Blob([timesheetCsv(totals)], { type: "text/csv;charset=utf-8" }),
@@ -394,7 +409,8 @@ export default function CustomerPeopleOps({
         </div>
         <p>
           Completed sessions only · recorded breaks deducted · overnight
-          sessions split across days · overtime shown above 40 hours
+          sessions split across days · overtime shown above{" "}
+          {org.workspaceConfig?.operations?.overtimeHours ?? 40} hours
           (illustrative).
         </p>
         <div className="table-wrap">
@@ -512,6 +528,14 @@ export default function CustomerPeopleOps({
             <ArrowRight size={16} />
           </button>
         </div>
+        <ScheduleTemplates
+          org={org}
+          module={module}
+          records={records}
+          onAdd={onAdd}
+          onUpdate={onUpdate}
+          canCreate={canCreate}
+        />
         <RotaPlanner
           days={dates}
           people={people}
@@ -622,6 +646,7 @@ export default function CustomerPeopleOps({
           person. Approved requests affect assignment eligibility; holiday and
           pro-rata payroll rules are not inferred.
         </p>
+        <LeaveCalendar org={org} records={records} onOpen={setSelected} />
         <div className="leave-list">
           {filtered.map((r) => (
             <article key={r.id}>
@@ -699,6 +724,15 @@ export default function CustomerPeopleOps({
             desc="Profiles without a linked record"
           />
         </div>
+        <TrainingSessions
+          org={org}
+          module={module}
+          records={records}
+          onAdd={onAdd}
+          onUpdate={onUpdate}
+          canCreate={canCreate}
+          canApprove={canApprove}
+        />
         <label className="people-search">
           Find qualification or person
           <input
@@ -917,6 +951,63 @@ export default function CustomerPeopleOps({
                 />
               </label>
             ))}
+          {type === "timesheets" && (
+            <div className="completion-workspace">
+              <label>
+                Project allocation
+                <select
+                  disabled={!canEdit}
+                  value={r.projectId || ""}
+                  onChange={(e) => update(r, { projectId: e.target.value })}
+                >
+                  <option value="">No project</option>
+                  {records
+                    .filter(
+                      (x) => x.orgId === org.id && x.recordType === "project",
+                    )
+                    .map((x) => (
+                      <option key={x.id} value={x.id}>
+                        {x.title}
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <label>
+                Maintenance allocation
+                <select
+                  disabled={!canEdit}
+                  value={r.jobId || ""}
+                  onChange={(e) => update(r, { jobId: e.target.value })}
+                >
+                  <option value="">No work order</option>
+                  {records
+                    .filter(
+                      (x) =>
+                        x.orgId === org.id &&
+                        moduleInfo(x.module).type === "maintenance",
+                    )
+                    .map((x) => (
+                      <option key={x.id} value={x.id}>
+                        {x.title}
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <label>
+                Break minutes
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={r.breakMinutes || 0}
+                  disabled={!canEdit}
+                  onChange={(e) =>
+                    update(r, { breakMinutes: Number(e.target.value) })
+                  }
+                />
+              </label>
+            </div>
+          )}
           <label>
             Approval
             <select

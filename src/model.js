@@ -80,6 +80,11 @@ export const modules = [
   },
   {
     name: "Vehicle / fleet management",
+    requires: [
+      "Staff & volunteers",
+      "Training and qualifications",
+      "Assets & equipment",
+    ],
     description: "Fleet records, servicing and vehicle locations.",
   },
   {
@@ -817,6 +822,117 @@ export function seedRecords(orgs) {
         createdAt: "2026-11-20T10:00:00Z",
         history: [],
       });
+  }
+  for (const o of orgs) {
+    if (o.modules.includes("Forms and surveys"))
+      seeded.push({
+        id: o.id + "-handover-template",
+        orgId: o.id,
+        module: "Forms and surveys",
+        recordType: "form-template",
+        title: "Daily site handover",
+        detail: "Internal operations form",
+        status: "Published",
+        version: 1,
+        workflow: "None",
+        fields: [
+          {
+            id: "location",
+            label: "Location",
+            type: "Short text",
+            required: true,
+          },
+          {
+            id: "safe",
+            label: "Site left secure",
+            type: "Yes / No",
+            required: true,
+          },
+        ],
+        versions: [],
+      });
+    if (o.modules.includes("Vehicle / fleet management")) {
+      const person = seeded.find(
+        (r) => r.orgId === o.id && r.module === "Staff & volunteers",
+      );
+      if (person)
+        seeded.push({
+          id: o.id + "-driving-qualification",
+          orgId: o.id,
+          module: "Training and qualifications",
+          recordType: "qualification",
+          title: "Vehicle driving",
+          qualification: "Vehicle driving",
+          personId: person.id,
+          person: person.title,
+          approval: "Approved",
+          validFrom: "2020-01-01",
+          expiry: "2028-12-31",
+          status: "Valid",
+        });
+      for (const vehicle of seeded.filter(
+        (r) => r.orgId === o.id && r.module === "Vehicle / fleet management",
+      )) {
+        vehicle.recordType = "vehicle";
+        vehicle.condition = "Good";
+        vehicle.vehicleType = "Van";
+        vehicle.insuranceDue = "2027-05-01";
+        vehicle.mileage = 12000;
+        vehicle.checks = [];
+        vehicle.defects = [];
+        const assetModule = o.modules.find((m) =>
+          ["Assets & equipment", "Assets"].includes(m),
+        );
+        if (assetModule) {
+          vehicle.assetRefId = vehicle.id + "-asset";
+          seeded.push({
+            id: vehicle.assetRefId,
+            orgId: o.id,
+            module: assetModule,
+            title: vehicle.title,
+            asset: vehicle.registration,
+            sourceFleetId: vehicle.id,
+            condition: "Good",
+            location: vehicle.location,
+            status: "Active",
+          });
+        }
+      }
+    }
+  }
+  for (const o of orgs) {
+    for (const module of o.modules.filter(
+      (m) => m === "Donations and fundraising" || m === "Donations",
+    ))
+      for (const title of [
+        ...new Set(
+          seeded
+            .filter((r) => r.orgId === o.id && r.module === module)
+            .map((r) => r.campaign || "General fund"),
+        ),
+      ]) {
+        const id = o.id + "-campaign-" + title;
+        seeded.push({
+          id,
+          orgId: o.id,
+          module,
+          title,
+          recordType: "campaign",
+          detail: "Fictional fundraising programme",
+          target: 2500,
+          status: "Active",
+        });
+        for (const r of seeded.filter(
+          (r) =>
+            r.orgId === o.id &&
+            r.module === module &&
+            r.recordType !== "campaign" &&
+            (r.campaign || "General fund") === title,
+        )) {
+          r.campaignId = id;
+          r.recordType = "donation";
+        }
+      }
   }
   return seeded;
 }

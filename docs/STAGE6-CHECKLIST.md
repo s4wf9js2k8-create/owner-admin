@@ -24,7 +24,7 @@ Release verification is tracked separately in PR #32, including executed regress
 
 ## Remaining Stage 6 extensions
 
-- Package description/allowance/module editing after creation, a full optional add-on pricing editor and historical subscription-period accounting/payment status. Current payment entries are illustrative records, not a billing ledger or receipts.
+- Package editing/add-on prices/illustrative period balances are implemented in the 22 November remaining-workflow follow-up (`PackageEditor.jsx`), with a browser scenario covering totals and overlap rejection. No real billing or receipts.
 - Custom owner account records, invitations and editable fine-grained permission matrices. The public demo offers role previews; real secure account administration belongs to the existing private backend.
 - Owner-specific notification preferences, support priority/category template editing and reusable onboarding-template management beyond industry presets.
 - More detailed sales ownership and roadmap release/announcement associations. Existing lead conversion and request/roadmap relationships use stable IDs.

@@ -1,4 +1,9 @@
+import { moduleInfo } from "../customerModules.js";
 import { validateScheduledRecord } from "../scheduling/rules.js";
+import {
+  businessCommand,
+  validateCompletionRecord,
+} from "../completion/rules.js";
 import { moveStock } from "../stockTransactions.js";
 import { validateDemoAssignment } from "../demoAssignmentRules.js";
 import {
@@ -153,10 +158,37 @@ export function createFictionalBackend({
             ),
           ],
         };
+        if (moduleInfo(record.module).type === "maintenance")
+          record.requiresSupervisorReview ??= true;
         validateDemoAssignment(record, record, state.records, true);
         validateScheduledRecord(record, null, state.records, org);
+        validateCompletionRecord(record, null, state.records);
+        let createdRows = [...state.records, record];
+        if (moduleInfo(record.module).type === "fleet" && !record.assetRefId) {
+          const assetModule = org.modules.find(
+            (m) => moduleInfo(m).type === "assets",
+          );
+          if (!assetModule)
+            throw new Error(
+              "Enable Assets & equipment before registering a vehicle.",
+            );
+          const asset = {
+            id: crypto.randomUUID(),
+            orgId,
+            module: assetModule,
+            title: record.title,
+            asset: record.registration || record.title,
+            location: record.location || "",
+            condition: record.condition || "Good",
+            sourceFleetId: record.id,
+            status: "Planned",
+            createdAt: record.createdAt,
+          };
+          record.assetRefId = asset.id;
+          createdRows = [...state.records, record, asset];
+        }
         const automated = processAutomations(
-          [...state.records, record],
+          createdRows,
           record,
           org,
           org.workspaceConfig?.automationRuns,
@@ -184,6 +216,17 @@ export function createFictionalBackend({
           throw new Error("Example record unavailable.");
         if ("orgId" in patch || "id" in patch || "module" in patch)
           throw new Error("Example record identity cannot change.");
+        if (patch._workflow) {
+          const next = businessCommand(
+            state.records,
+            organisation(orgId),
+            id,
+            patch._workflow,
+            patch._actor,
+          );
+          publish({ ...state, records: next });
+          return copy(next.find((r) => r.id === id));
+        }
         if (patch._stockMovement) {
           const next = moveStock(
             state.records,
@@ -270,6 +313,7 @@ export function createFictionalBackend({
           changed = next.find((r) => r.id === id && r.orgId === orgId);
         validateDemoAssignment(changed, fields, state.records);
         validateScheduledRecord(changed, record, state.records, org);
+        validateCompletionRecord(changed, record, state.records);
         const automated = processAutomations(
           next,
           changed,

@@ -97,3 +97,30 @@ See OVERHAUL-AUDIT.md for the earlier baseline inventory. This checklist superse
 ## Stage 7 integration batch
 
 See [FULL-APPLICATION-AUDIT.md](FULL-APPLICATION-AUDIT.md) for the complete per-page inventory and [DEMO-ACCEPTANCE-CHECKLIST.md](DEMO-ACCEPTANCE-CHECKLIST.md) for exact acceptance/release evidence. This batch connects scheduling, commercial records and customer dossiers; it does not claim that all earlier unfinished requirements are complete. Event aliases are consolidated in customer navigation; other legacy alias consolidation remains pending. Production infrastructure is unchanged.
+
+
+## Remaining-workflow follow-up — 22 November 2026
+
+This list supersedes earlier descriptions of missing interactions; earlier unchecked extensions not listed as implemented remain open. Final release verification is tracked in FULL-APPLICATION-AUDIT.md and the associated PR.
+
+- [x] Fleet: dedicated profiles, qualified drivers, per-item checks, local evidence, mileage/service history, insurance/MOT dates, linked defects/maintenance/equipment.
+- [x] Business archives: eligible-record archive/restore, preserved IDs/history/links, source/date filters, selected CSV/print. Active valid qualifications are not eligible for archive.
+- [x] Forms: record-based templates, draft/publish/archive, conditional/required fields, sections/choices/reordering, linked versioned submissions, CSV and defect-to-maintenance.
+- [x] Training: group sessions, attendee pass/fail, pending qualifications, local evidence; failed assessments cannot be approved.
+- [x] Safety: scored assessments, controls/reviews/responsibility and linked corrective tasks/work orders.
+- [x] Fundraising: campaign targets, CRM donor/event IDs, contribution references/sources, local reconciliation and CSV.
+- [x] Visitors: date/category summaries, daily chart, period comparison, linked event attendance and CSV.
+- [x] Leave: month calendar and annual weekday balances, with overlaps counted once.
+- [x] Timesheets/projects: project/job allocation, recorded breaks, configurable overtime, project team/equipment/costs/budget balance and allocated hours.
+- [x] Recurring templates: bounded shift, maintenance and opening/closing occurrence generation; validation is atomic and repeated dates are deduplicated.
+- [x] Maintenance: new-job checklist/engineer/supervisor completion gate, central decisions/self-review checks, scheduled intervals, linked project and local evidence.
+- [x] Assets: purchase/reference/warranty details and downloadable local QR profile labels. Refresh still resets session-only new records.
+- [x] Inspections: editable template versions preserve existing inspection question snapshots.
+- [x] Reports: Excel-compatible XML of the same filtered/selected rows as CSV; no unattended delivery.
+- [x] Notifications: per-company/user read/preferences remain while switching workspaces and clear on Reset Demo.
+- [x] Owner packages: editable allowances, priced optional modules, company add-ons and illustrative non-overlapping billing-period balances.
+- [ ] Competency minima, completed shift swaps, per-person permission exceptions and recurring inspections.
+- [ ] Product/service catalogue, advanced tax rules/refunds, event ticket/attendee/checklist/cancellation-credit extensions.
+- [ ] Collection provenance/date/digital-reference controls and dedicated overtime/project reporting measures.
+- [ ] Custom owner accounts/matrix and further business/support/onboarding defaults, sales ownership and roadmap-release announcements.
+- [ ] Real backend hosting, durable storage, external delivery, background schedules, live monitoring and backup operations. These require separately configured private infrastructure and are unavailable in this browser demo.
