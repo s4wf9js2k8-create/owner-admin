@@ -1,3 +1,4 @@
+import useDeepLink from "./completion/DeepLink";
 import BrandingEditor from "./owner/BrandingEditor";
 import BusinessDashboard from "./owner/BusinessDashboard";
 import CompanyDirectory from "./owner/CompanyDirectory";
@@ -33,10 +34,13 @@ import SettingsPage from "./pages/SettingsPage";
 export default function App({ backend: suppliedBackend }) {
   const [serverWorkspace, setServerWorkspace] = useState(false);
   const [onboarding, setOnboarding] = useState(false);
+  const [notificationStore, setNotificationStore] = useState({});
   const [ownerData, setOwnerData] = useState(ownerSeed);
   const [demoBackend] = useState(() => createFictionalBackend());
   const backend = suppliedBackend || demoBackend;
   const controller = useConsoleController(backend);
+  const [deepFocus, setDeepFocus] = useState(null);
+  useDeepLink(controller, setDeepFocus);
   const {
     page,
     orgs,
@@ -70,7 +74,7 @@ export default function App({ backend: suppliedBackend }) {
     return <CompanyOnboarding onClose={() => setOnboarding(false)} />;
   return (
     <div
-      className="shell"
+      className={"shell " + (customer ? "customer-view" : "owner-view")}
       style={{ "--brand": customer && active ? active.color : "#1e3a1e" }}
     >
       <a className="skip-link" href="#main">
@@ -87,12 +91,15 @@ export default function App({ backend: suppliedBackend }) {
             </span>
           </div>
           <div role="status" className="feedback">
-            {message}
+            {deepFocus?.error || message}
           </div>
           <div className="toolbar">
             <button
               onClick={async () => {
-                if (await reset()) setOwnerData(ownerSeed);
+                if (await reset()) {
+                  setOwnerData(ownerSeed);
+                  setNotificationStore({});
+                }
               }}
             >
               Reset fictional demo
@@ -138,6 +145,9 @@ export default function App({ backend: suppliedBackend }) {
                   </label>
                 </div>
                 <CustomerWorkspace
+                  externalFocus={deepFocus}
+                  notificationStore={notificationStore}
+                  setNotificationStore={setNotificationStore}
                   key={active.id}
                   org={active}
                   records={records}

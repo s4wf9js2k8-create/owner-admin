@@ -14,6 +14,9 @@ export default function StaffProfile({
   const belongs = (r) =>
     [
       ...(r.staffIds || []),
+      ...(r.memberIds || []),
+      ...(r.attendeeIds || []),
+      r.driverId,
       r.personId,
       r.ownerId,
       r.engineerId,

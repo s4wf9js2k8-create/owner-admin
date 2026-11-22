@@ -11,6 +11,7 @@ import {
   previousPeriod,
   reportFields,
   reportCsv,
+  reportSpreadsheet,
 } from "./reportingRules";
 const clean = (source) => ({
   source,
@@ -158,6 +159,30 @@ export default function ReportingWorkspace({
             onClick={download}
           >
             Export report CSV
+          </button>
+          <button
+            disabled={!canExport || Boolean(invalidDates)}
+            onClick={() => {
+              const url = URL.createObjectURL(
+                new Blob(
+                  [
+                    reportSpreadsheet(
+                      { ...result, accepted: rows },
+                      config,
+                      records,
+                    ),
+                  ],
+                  { type: "application/xml" },
+                ),
+              );
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "channel-report.xml";
+              a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }}
+          >
+            Export Excel XML
           </button>
           <button
             disabled={!canExport || Boolean(invalidDates)}

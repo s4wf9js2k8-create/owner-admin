@@ -20,6 +20,7 @@ export function validateDemoAssignment(
   )
     return;
   const keys = [
+    "driverId",
     "personId",
     "ownerId",
     "engineerId",
@@ -33,6 +34,7 @@ export function validateDemoAssignment(
   ];
   if (!creating && !keys.some((key) => key in patch)) return;
   const id =
+    record.driverId ||
     record.engineerId ||
     record.inspectorId ||
     record.ownerId ||
@@ -51,7 +53,7 @@ export function validateDemoAssignment(
   if (!person) throw new Error("Select an existing staff profile.");
   const assessment = availabilityAssessment(person, records, record.orgId, {
     kind,
-    date: record.startTime || record.dueDate,
+    date: record.startTime || record.reviewDate || record.dueDate,
     startTime: record.startTime,
     endTime: record.endTime,
     excludedRecordId: record.id,

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { modules, toggleModule } from "../model";
+import PackageEditor from "./PackageEditor";
 import { illustrativeAmount } from "./rules";
 export default function CommercialControls({ controller: c }) {
   const [message, setMessage] = useState(""),
@@ -7,6 +8,7 @@ export default function CommercialControls({ controller: c }) {
     plan = c.plans.find((p) => p.name === o.plan);
   return (
     <div className="owner-commercial-controls">
+      <PackageEditor controller={c} />
       <details>
         <summary>Create a standard or bespoke package</summary>
         <form

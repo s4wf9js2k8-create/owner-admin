@@ -54,9 +54,17 @@ export default function CustomerCommandBar({
   const matches = records
     .filter(
       (r) =>
-        !["inspection-template", "report-config", "resource"].includes(
-          r.recordType,
-        ),
+        ![
+          "inspection-template",
+          "report-config",
+          "resource",
+          "maintenance-template",
+          "schedule-template",
+          "operations-template",
+          "training-session",
+          "campaign",
+          "product",
+        ].includes(r.recordType),
     )
     .filter(
       (r) =>

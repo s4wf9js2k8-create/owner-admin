@@ -55,13 +55,22 @@ export function illustrativeAmount(org, plans) {
   const plan = plans.find((p) => p.name === org.plan);
   if (!plan) return null;
   const negotiated = org.negotiatedPrice;
-  if (
+  const base =
     negotiated !== undefined &&
     negotiated !== "" &&
     Number.isFinite(Number(negotiated))
-  )
-    return Number(negotiated);
-  return Number(org.cycle === "Annual" ? plan.annual : plan.monthly);
+      ? Number(negotiated)
+      : Number(org.cycle === "Annual" ? plan.annual : plan.monthly);
+  const addons = (plan.addons || [])
+    .filter(
+      (a) =>
+        (org.subscriptionAddons || []).includes(a.module) &&
+        !(plan.includedModules || []).includes(a.module),
+    )
+    .reduce((n, a) => n + Number(a.monthly || 0), 0);
+  return (
+    Math.round((base + addons * (org.cycle === "Annual" ? 12 : 1)) * 100) / 100
+  );
 }
 export function reorder(values, id, delta) {
   const result = [...values],

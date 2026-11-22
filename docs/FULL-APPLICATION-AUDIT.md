@@ -40,7 +40,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `CustomerTaskBoard.jsx` — Task delivery and project milestones.
 - Primary actions: Create/edit tasks; checklist; time; status. Secondary: Board/list/calendar; project views; comments.
 - Connected modules: Staff, projects, approvals, automations.
-- Defects/missing: Project resources, dependencies and full budgets remain; team field still text.
+- Defects/missing: Linked project team and equipment, cost entries/budget balance, allocated attendance hours and maintenance are implemented. Task dependency cycles and premature completion are rejected at save time. Multi-stage cost approvals are not implemented.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `customer-overhaul; administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -59,7 +59,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `CustomerPeopleOps.jsx` — Clock sessions and weekly hours.
 - Primary actions: Clock in/out; review hours. Secondary: Correction requests; CSV; weekly summary.
 - Connected modules: Staff, approvals, reporting.
-- Defects/missing: Project/job allocation and configurable overtime incomplete; aliases duplicate navigation.
+- Defects/missing: Existing project/job selectors and configurable weekly overtime threshold are implemented. Correction requests still use the central approval workflow. Attendance alias consolidation and stricter editing/correction-only policies remain.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `operational-redesign; staff-eligibility`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -68,7 +68,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `CustomerPeopleOps.jsx; RotaPlanner.jsx` — Weekly staffing planner.
 - Primary actions: Create/edit validated shifts. Secondary: Week/day views; coverage warnings.
 - Connected modules: Staff, qualifications, leave, availability.
-- Defects/missing: Event/appointment commitments now visible separately from shifts; competency minima, templates and swaps incomplete.
+- Defects/missing: Event/appointment commitments remain visible. Bounded daily/weekly/fortnightly shift templates validate each generated assignment atomically and skip duplicates. Competency-specific minima and completed swaps remain unfinished.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
 - Coverage: `staff-eligibility; operational-redesign`. Completion: PARTIAL; no assertion that every requested extension is delivered.
@@ -78,7 +78,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `CustomerPeopleOps.jsx` — Availability requests and decisions.
 - Primary actions: Request, approve/reject/cancel leave. Secondary: Record unavailable dates.
 - Connected modules: Staff, eligibility, approvals.
-- Defects/missing: Complete calendar and accrual/balance logic incomplete.
+- Defects/missing: A month calendar and annual approved-weekday balances are implemented, including duplicate-date protection and configured business days. Payroll accrual, holidays and pro-rata entitlement are not inferred.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `staff-eligibility; administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -87,7 +87,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `CustomerPeopleOps.jsx` — Competency matrix and renewal records.
 - Primary actions: Record training; expiry; approval. Secondary: Filter staff/qualifications.
 - Connected modules: Staff, eligibility, notifications.
-- Defects/missing: Training sessions, assessments and evidence upload incomplete.
+- Defects/missing: Group training sessions, attendee assessments, local certificate evidence and pending qualification generation are implemented. Failed assessments cannot be approved as qualifications. Server evidence storage is unavailable.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `staff-eligibility`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -96,7 +96,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `CustomerAssetOps.jsx` — Equipment register and history.
 - Primary actions: Create asset; inspect; report defect. Secondary: Custodian, condition, maintenance/files tabs.
 - Connected modules: Staff, maintenance, inspections, documents.
-- Defects/missing: Purchase details/QR deep links incomplete; duplicate alias navigation remains.
+- Defects/missing: Purchase date/cost/reference, warranty editing and locally generated downloadable QR labels/deep links are implemented. Newly created session-only assets cannot survive a refresh. Duplicate alias navigation remains.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
 - Coverage: `operational-redesign; stock-recovery`. Completion: PARTIAL; no assertion that every requested extension is delivered.
@@ -106,7 +106,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `CustomerAssetOps.jsx` — Repair board and job execution.
 - Primary actions: Assign engineer; checklist; parts; labour; complete. Secondary: Supervisor review; asset/inspection navigation.
 - Connected modules: Assets, inspections, stock, staff, approvals.
-- Defects/missing: Completion gate and recurring templates incomplete; untimed/due-date-only jobs do not prove availability over a working interval; Job records overlaps active maintenance.
+- Defects/missing: New jobs enforce engineer/checklist/supervisor completion gates. Completion enters the shared approval workflow, including self-review rules. Scheduled start/end, project allocation, local work evidence and bounded recurring templates are implemented. Due-date-only jobs do not establish interval availability; Job records still overlaps active maintenance.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `operational-redesign; stock-recovery`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -115,25 +115,25 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `InspectionTemplates.jsx; InspectionRun.jsx` — Template-based checks and corrective work.
 - Primary actions: Build template; run; submit; review. Secondary: Local evidence; corrective maintenance.
 - Connected modules: Assets, staff/qualifications, maintenance, automations.
-- Defects/missing: Template version editing and recurrence incomplete.
+- Defects/missing: Templates can be edited with retained prior versions; existing inspections keep their question snapshot. Automatic recurring inspection scheduling remains unfinished.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `stage3-operations; administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Health & Safety — PARTIAL
 
-- Implementation/purpose: `CustomerResourcesOps.jsx` — Risk-priority hazard board.
+- Implementation/purpose: `completion/SafetyWorkspace.jsx` — Risk assessment and corrective-action board.
 - Primary actions: Report hazard; assign competent responsible person. Secondary: Edit risk/action/status.
 - Connected modules: Staff and training.
-- Defects/missing: Scored risk assessments and linked corrective work incomplete.
+- Defects/missing: Likelihood/severity, affected people, controls, review date, qualified responsible person, local evidence and linked corrective task/maintenance are implemented. Safety records remain fictional and establish no legal compliance.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Fleet Management — PARTIAL
 
-- Implementation/purpose: `CustomerResourcesOps.jsx` — Vehicle register and checks.
+- Implementation/purpose: `completion/FleetWorkspace.jsx` — Vehicle garage and tabbed operating profiles.
 - Primary actions: Register vehicle; mileage; pass/defect check. Secondary: Driver selection; defects; linked repair.
 - Connected modules: Staff, qualifications, maintenance.
-- Defects/missing: Per-item check workflow, insurance/service history and eligible driver fixtures missing.
+- Defects/missing: Per-item checks, qualified driver fixtures/assignment, local evidence, mileage, defects, linked maintenance, equipment identity, service history and calculated service/MOT/insurance dates are implemented. No telemetry, legal roadworthiness verification or real fleet services.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -218,34 +218,34 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `CustomerResourcesOps.jsx` — Historical collection catalogue.
 - Primary actions: Accession item; view condition/location. Secondary: Search and condition changes.
 - Connected modules: Independent collection records.
-- Defects/missing: Provenance/dates/export and separate business-record archive/restore missing.
+- Defects/missing: Collection provenance/historical dates/digital references remain unfinished. A separate Business archives workspace now archives/restores eligible records with retained IDs/history/links, filters, selected CSV and browser print.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Forms & Surveys — PARTIAL
 
-- Implementation/purpose: `CustomerFormsOps.jsx` — Custom questions and response collection.
+- Implementation/purpose: `completion/FormsWorkspace.jsx` — Versioned form builder and response workspace.
 - Primary actions: Create template; reorder fields; submit. Secondary: Preview responses.
-- Connected modules: Standalone session templates/responses.
-- Defects/missing: Publish/archive lifecycle, conditional fields and related-record links missing.
+- Connected modules: Staff/assets/customers/operational records through stable related IDs; defect responses can create maintenance.
+- Defects/missing: Draft/publish/archive, versions, accessible reordering, conditional fields, required validation, linked responses, CSV and defect-to-maintenance are implemented. Responses retain the submitted schema. No permanent server form hosting.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `connected-business`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Donations & Fundraising (Donations alias) — PARTIAL
 
-- Implementation/purpose: `CustomerCommercialOps.jsx` — Illustrative campaign contribution ledger.
+- Implementation/purpose: `completion/FundraisingWorkspace.jsx` — Campaign targets and contribution/reconciliation ledger.
 - Primary actions: Record donation; browse campaign. Secondary: View contribution details.
 - Connected modules: Campaign names.
-- Defects/missing: Targets/donor/event links incomplete; no payment processing or Gift Aid claims.
+- Defects/missing: Campaign targets, linked CRM donors/events, contribution sources/references, CSV and fictional reconciliation are implemented. No payment processing or Gift Aid claims.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
 ### Visitor Statistics — PARTIAL
 
-- Implementation/purpose: `CustomerResourcesOps.jsx` — Recorded daily counts and trends.
+- Implementation/purpose: `completion/VisitorWorkspace.jsx` — Date/category visitor analysis and recording.
 - Primary actions: Record count; browse chart. Secondary: Open recorded day.
 - Connected modules: Reporting.
-- Defects/missing: Category/period aggregation and event reconciliation incomplete.
+- Defects/missing: Daily/category/period totals, previous-period comparison, CSV and separate linked event attendance are implemented. Event counts are not automatically added to manual visitor totals to avoid double counting.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -254,7 +254,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `DailyOperations.jsx` — Daily checks and accountable handover.
 - Primary actions: Complete/approve opening and closing checks. Secondary: Create/acknowledge linked handover.
 - Connected modules: Staff, attendance, shifts, work, maintenance.
-- Defects/missing: Reusable recurring templates and bulk-day preparation remain.
+- Defects/missing: Reusable opening/closing templates and bounded date-range preparation are implemented, including staff IDs and per-date deduplication. Background execution remains unavailable.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `stage3-operations`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -263,7 +263,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `ReportingWorkspace.jsx; reportingRules.js` — Filtered records and grouped analysis.
 - Primary actions: Filter/build/save reports; CSV/print. Secondary: Comparisons and chart drilldown.
 - Connected modules: Current enabled module records.
-- Defects/missing: Confirmed places, checked-in visitors and illustrative booking value derive from reservations using linked event dates, venues and staff. Filters, CSV and grouped summaries share the same joins; preparation tasks keep their own deadlines. Overtime/project metrics, Excel and scheduling remain unavailable.
+- Defects/missing: Confirmed places, checked-in visitors and illustrative booking value derive from reservations using linked event dates, venues and staff. Filters, CSV and grouped summaries share the same joins; preparation tasks keep their own deadlines. Configured overtime is available in weekly review; project allocations are shown in project profiles. Excel-compatible SpreadsheetML export uses the same filtered rows/fields as CSV. Dedicated overtime/project report measures and scheduled delivery remain unfinished.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `stage5-workspaces`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -308,7 +308,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `CustomerCommandBar.jsx` — Permitted records and creation commands.
 - Primary actions: Search/filter/open record; quick command. Secondary: Save search; keyboard dialog.
 - Connected modules: All accessible records.
-- Defects/missing: Event and reservation focus now resolves the correct event; appointment/resource results and quick creation are wired. Resource definitions are excluded from record search. Older form quick-creation consistency remains partial.
+- Defects/missing: Event and reservation focus now resolves the correct event; appointment/resource results and quick creation are wired. Resource definitions are excluded from record search. Form-template records use the new versioned workspace; configuration rows are excluded from normal search. Saved searches remain session-local.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
 - Coverage: `administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
@@ -379,7 +379,7 @@ Packages and subscriptions, server monitoring/backups, accounts/permissions and 
 
 - Implementation/purpose: `src/pages/SubscriptionsPage.jsx; src/owner/CommercialControls.jsx` — Configured packages and illustrative agreements.
 - Primary/secondary actions: Create package; assign; negotiated amount; fictional payment. Connected modules: Companies/modules/plans.
-- Defects/missing: Add-on price editor, editing all package allowances and period ledger missing.
+- Defects/missing: Package descriptions/prices/trial/user/storage/support/module allowances can be edited. Optional module prices, company add-ons, negotiated base pricing and non-overlapping illustrative billing periods with recorded-payment balances are implemented. No real billing or receipts.
 - Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
 - Coverage/completion: nine Stage 6 owner scenarios; PARTIAL for stated demo scope.
 
@@ -511,7 +511,7 @@ Stage 7 adds a coherent scheduling/commercial integration batch, not completion 
 
 Performance: the initial main JavaScript chunk fell from 560.01 kB / 152.48 kB gzip to approximately 423.30 kB / 123.14 kB gzip by loading specialist customer modules on demand; no dependencies added.
 
-Remaining highest-priority functional areas: full Fleet checks/history/driver fixtures; business-record archive/restore; published/conditional/linked forms; structured safety assessments; full project resources/dependencies; training sessions; donation donor/target links; visitor aggregations. Earlier owner billing/accounts/settings extensions remain in STAGE6-CHECKLIST.md. Complete requests A–D and F are covered in part by existing scenario suites; a single uninterrupted employee-to-payroll scenario and all advanced financial/maintenance supervisor gates are not claimed implemented.
+The original remaining-work register below is superseded by the 22 November follow-up at the end of this document. That follow-up implements Fleet, archives, forms, safety, training, project resources, fundraising, visitors and owner billing extensions; remaining accounts/settings and other advanced requirements are listed there. Complete requests A–D and F are covered in part by existing scenario suites; a single uninterrupted employee-to-payroll scenario and all advanced financial/maintenance supervisor gates are not claimed implemented.
 
 Collection archives remain distinct from documents, and persistent/external production services remain explicitly unavailable. Earlier unchecked requirements in PAGE-CHECKLIST.md remain unfinished.
 
@@ -524,3 +524,20 @@ The updated navigation/screenshot sweep completed **126 page visits at each of 3
 [PR #34](https://github.com/s4wf9js2k8-create/owner-admin/pull/34) excludes completed/cancelled events and shifts from upcoming dashboard widgets; removes cancelled appointments/events from My Work outstanding/today/overdue queues; retains them in All/history; and derives assignment names/team matching from staff IDs. Its new scenario passed at all three viewports. The expanded suite contains 219 browser cases (24 Stage 7 cases); final CI and deployed checks are recorded in the PR.
 
 The PR #34 report follow-up also joins reservation dates/locations/staff to the linked event for filters, grouped summaries, screen rows and CSV, without copying event details into reservations. Changing the event venue/staff updates the report. Event preparation tasks retain their own report deadline. These two new rule cases failed before the correction and pass after it. Local final follow-up checks: lint, 119 unit tests, build, 17 Europe/London rule cases, and six focused cancellation/booking-report browser cases across all three viewports. The full 219-case CI run remains the release gate.
+
+
+## Remaining-workflow implementation follow-up — 22 November 2026
+
+Baseline: main `da01770`, following merged PRs #33/#34. This follow-up preserves the existing customer and owner interfaces and adds specialised components under `src/completion/`. The pure command layer validates related writes before one fictional-state publication; it is not a production API or security boundary.
+
+Implemented: fleet profiles/item checks/services/driving qualifications; business-record archive/restore; published/conditional/linked/versioned forms; training sessions/assessments/local certificates; safety scoring/corrective work; campaign targets/donors/events/reconciliation; visitor period/category analysis; leave calendar/balances; project team/equipment/costs/time allocations; configurable overtime; recurring shift/maintenance/operational templates; maintenance completion gates and evidence; editable inspection template versions; asset purchase/warranty/QR profiles; Excel-compatible report export; notification state retained while switching companies; owner package/add-on/period controls. Individual earlier entries above describe residual limits; PARTIAL pages are not silently reclassified COMPLETE.
+
+The QR encoder is the only added dependency (`qrcode-generator`); QR generation is local and calls no external service. The obsolete state-only forms component is removed after replacement with the versioned record-based workflow.
+
+Verification: `npm ci`, lint, all **133 unit tests**, and build passed. All **246 browser cases passed** locally at desktop 1440px, iPhone 390px and iPad 820px, including 27 executions of nine new workflows. All **18 PostgreSQL integration tests passed** against the disposable synthetic database. The application source was frozen during the final run. [PR #35](https://github.com/s4wf9js2k8-create/owner-admin/pull/35) records remote CI, merge, Pages and deployed live checks; none are inferred from the local test result.
+
+Still unfinished: competency-specific rota minima/swaps; per-person permission exceptions; recurring inspection generation; structured ticket categories/individual attendees/event checklist/cancellation credits; product/service catalogue/advanced tax/refunds; collection catalogue provenance/dates; dedicated overtime/project report measures; owner custom accounts/matrix/settings/templates, sales ownership and release associations. Production authentication/storage/email/push/schedules/telemetry/backups remain explicitly unavailable in the public application. This is a substantial follow-up, not a claim that the entire multi-stage specification is finished.
+
+### Follow-up review hardening
+
+The final page review advances legacy inspection templates correctly from implicit v1 to v2, exposes retained question versions, labels timesheet CSV exports with the configured overtime threshold, and reduces repeated customer-header spacing. Fictional acting-user choices now come from staff records; seeded project/task owners and teams use those same stable staff IDs. The new version scenario passed at all three viewports; lint, **135 unit tests** and build passed. These changes expand the full release suite to **249 browser cases**; latest full CI and deployment evidence remains in PR #35. The earlier 246-case run and 130-page-per-width sweep are baseline evidence preceding this small hardening change, not a claim that later changes were covered by the earlier run.
