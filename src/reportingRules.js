@@ -5,20 +5,46 @@ import {
   balancePence,
   financialStatus,
 } from "./financialRules.js";
-export const reportDate = (r, records = []) =>
-  String(
-    (r.eventId
-      ? records.find((e) => e.id === r.eventId && e.orgId === r.orgId)
-          ?.startTime
-      : "") ||
-      r.startTime ||
-      r.operationDate ||
-      r.date ||
-      r.creationDate ||
-      r.dueDate ||
-      r.createdAt ||
+const reportSubject = (record, records = []) =>
+  record.recordType === "booking" && record.eventId
+    ? records.find(
+        (r) =>
+          r.id === record.eventId &&
+          r.orgId === record.orgId &&
+          moduleInfo(r.module).type === "events" &&
+          r.recordType !== "booking",
+      ) || record
+    : record;
+const assignmentIds = (record) =>
+  [
+    record.personId,
+    record.ownerId,
+    record.engineerId,
+    record.inspectorId,
+    record.custodianId,
+    ...(record.staffIds || []),
+  ].filter(Boolean);
+const reportAssignmentIds = (record, records) => [
+  ...new Set([
+    ...assignmentIds(record),
+    ...assignmentIds(reportSubject(record, records)),
+  ]),
+];
+export const reportLocation = (record, records = []) =>
+  reportSubject(record, records).location || record.location || "";
+export const reportDate = (record, records = []) => {
+  const r = reportSubject(record, records);
+  return String(
+    r.startTime ||
+      record.startTime ||
+      record.operationDate ||
+      record.date ||
+      record.creationDate ||
+      record.dueDate ||
+      record.createdAt ||
       "",
   ).slice(0, 10);
+};
 export function reportStatus(r) {
   const type = moduleInfo(r.module).type;
   if (r.recordType === "booking") return r.bookingStatus || r.status;
@@ -34,26 +60,30 @@ export function reportStatus(r) {
     "Not recorded"
   );
 }
-export function reportPerson(r, records) {
-  const ids = [
-    r.personId,
-    r.ownerId,
-    r.engineerId,
-    r.inspectorId,
-    r.custodianId,
-  ];
+export function reportPerson(record, records) {
+  const subject = reportSubject(record, records);
   return (
+    reportAssignmentIds(record, records)
+      .map((id) =>
+        records.find(
+          (p) =>
+            p.id === id &&
+            p.orgId === record.orgId &&
+            moduleInfo(p.module).type === "people",
+        ),
+      )
+      .find(Boolean) ||
     records.find(
       (p) =>
-        p.orgId === r.orgId &&
+        p.orgId === record.orgId &&
         moduleInfo(p.module).type === "people" &&
-        ids.includes(p.id),
-    ) ||
-    records.find(
-      (p) =>
-        p.orgId === r.orgId &&
-        moduleInfo(p.module).type === "people" &&
-        [r.person, r.owner, r.inspector].includes(p.title),
+        [
+          record.person,
+          record.owner,
+          record.inspector,
+          subject.owner,
+          subject.person,
+        ].includes(p.title),
     )
   );
 }
@@ -179,11 +209,11 @@ export function buildReport(records, orgId, config) {
         (!config.to || (date && date <= config.to)) &&
         (!config.staff ||
           person?.id === config.staff ||
-          r.staffIds?.includes(config.staff)) &&
+          reportAssignmentIds(r, records).includes(config.staff)) &&
         (!config.department ||
           (r.team || person?.team || person?.department) ===
             config.department) &&
-        (!config.location || r.location === config.location) &&
+        (!config.location || reportLocation(r, records) === config.location) &&
         (!config.status || reportStatus(r) === config.status) &&
         (!config.category ||
           (r.category ||
@@ -209,7 +239,7 @@ export function buildReport(records, orgId, config) {
         : config.group === "date"
           ? reportDate(r, records) || "Undated"
           : config.group === "location"
-            ? r.location || "Not recorded"
+            ? reportLocation(r, records) || "Not recorded"
             : config.group === "category"
               ? r.category ||
                 r.condition ||
@@ -284,7 +314,7 @@ export function reportCsv(report, config, records) {
         status: reportStatus(r),
         staff: person?.title || r.person || r.owner || "",
         department: r.team || person?.team || "",
-        location: r.location || "",
+        location: reportLocation(r, records),
         value: Number(value.toFixed(2)),
       };
       return fields.map((f) => values[f]);

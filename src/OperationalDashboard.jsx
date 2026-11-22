@@ -59,7 +59,7 @@ export default function OperationalDashboard({
       (r) =>
         type(r) === "schedule" &&
         r.startTime >= now &&
-        r.status !== "Cancelled",
+        !["Complete", "Completed", "Cancelled"].includes(r.status),
     )
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
   const alerts = all.filter((r) =>
@@ -83,6 +83,7 @@ export default function OperationalDashboard({
       (r) =>
         type(r) === "events" &&
         r.recordType !== "booking" &&
+        !["Complete", "Completed", "Cancelled"].includes(r.status) &&
         r.startTime >= now,
     )
     .sort((a, b) => a.startTime.localeCompare(b.startTime));

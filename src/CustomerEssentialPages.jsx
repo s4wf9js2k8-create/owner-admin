@@ -1,3 +1,4 @@
+import { assignedIds } from "./scheduling/rules";
 import React, { useState } from "react";
 import { Panel, Empty, Status } from "./components";
 import {
@@ -37,7 +38,9 @@ const priorityScore = (p) =>
 const recordDate = (r) =>
   r.startTime?.slice(0, 10) || r.startDate || r.date || r.dueDate || "";
 const isLate = (r) =>
-  r.status !== "Complete" && r.dueDate && r.dueDate < today();
+  !["Complete", "Completed", "Cancelled"].includes(r.status) &&
+  r.dueDate &&
+  r.dueDate < today();
 const upcoming = (all) =>
   [...all]
     .filter((r) => recordDate(r))
@@ -386,6 +389,19 @@ export function CustomerMyWork({
     ) ||
     r.owner === actor ||
     r.person === actor;
+  const staffFor = (r) =>
+    assignedIds(r)
+      .map((id) =>
+        all.find((p) => p.id === id && moduleInfo(p.module).type === "people"),
+      )
+      .filter(Boolean);
+  const assignmentLabel = (r) =>
+    staffFor(r)
+      .map((p) => p.title)
+      .join(", ") ||
+    r.owner ||
+    r.person ||
+    (assignedIds(r).length ? "Staff record unavailable" : "Unassigned");
   const work = all.filter(
     (r) =>
       r.recordType !== "resource" &&
@@ -405,7 +421,8 @@ export function CustomerMyWork({
       scope === "All" ||
       (scope === "Mine"
         ? assigned(r)
-        : teamMembers.includes(r.owner) ||
+        : (staff?.team && staffFor(r).some((p) => p.team === staff.team)) ||
+          teamMembers.includes(r.owner) ||
           teamMembers.includes(r.person) ||
           assigned(r)),
   );
@@ -414,12 +431,12 @@ export function CustomerMyWork({
       (r) =>
         (filter === "All" ||
           (filter === "Outstanding"
-            ? r.status !== "Complete"
+            ? !["Complete", "Completed", "Cancelled"].includes(r.status)
             : filter === "Overdue"
               ? isLate(r)
               : r.status === filter)) &&
         (priority === "All" || r.priority === priority) &&
-        [r.title, r.detail, r.owner, r.person, r.module]
+        [r.title, r.detail, assignmentLabel(r), r.module]
           .join(" ")
           .toLowerCase()
           .includes(query.toLowerCase()),
@@ -431,7 +448,7 @@ export function CustomerMyWork({
         (a.dueDate || "9999").localeCompare(b.dueDate || "9999"),
     );
   const todayItems = work.filter(
-    (r) => recordDate(r) === today() && assigned(r),
+    (r) => r.status !== "Cancelled" && recordDate(r) === today() && assigned(r),
   );
   const navigateRecord = (r) =>
     onNavigate(isTaskModule(r.module) ? "Tasks & projects" : r.module, {
@@ -556,7 +573,7 @@ export function CustomerMyWork({
                 <div className="work-tags">
                   <Status>{r.status}</Status>
                   <span>{r.priority || "Normal"} priority</span>
-                  <span>{r.owner || r.person || "Unassigned"}</span>
+                  <span>{assignmentLabel(r)}</span>
                   <span className={isLate(r) ? "task-overdue" : ""}>
                     {format(recordDate(r))}
                   </span>

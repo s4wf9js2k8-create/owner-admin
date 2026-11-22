@@ -22,7 +22,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `CustomerEssentialPages.jsx` — Personal and team work queue.
 - Primary actions: Filter assignments; open work. Secondary: Complete supported task types.
 - Connected modules: Tasks, maintenance, staff, schedule.
-- Defects/missing: Some related assignment names remain legacy text; schedule integration needs expansion.
+- Defects/missing: Linked schedules now resolve staff names/teams from IDs, and cancelled work is excluded from active/overdue queues while retained in All/history. Legacy free-text records and broader project/resource integration remain.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `customer-overhaul`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -263,7 +263,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `ReportingWorkspace.jsx; reportingRules.js` — Filtered records and grouped analysis.
 - Primary actions: Filter/build/save reports; CSV/print. Secondary: Comparisons and chart drilldown.
 - Connected modules: Current enabled module records.
-- Defects/missing: Confirmed places, checked-in visitors and illustrative booking value now derive from reservations using event dates. CSV and grouped dates share the same derivation. Overtime/project metrics, Excel and scheduling remain unavailable.
+- Defects/missing: Confirmed places, checked-in visitors and illustrative booking value derive from reservations using linked event dates, venues and staff. Filters, CSV and grouped summaries share the same joins; preparation tasks keep their own deadlines. Overtime/project metrics, Excel and scheduling remain unavailable.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `stage5-workspaces`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -507,7 +507,7 @@ Release tracking: [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull
 
 Baseline evidence: `npm ci`, lint, 102 unit tests, build and **195 browser tests passed** before changes. A scripted sweep inspected 122 destinations (18 owner and 104 customer page visits across the four organisations), captured desktop screenshots, and reported zero page errors or root horizontal overflow. This is automated navigation evidence, not a claim that every advanced control was manually inspected.
 
-Stage 7 adds a coherent scheduling/commercial integration batch, not completion of all stages. The seven scenario implementations are in `tests/browser/stage7-scheduling.spec.js`; new rule/adapter cases are in `tests/scheduling.test.js`. Local acceptance: lint, **117 unit tests**, build, **18 PostgreSQL integration tests**, and **21 expanded scheduling/commercial browser workflows** passed. The 15 scheduling rule/adapter cases also passed under `TZ=Europe/London`. Final full-suite CI and Pages evidence are recorded in [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull/33). The final application code remains unchanged during the final regression run; documentation updates do not alter its behavior.
+Stage 7 adds a coherent scheduling/commercial integration batch, not completion of all stages. The eight scenario implementations are in `tests/browser/stage7-scheduling.spec.js`; new rule/adapter cases are in `tests/scheduling.test.js`. Local acceptance: lint, **117 unit tests**, build, **18 PostgreSQL integration tests**, and **21 expanded scheduling/commercial browser workflows** passed. The 15 scheduling rule/adapter cases also passed under `TZ=Europe/London`. Final full-suite CI and Pages evidence are recorded in [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull/33). The final application code remains unchanged during the final regression run; documentation updates do not alter its behavior.
 
 Performance: the initial main JavaScript chunk fell from 560.01 kB / 152.48 kB gzip to approximately 423.30 kB / 123.14 kB gzip by loading specialist customer modules on demand; no dependencies added.
 
@@ -518,3 +518,9 @@ Collection archives remain distinct from documents, and persistent/external prod
 ### Post-implementation viewport sweep
 
 The updated navigation/screenshot sweep completed **126 page visits at each of 390px, 820px and 1440px** (378 visits total), with no recorded page errors and no root horizontal overflow. This includes owner pages, all enabled customer pages and newly enabled CRM/asset records; bounded horizontal scroll inside existing tables/rotas is intentional. Relevant desktop/mobile screenshots were reviewed for events, the appointment diary and CRM. The sweep is a navigation/layout observation, not a replacement for the workflow tests.
+
+### Cancellation status integration follow-up
+
+[PR #34](https://github.com/s4wf9js2k8-create/owner-admin/pull/34) excludes completed/cancelled events and shifts from upcoming dashboard widgets; removes cancelled appointments/events from My Work outstanding/today/overdue queues; retains them in All/history; and derives assignment names/team matching from staff IDs. Its new scenario passed at all three viewports. The expanded suite contains 219 browser cases (24 Stage 7 cases); final CI and deployed checks are recorded in the PR.
+
+The PR #34 report follow-up also joins reservation dates/locations/staff to the linked event for filters, grouped summaries, screen rows and CSV, without copying event details into reservations. Changing the event venue/staff updates the report. Event preparation tasks retain their own report deadline. These two new rule cases failed before the correction and pass after it. Local final follow-up checks: lint, 119 unit tests, build, 17 Europe/London rule cases, and six focused cancellation/booking-report browser cases across all three viewports. The full 219-case CI run remains the release gate.

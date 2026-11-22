@@ -188,6 +188,10 @@ test("capacity, waiting list, check-in, cancellation, booking invoice and custom
   await page.getByLabel("Report measure").selectOption("places");
   await page.getByLabel("Report from date").fill("2026-12-16");
   await page.getByLabel("Report to date").fill("2026-12-16");
+  await page
+    .getByText("People, location and status filters", { exact: true })
+    .click();
+  await page.getByLabel("Report location").selectOption("Main hall");
   await expect(
     page
       .getByLabel("Report results")
@@ -491,4 +495,54 @@ test("maintenance customer selection opens the linked CRM history", async ({
   await expect(page.getByRole("dialog")).toContainText(
     "Fictional customer site repair",
   );
+});
+test("cancelled schedules leave active work and upcoming widgets while remaining in history", async ({
+  page,
+}) => {
+  await open(page);
+  await page
+    .getByLabel("Sample team member", { exact: true })
+    .selectOption("Sample coordinator A");
+  await event(page, "Fictional cancelled delivery", true);
+  await page.getByRole("button", { name: "Cancel event", exact: true }).click();
+  await go(page, "Dashboard");
+  await expect(page.locator(".ops-control")).not.toContainText(
+    "Fictional cancelled delivery",
+  );
+  await go(page, "Bookings and appointments");
+  await page
+    .getByRole("button", { name: "Book appointment", exact: true })
+    .click();
+  const dialog = page.getByRole("dialog");
+  await dialog
+    .getByLabel("Appointment title")
+    .fill("Fictional cancelled consultation");
+  await dialog
+    .getByLabel("Customer", { exact: true })
+    .selectOption("demo-visitor-Customers / CRM-0");
+  await dialog.getByLabel("Start", { exact: true }).fill("2026-12-18T14:00");
+  await dialog.getByLabel("End", { exact: true }).fill("2026-12-18T15:00");
+  await dialog
+    .getByLabel("Staff member")
+    .selectOption("demo-visitor-Staff & volunteers-0");
+  await dialog.getByRole("button", { name: "Save appointment" }).click();
+  await page
+    .locator(".schedule-appointment")
+    .filter({ hasText: "Fictional cancelled consultation" })
+    .getByRole("button", { name: "Manage" })
+    .click();
+  await dialog
+    .getByRole("button", { name: "Cancel appointment", exact: true })
+    .click();
+  await dialog.getByRole("button", { name: "Close dialog" }).click();
+  await go(page, "My work");
+  await expect(page.locator(".work-feed")).not.toContainText(
+    "Fictional cancelled consultation",
+  );
+  await page.getByLabel("Filter my work").selectOption("All");
+  const row = page
+    .locator(".work-feed-item")
+    .filter({ hasText: "Fictional cancelled consultation" });
+  await expect(row).toContainText("Cancelled");
+  await expect(row).toContainText("Sample coordinator A");
 });
