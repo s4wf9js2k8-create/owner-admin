@@ -102,6 +102,7 @@ export default function ModulesPage({ controller }) {
           <label>
             Organisation
             <select
+              aria-label="Organisation"
               value={selected}
               onChange={(e) => setSelected(e.target.value)}
             >

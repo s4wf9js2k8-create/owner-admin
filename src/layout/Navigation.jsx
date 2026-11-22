@@ -1,5 +1,5 @@
 import { ownerPageAllowed } from "../owner/rules";
-import React from "react";
+import React, { useState } from "react";
 import { moduleInfo, isTaskModule } from "../customerModules";
 import { moduleAllowed } from "../customerWorkflows";
 import {
@@ -95,7 +95,11 @@ const customerGroups = (org, role, roleModules, actions = []) => {
   const enabled = org.modules.filter((m) =>
     moduleAllowed(role, m, roleModules),
   );
-  const modules = enabled.filter((m) => !isTaskModule(m));
+  const modules = enabled.filter(
+    (m) =>
+      !isTaskModule(m) &&
+      !(m === "Events" && enabled.includes("Events & bookings")),
+  );
   if (enabled.some(isTaskModule)) modules.unshift("Tasks & projects");
   const by = (types) =>
     modules
@@ -157,6 +161,13 @@ const ownerGroups = [
   names.map((name) => pages.find(([page]) => page === name)),
 ]);
 export default function Navigation({ controller }) {
+  const [collapsed, setCollapsed] = useState({});
+  const isDestinationActive = (name) =>
+    (controller.customer ? controller.customerPage : controller.page) ===
+      name ||
+    (controller.customer &&
+      name === "Events & bookings" &&
+      controller.customerPage === "Events");
   const {
     menuButton,
     menuOpen,
@@ -166,8 +177,6 @@ export default function Navigation({ controller }) {
     setCustomer,
     closeMenu,
     menuRef,
-    customerPage,
-    page,
     setCustomerPage,
     navigate,
     customerRole,
@@ -261,31 +270,38 @@ export default function Navigation({ controller }) {
                 .filter(([, items]) => items.length)
           ).map(([group, items]) => (
             <React.Fragment key={group}>
-              <div className="nav-section-label">{group}</div>
-              {items.map(([name, Icon]) => (
-                <button
-                  key={name}
-                  aria-current={
-                    (customer ? customerPage : page) === name
-                      ? "page"
-                      : undefined
-                  }
-                  className={
-                    (customer ? customerPage : page) === name ? "selected" : ""
-                  }
-                  onClick={() => {
-                    if (customer) {
-                      setCustomerPage(name);
-                      setMenuOpen(false);
-                    } else navigate(name);
-                  }}
-                >
-                  <Icon size={18} />
-                  {customer
-                    ? active.workspaceConfig?.navLabels?.[name] || name
-                    : name}
-                </button>
-              ))}
+              <button
+                className="nav-section-toggle"
+                aria-expanded={!collapsed[group]}
+                aria-label={"Toggle " + group + " navigation"}
+                onClick={() =>
+                  setCollapsed((old) => ({ ...old, [group]: !old[group] }))
+                }
+              >
+                {group}
+                <span aria-hidden="true">{collapsed[group] ? "+" : "−"}</span>
+              </button>
+              {!collapsed[group] &&
+                items.map(([name, Icon]) => (
+                  <button
+                    key={name}
+                    aria-current={
+                      isDestinationActive(name) ? "page" : undefined
+                    }
+                    className={isDestinationActive(name) ? "selected" : ""}
+                    onClick={() => {
+                      if (customer) {
+                        setCustomerPage(name);
+                        setMenuOpen(false);
+                      } else navigate(name);
+                    }}
+                  >
+                    <Icon size={18} />
+                    {customer
+                      ? active.workspaceConfig?.navLabels?.[name] || name
+                      : name}
+                  </button>
+                ))}
             </React.Fragment>
           ))}
         </nav>

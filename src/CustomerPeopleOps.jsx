@@ -1,162 +1,1118 @@
 import React, { useEffect, useState } from "react";
 import { Empty, Modal, Status } from "./components";
-import { Clock3, Plus, ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
+import {
+  Clock3,
+  Plus,
+  ArrowLeft,
+  ArrowRight,
+  AlertTriangle,
+} from "lucide-react";
 import { moduleInfo, isTaskModule } from "./customerModules";
-import {QualifiedStaffSelect} from "./LinkedSelectors";
+import { QualifiedStaffSelect } from "./LinkedSelectors";
 import RotaPlanner from "./RotaPlanner";
 import StaffProfile from "./StaffProfile";
-import {weeklyHours,timesheetCsv} from "./timeReporting";
-import {validateAssignee} from "./staffEligibility";
+import { weeklyHours, timesheetCsv } from "./timeReporting";
+import { validateAssignee } from "./staffEligibility";
 
-const day=v=>v?.slice(0,10)||"";
-const today=()=>new Date().toISOString().slice(0,10);
-const date=v=>v?new Date(day(v)+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"—";
-const minutes=(start,end)=>start&&end?Math.max(0,Math.round((new Date(end)-new Date(start))/60000)):0;
-const weekStart=v=>{const d=new Date(day(v)+"T12:00:00");d.setDate(d.getDate()-(d.getDay()+6)%7);return d.toISOString().slice(0,10);};
-const weekDays=v=>Array.from({length:7},(_,i)=>{const d=new Date(v+"T12:00:00");d.setDate(d.getDate()+i);return d.toISOString().slice(0,10);});
-const shiftEndValid=(start,end)=>!start||!end||end>start;
-const tableDate=v=>v?String(v).replace("T"," "):"Open";
-const peopleType=name=>moduleInfo(name).type==="people";
-const nextDate=(base,increment)=>{const d=new Date(base+"T12:00:00");d.setDate(d.getDate()+increment);return d.toISOString().slice(0,10);};
-function SectionHeading({eyebrow,title,description,children}){return <div className="customer-page-intro"><div><span className="eyebrow">{eyebrow}</span><h2>{title}</h2><p>{description}</p></div>{children}</div>;}
-function Measure({title,value,desc}){return <div className="metric-tile"><span>{title}</span><strong>{value}</strong><small>{desc}</small></div>;}
-export default function CustomerPeopleOps({org,module,records,onAdd,onUpdate,onNavigate,focusId,canCreate=true,canEdit=true,canApprove=true,canManage=false,createRequest=0}) {
-  const type=moduleInfo(module).type;
-  useEffect(()=>{if(createRequest)setCreating(true);},[createRequest]);
-  const [selected,setSelected]=useState(null),[creating,setCreating]=useState(false);
-  const [query,setQuery]=useState(""),[error,setError]=useState("");
-  const [week,setWeek]=useState(weekStart(today()));
-  const [shiftStart,setShiftStart]=useState("");
-  const [shiftEnd,setShiftEnd]=useState("");
-  const list=records.filter(r=>r.orgId===org.id&&r.module===module);
-  const people=records.filter(r=>r.orgId===org.id&&peopleType(r.module));
-  const rotas=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="schedule");
-  const timesheets=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="timesheets");
-  const training=records.filter(r=>r.orgId===org.id&&moduleInfo(r.module).type==="training");
-  const actorNames=[...new Set([...people.map(p=>p.title),...list.map(r=>r.person)].filter(Boolean))].sort();
-  const [clockPerson,setClockPerson]=useState("");
-  useEffect(()=>{if(focusId)setSelected(focusId);},[focusId]);
-  const active=list.find(r=>r.id===selected);
-  const update=(r,patch)=>onUpdate(org.id,r.id,patch);
-  const filtered=list.filter(r=>[r.title,r.person,r.team,r.role,r.detail,r.qualification].join(" ").toLowerCase().includes(query.toLowerCase()));
-  const created=async e=>{
-    e.preventDefault();setError("");
-    const values=Object.fromEntries(new FormData(e.currentTarget));
-    const title=String(values.title||values.person||"").trim();
-    if(!title){setError("Enter a name or title.");return;}
-    if(!shiftEndValid(values.startTime,values.endTime)){setError("End must come after start.");return;}
-    if(values.startDate&&values.endDate&&values.endDate<values.startDate){setError("Leave end date must not be before its start.");return;}
-    if(type==="schedule"){
-      const result=validateAssignee(records,org.id,values.person,{kind:"schedule",date:values.startTime,startTime:values.startTime,endTime:values.endTime});
-      if(!values.person||!result.eligible){setError("Shift assignment rejected: "+(result.reasons||["Select a team member"]).join("; "));return;}
-    }
-    const saved=await onAdd({orgId:org.id,module,title,detail:String(values.detail||"").trim(),status:"Planned",employmentStatus:type==="people"?"Active":undefined,
-      person:String(values.person||"").trim(),personId:people.find(p=>p.title===values.person)?.id||"",role:String(values.role||"").trim(),team:String(values.team||"").trim(),
-      contact:String(values.contact||"").trim(),startTime:values.startTime||"",endTime:values.endTime||"",
-      startDate:values.startDate||"",endDate:values.endDate||"",location:values.location||"",
-      qualification:values.qualification||"",expiry:values.expiry||"",approval:"Pending",swapRequested:false});
-    if(saved){setCreating(false);setClockPerson("");}
-  };
-  const approve=(r,value)=>update(r,{approval:value});
-  const peoplePage=()=> <div>
-    <SectionHeading eyebrow="PEOPLE DIRECTORY" title="Staff & volunteers" description="Staff profiles, roles, teams and connected qualifications.">
-      {canCreate&&<button className="action-primary" onClick={()=>setCreating(true)}><Plus size={16}/> Add person</button>}
-    </SectionHeading>
-    <div className="customer-metrics"><Measure title="People" value={list.length} desc="Sample directory"/><Measure title="Teams" value={new Set(list.map(r=>r.team).filter(Boolean)).size} desc="Departments & groups"/><Measure title="Qualifications" value={training.length} desc="Linked training records"/></div>
-    <label className="people-search">Search people<input value={query} onChange={e=>setQuery(e.target.value)} aria-label="Search people" placeholder="Name, team or role"/></label>
-    <div className="people-profile-grid">{filtered.map(p=>{
-      const trained=training.filter(t=>t.person===p.title),assigned=records.filter(r=>r.orgId===org.id&&isTaskModule(r.module)&&r.owner===p.title);
-      return <article className="people-profile" key={p.id}><div className="people-avatar">{p.title.slice(0,1)}</div><div><h3>{p.title}</h3><p>{p.role||p.detail||"Member"}</p><small>{p.team||"No assigned team"}</small></div>
-        <div className="people-profile-stats"><span>{assigned.length} assigned tasks</span><span>{trained.length} qualifications</span></div>
-        <button onClick={()=>setSelected(p.id)}>Open profile</button></article>;
-    })}</div>{!filtered.length&&<Empty>No matching people.</Empty>}</div>;
-  const clockIn=async()=>{
-    const person=clockPerson||actorNames[0];
-    if(!person){setError("Choose a sample person to clock in.");return;}
-    if(timesheets.some(r=>r.person===person&&r.startTime&&!r.endTime)){setError("This person already has an open clock-in.");return;}
-    setError("");
-    await onAdd({orgId:org.id,module,title:person+" · Sample session",detail:"Manual in-app clock-in",person,
-      startTime:new Date().toISOString().slice(0,16),endTime:"",status:"In progress",approval:"Pending"});
-  };
-  const timesheetPage=()=>{
-    const open=list.filter(r=>r.startTime&&!r.endTime);
-    const approved=list.filter(r=>r.approval==="Approved");
-    const totals=weeklyHours(list,week);
-    const exportWeek=()=>{const url=URL.createObjectURL(new Blob([timesheetCsv(totals)],{type:"text/csv;charset=utf-8"}));const link=document.createElement("a");link.href=url;link.download="timesheets-"+week+".csv";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-    return <div><SectionHeading eyebrow="TIME & ATTENDANCE" title="Attendance & timesheets" description="Open clock-ins, reviewed sessions, corrections and sample hours.">
-      {canCreate&&<button className="action-primary" onClick={()=>setCreating(true)}><Plus size={16}/> Manual session</button>}</SectionHeading>
-      <div className="customer-metrics"><Measure title="Open clock-ins" value={open.length} desc="No recorded clock-out"/><Measure title="Completed sessions" value={list.filter(r=>r.startTime&&r.endTime).length} desc="Sample time entries"/><Measure title="Approved" value={approved.length} desc="Manager-reviewed sessions"/></div>
-      {canCreate&&<div className="people-clock"><label>Team member<select aria-label="Clock-in team member" value={clockPerson||actorNames[0]||""} onChange={e=>setClockPerson(e.target.value)}>{actorNames.map(x=><option key={x}>{x}</option>)}</select></label><button onClick={clockIn}><Clock3 size={16}/> Clock in</button><small>Open a sample shift, then clock out to calculate worked hours.</small></div>}
-      {error&&<p role="alert">{error}</p>}
-      <h3 className="section-title">Open clock-ins</h3><div className="people-time-list">
-        {open.length?open.map(r=><article key={r.id}><div><strong>{r.person||r.title}</strong><small>Started {tableDate(r.startTime)}</small></div>{canEdit&&<button onClick={()=>update(r,{endTime:new Date().toISOString().slice(0,16),status:"Complete"})}>Clock out</button>}</article>):<Empty>All sample sessions have a clock-out.</Empty>}
+const day = (v) => v?.slice(0, 10) || "";
+const today = () => new Date().toISOString().slice(0, 10);
+const date = (v) =>
+  v
+    ? new Date(day(v) + "T12:00:00").toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+      })
+    : "—";
+const minutes = (start, end) =>
+  start && end
+    ? Math.max(0, Math.round((new Date(end) - new Date(start)) / 60000))
+    : 0;
+const weekStart = (v) => {
+  const d = new Date(day(v) + "T12:00:00");
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+};
+const weekDays = (v) =>
+  Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(v + "T12:00:00");
+    d.setDate(d.getDate() + i);
+    return d.toISOString().slice(0, 10);
+  });
+const shiftEndValid = (start, end) => !start || !end || end > start;
+const tableDate = (v) => (v ? String(v).replace("T", " ") : "Open");
+const peopleType = (name) => moduleInfo(name).type === "people";
+const nextDate = (base, increment) => {
+  const d = new Date(base + "T12:00:00");
+  d.setDate(d.getDate() + increment);
+  return d.toISOString().slice(0, 10);
+};
+function SectionHeading({ eyebrow, title, description, children }) {
+  return (
+    <div className="customer-page-intro">
+      <div>
+        <span className="eyebrow">{eyebrow}</span>
+        <h2>{title}</h2>
+        <p>{description}</p>
       </div>
-      <h3 className="section-title">Weekly review by person</h3>
-      <div className="rota-header"><button onClick={()=>setWeek(nextDate(week,-7))} aria-label="Previous timesheet week"><ArrowLeft size={16}/></button><strong>Week beginning {date(week)}</strong><button onClick={()=>setWeek(weekStart(today()))}>This week</button><button onClick={()=>setWeek(nextDate(week,7))} aria-label="Next timesheet week"><ArrowRight size={16}/></button><button onClick={exportWeek}>Export weekly CSV</button></div>
-      <p>Completed sessions only · recorded breaks deducted · overnight sessions split across days · overtime shown above 40 hours (illustrative).</p>
-      <div className="table-wrap"><table><thead><tr><th>Person</th>{["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=><th key={d}>{d}</th>)}<th>Total</th><th>Overtime</th><th>Review</th></tr></thead><tbody>{totals.map(t=><tr key={t.id}><th>{t.person}</th>{t.days.map((h,i)=><td key={i}>{h.toFixed(2)}</td>)}<td>{t.total.toFixed(2)} h</td><td>{t.overtime.toFixed(2)} h</td><td>{t.pending?`${t.pending} pending`:"Approved"}</td></tr>)}</tbody></table></div>
-      {!totals.length&&<Empty>No completed sessions in this week. Use the week controls to review historical entries.</Empty>}
-      <h3 className="section-title">Sessions requiring review</h3><div className="people-time-list">{filtered.map(r=><article key={r.id}><div><strong>{r.person||r.title}</strong><small>{tableDate(r.startTime)} – {tableDate(r.endTime)} · {(minutes(r.startTime,r.endTime)/60).toFixed(2)}h · {r.approval||"Pending"}</small></div>
-        <div className="quick-actions">{canApprove&&r.endTime&&r.approval!=="Approved"&&<button onClick={()=>approve(r,"Approved")}>Approve</button>}<button onClick={()=>setSelected(r.id)}>Review / correct</button></div></article>)}</div>
-      <p className="module-disclaimer">Clock-in actions and approvals are temporary demonstration records. They are not verified workplace attendance or payroll.</p>
-    </div>;
+      {children}
+    </div>
+  );
+}
+function Measure({ title, value, desc }) {
+  return (
+    <div className="metric-tile">
+      <span>{title}</span>
+      <strong>{value}</strong>
+      <small>{desc}</small>
+    </div>
+  );
+}
+export default function CustomerPeopleOps({
+  org,
+  module,
+  records,
+  onAdd,
+  onUpdate,
+  onNavigate,
+  focusId,
+  canCreate = true,
+  canEdit = true,
+  canApprove = true,
+  canManage = false,
+  createRequest = 0,
+}) {
+  const type = moduleInfo(module).type;
+  useEffect(() => {
+    if (createRequest) setCreating(true);
+  }, [createRequest]);
+  const [selected, setSelected] = useState(null),
+    [creating, setCreating] = useState(false);
+  const [query, setQuery] = useState(""),
+    [error, setError] = useState("");
+  const [week, setWeek] = useState(weekStart(today()));
+  const [shiftStart, setShiftStart] = useState("");
+  const [shiftEnd, setShiftEnd] = useState("");
+  const list = records.filter((r) => r.orgId === org.id && r.module === module);
+  const people = records.filter(
+    (r) => r.orgId === org.id && peopleType(r.module),
+  );
+  const rotas = records.filter(
+    (r) => r.orgId === org.id && moduleInfo(r.module).type === "schedule",
+  );
+  const timesheets = records.filter(
+    (r) => r.orgId === org.id && moduleInfo(r.module).type === "timesheets",
+  );
+  const training = records.filter(
+    (r) => r.orgId === org.id && moduleInfo(r.module).type === "training",
+  );
+  const actorNames = [
+    ...new Set(
+      [...people.map((p) => p.title), ...list.map((r) => r.person)].filter(
+        Boolean,
+      ),
+    ),
+  ].sort();
+  const [clockPerson, setClockPerson] = useState("");
+  useEffect(() => {
+    if (focusId) setSelected(focusId);
+  }, [focusId]);
+  const active = list.find((r) => r.id === selected);
+  const update = (r, patch) => onUpdate(org.id, r.id, patch);
+  const filtered = list.filter((r) =>
+    [r.title, r.person, r.team, r.role, r.detail, r.qualification]
+      .join(" ")
+      .toLowerCase()
+      .includes(query.toLowerCase()),
+  );
+  const created = async (e) => {
+    e.preventDefault();
+    setError("");
+    const values = Object.fromEntries(new FormData(e.currentTarget));
+    const title = String(values.title || values.person || "").trim();
+    if (!title) {
+      setError("Enter a name or title.");
+      return;
+    }
+    if (!shiftEndValid(values.startTime, values.endTime)) {
+      setError("End must come after start.");
+      return;
+    }
+    if (
+      values.startDate &&
+      values.endDate &&
+      values.endDate < values.startDate
+    ) {
+      setError("Leave end date must not be before its start.");
+      return;
+    }
+    if (type === "schedule") {
+      const result = validateAssignee(records, org.id, values.person, {
+        kind: "schedule",
+        date: values.startTime,
+        startTime: values.startTime,
+        endTime: values.endTime,
+      });
+      if (!values.person || !result.eligible) {
+        setError(
+          "Shift assignment rejected: " +
+            (result.reasons || ["Select a team member"]).join("; "),
+        );
+        return;
+      }
+    }
+    const saved = await onAdd({
+      orgId: org.id,
+      module,
+      title,
+      detail: String(values.detail || "").trim(),
+      status: "Planned",
+      employmentStatus: type === "people" ? "Active" : undefined,
+      person: String(values.person || "").trim(),
+      personId: people.find((p) => p.title === values.person)?.id || "",
+      role: String(values.role || "").trim(),
+      team: String(values.team || "").trim(),
+      contact: String(values.contact || "").trim(),
+      startTime: values.startTime || "",
+      endTime: values.endTime || "",
+      startDate: values.startDate || "",
+      endDate: values.endDate || "",
+      location: values.location || "",
+      qualification: values.qualification || "",
+      expiry: values.expiry || "",
+      approval: "Pending",
+      swapRequested: false,
+    });
+    if (saved) {
+      setCreating(false);
+      setClockPerson("");
+    }
   };
-  const rotaPage=()=>{
-    const dates=weekDays(week);
-    const weekRows=filtered.filter(r=>r.startTime&&day(r.startTime)>=week&&day(r.startTime)<=dates[6]);
-    return <div><SectionHeading eyebrow="SHIFT PLANNING" title="Shift rotas" description="Weekly staff assignments, coverage and leave conflicts.">
-      {canCreate&&<button className="action-primary" onClick={()=>setCreating(true)}><Plus size={16}/> Add shift</button>}</SectionHeading>
-      <div className="rota-header"><label>Week containing<input aria-label="Rota week containing" type="date" value={week} onChange={e=>{if(e.target.value)setWeek(weekStart(e.target.value));}}/></label><button onClick={()=>setWeek(nextDate(week,-7))} aria-label="Previous rota week"><ArrowLeft size={16}/></button><strong>Week beginning {date(week)}</strong><button onClick={()=>setWeek(weekStart(today()))}>This week</button><button onClick={()=>setWeek(nextDate(week,7))} aria-label="Next rota week"><ArrowRight size={16}/></button></div>
-      <RotaPlanner days={dates} people={people} shifts={weekRows} records={records} orgId={org.id} operations={org.workspaceConfig?.operations} canEdit={canEdit} onOpen={id=>{setShiftStart("");setShiftEnd("");setSelected(id);}}/>
-      <p className="module-disclaimer">Availability and overlap conflicts use current sample leave and shift records; drag-and-drop shift moves are not enabled yet.</p>
-    </div>;
+  const approve = (r, value) => update(r, { approval: value });
+  const peoplePage = () => (
+    <div>
+      <SectionHeading
+        eyebrow="PEOPLE DIRECTORY"
+        title="Staff & volunteers"
+        description="Staff profiles, roles, teams and connected qualifications."
+      >
+        {canCreate && (
+          <button className="action-primary" onClick={() => setCreating(true)}>
+            <Plus size={16} /> Add person
+          </button>
+        )}
+      </SectionHeading>
+      <div className="customer-metrics">
+        <Measure title="People" value={list.length} desc="Sample directory" />
+        <Measure
+          title="Teams"
+          value={new Set(list.map((r) => r.team).filter(Boolean)).size}
+          desc="Departments & groups"
+        />
+        <Measure
+          title="Qualifications"
+          value={training.length}
+          desc="Linked training records"
+        />
+      </div>
+      <label className="people-search">
+        Search people
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          aria-label="Search people"
+          placeholder="Name, team or role"
+        />
+      </label>
+      <div className="people-profile-grid">
+        {filtered.map((p) => {
+          const trained = training.filter((t) => t.person === p.title),
+            assigned = records.filter(
+              (r) =>
+                r.orgId === org.id &&
+                isTaskModule(r.module) &&
+                r.owner === p.title,
+            );
+          return (
+            <article className="people-profile" key={p.id}>
+              <div className="people-avatar">{p.title.slice(0, 1)}</div>
+              <div>
+                <h3>{p.title}</h3>
+                <p>{p.role || p.detail || "Member"}</p>
+                <small>{p.team || "No assigned team"}</small>
+              </div>
+              <div className="people-profile-stats">
+                <span>{assigned.length} assigned tasks</span>
+                <span>{trained.length} qualifications</span>
+              </div>
+              <button onClick={() => setSelected(p.id)}>Open profile</button>
+            </article>
+          );
+        })}
+      </div>
+      {!filtered.length && <Empty>No matching people.</Empty>}
+    </div>
+  );
+  const clockIn = async () => {
+    const person = clockPerson || actorNames[0];
+    if (!person) {
+      setError("Choose a sample person to clock in.");
+      return;
+    }
+    if (
+      timesheets.some((r) => r.person === person && r.startTime && !r.endTime)
+    ) {
+      setError("This person already has an open clock-in.");
+      return;
+    }
+    setError("");
+    await onAdd({
+      orgId: org.id,
+      module,
+      title: person + " · Sample session",
+      detail: "Manual in-app clock-in",
+      person,
+      startTime: new Date().toISOString().slice(0, 16),
+      endTime: "",
+      status: "In progress",
+      approval: "Pending",
+    });
   };
-  const leavePage=()=> {
-    const pending=list.filter(r=>r.approval==="Pending");
-    const conflicts=r=>rotas.filter(s=>s.person===r.person&&day(s.startTime)>=r.startDate&&day(s.startTime)<=r.endDate);
-    return <div><SectionHeading eyebrow="AVAILABILITY & REQUESTS" title="Leave & availability" description="Review leave requests alongside scheduled shifts.">
-      {canCreate&&<button className="action-primary" onClick={()=>setCreating(true)}><Plus size={16}/> Request leave</button>}</SectionHeading>
-      <div className="customer-metrics"><Measure title="Requests" value={list.length} desc="Total submitted"/><Measure title="Pending" value={pending.length} desc="Require a decision"/><Measure title="Approved" value={list.filter(r=>r.approval==="Approved").length} desc="Recorded in the team calendar"/></div>
-      <p className="module-disclaimer">Configured annual allowance: {org.workspaceConfig?.operations?.leaveDays??25} business days per person. Approved requests affect assignment eligibility; holiday and pro-rata payroll rules are not inferred.</p>
-      <div className="leave-list">{filtered.map(r=><article key={r.id}><div><h3>{r.person||r.title}</h3><p>{date(r.startDate)} – {date(r.endDate)} · <Status>{r.approval||"Pending"}</Status></p><small>{r.detail}</small>{conflicts(r).length>0&&<div className="rota-warning"><AlertTriangle size={14}/> {conflicts(r).length} scheduled shifts overlap this request.</div>}</div><div className="quick-actions">{canApprove&&r.approval==="Pending"&&<><button onClick={()=>approve(r,"Approved")}>Approve</button><button onClick={()=>approve(r,"Rejected")}>Reject</button></>}<button onClick={()=>setSelected(r.id)}>Details</button></div></article>)}</div>
-      </div>;
+  const timesheetPage = () => {
+    const open = list.filter((r) => r.startTime && !r.endTime);
+    const approved = list.filter((r) => r.approval === "Approved");
+    const totals = weeklyHours(list, week);
+    const exportWeek = () => {
+      const url = URL.createObjectURL(
+        new Blob([timesheetCsv(totals)], { type: "text/csv;charset=utf-8" }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "timesheets-" + week + ".csv";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+    return (
+      <div>
+        <SectionHeading
+          eyebrow="TIME & ATTENDANCE"
+          title="Attendance & timesheets"
+          description="Open clock-ins, reviewed sessions, corrections and sample hours."
+        >
+          {canCreate && (
+            <button
+              className="action-primary"
+              onClick={() => setCreating(true)}
+            >
+              <Plus size={16} /> Manual session
+            </button>
+          )}
+        </SectionHeading>
+        <div className="customer-metrics">
+          <Measure
+            title="Open clock-ins"
+            value={open.length}
+            desc="No recorded clock-out"
+          />
+          <Measure
+            title="Completed sessions"
+            value={list.filter((r) => r.startTime && r.endTime).length}
+            desc="Sample time entries"
+          />
+          <Measure
+            title="Approved"
+            value={approved.length}
+            desc="Manager-reviewed sessions"
+          />
+        </div>
+        {canCreate && (
+          <div className="people-clock">
+            <label>
+              Team member
+              <select
+                aria-label="Clock-in team member"
+                value={clockPerson || actorNames[0] || ""}
+                onChange={(e) => setClockPerson(e.target.value)}
+              >
+                {actorNames.map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
+              </select>
+            </label>
+            <button onClick={clockIn}>
+              <Clock3 size={16} /> Clock in
+            </button>
+            <small>
+              Open a sample shift, then clock out to calculate worked hours.
+            </small>
+          </div>
+        )}
+        {error && <p role="alert">{error}</p>}
+        <h3 className="section-title">Open clock-ins</h3>
+        <div className="people-time-list">
+          {open.length ? (
+            open.map((r) => (
+              <article key={r.id}>
+                <div>
+                  <strong>{r.person || r.title}</strong>
+                  <small>Started {tableDate(r.startTime)}</small>
+                </div>
+                {canEdit && (
+                  <button
+                    onClick={() =>
+                      update(r, {
+                        endTime: new Date().toISOString().slice(0, 16),
+                        status: "Complete",
+                      })
+                    }
+                  >
+                    Clock out
+                  </button>
+                )}
+              </article>
+            ))
+          ) : (
+            <Empty>All sample sessions have a clock-out.</Empty>
+          )}
+        </div>
+        <h3 className="section-title">Weekly review by person</h3>
+        <div className="rota-header">
+          <button
+            onClick={() => setWeek(nextDate(week, -7))}
+            aria-label="Previous timesheet week"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <strong>Week beginning {date(week)}</strong>
+          <button onClick={() => setWeek(weekStart(today()))}>This week</button>
+          <button
+            onClick={() => setWeek(nextDate(week, 7))}
+            aria-label="Next timesheet week"
+          >
+            <ArrowRight size={16} />
+          </button>
+          <button onClick={exportWeek}>Export weekly CSV</button>
+        </div>
+        <p>
+          Completed sessions only · recorded breaks deducted · overnight
+          sessions split across days · overtime shown above 40 hours
+          (illustrative).
+        </p>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Person</th>
+                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+                  <th key={d}>{d}</th>
+                ))}
+                <th>Total</th>
+                <th>Overtime</th>
+                <th>Review</th>
+              </tr>
+            </thead>
+            <tbody>
+              {totals.map((t) => (
+                <tr key={t.id}>
+                  <th>{t.person}</th>
+                  {t.days.map((h, i) => (
+                    <td key={i}>{h.toFixed(2)}</td>
+                  ))}
+                  <td>{t.total.toFixed(2)} h</td>
+                  <td>{t.overtime.toFixed(2)} h</td>
+                  <td>{t.pending ? `${t.pending} pending` : "Approved"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {!totals.length && (
+          <Empty>
+            No completed sessions in this week. Use the week controls to review
+            historical entries.
+          </Empty>
+        )}
+        <h3 className="section-title">Sessions requiring review</h3>
+        <div className="people-time-list">
+          {filtered.map((r) => (
+            <article key={r.id}>
+              <div>
+                <strong>{r.person || r.title}</strong>
+                <small>
+                  {tableDate(r.startTime)} – {tableDate(r.endTime)} ·{" "}
+                  {(minutes(r.startTime, r.endTime) / 60).toFixed(2)}h ·{" "}
+                  {r.approval || "Pending"}
+                </small>
+              </div>
+              <div className="quick-actions">
+                {canApprove && r.endTime && r.approval !== "Approved" && (
+                  <button onClick={() => approve(r, "Approved")}>
+                    Approve
+                  </button>
+                )}
+                <button onClick={() => setSelected(r.id)}>
+                  Review / correct
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+        <p className="module-disclaimer">
+          Clock-in actions and approvals are temporary demonstration records.
+          They are not verified workplace attendance or payroll.
+        </p>
+      </div>
+    );
   };
-  const trainingPage=()=> {
-    const missing=people.filter(p=>!list.some(r=>r.person===p.title));
-    const expiring=list.filter(r=>r.expiry&&r.expiry>=today()&&r.expiry<=nextDate(today(),45));
-    return <div><SectionHeading eyebrow="COMPETENCY MANAGEMENT" title="Training & qualifications" description="Team certificates, renewal dates and competency coverage.">
-      {canCreate&&<button className="action-primary" onClick={()=>setCreating(true)}><Plus size={16}/> Record qualification</button>}</SectionHeading>
-      <div className="customer-metrics"><Measure title="Qualifications" value={list.length} desc="Example records"/><Measure title="Expiring soon" value={expiring.length} desc="Within 45 days"/><Measure title="No qualifications" value={missing.length} desc="Profiles without a linked record"/></div>
-      <label className="people-search">Find qualification or person<input aria-label="Search competency matrix" value={query} onChange={e=>setQuery(e.target.value)}/></label>
-      <div className="table-wrap competency-matrix"><table><caption>Competency matrix · select a certificate to review its approval and expiry</caption><thead><tr><th scope="col">Staff member</th>{[...new Set(list.map(r=>r.qualification||r.title))].map(q=><th scope="col" key={q}>{q}</th>)}</tr></thead><tbody>{people.filter(p=>!query||p.title.toLowerCase().includes(query.toLowerCase())||list.some(r=>(r.personId===p.id||!r.personId&&r.person===p.title)&&(r.qualification||r.title).toLowerCase().includes(query.toLowerCase()))).map(p=><tr key={p.id}><th scope="row">{p.title}<small className="cell-subtitle">{p.team||"Department not recorded"}</small></th>{[...new Set(list.map(r=>r.qualification||r.title))].map(q=>{
-        const certificates=list.filter(r=>(r.personId===p.id||!r.personId&&r.person===p.title)&&(r.qualification||r.title)===q);
-        const certificate=certificates.find(r=>r.approval==="Approved"&&(r.noExpiry||r.expiry>=today()))||certificates[0];
-        const state=!certificate?"Missing":certificate.approval!=="Approved"?"Awaiting approval":!certificate.expiry&&!certificate.noExpiry?"Expiry not recorded":certificate.expiry<today()?"Expired":certificate.expiry<=nextDate(today(),45)?"Expiring soon":"Valid";
-        return <td key={q}>{certificate?<button aria-label={p.title+" · "+q+" · "+state} onClick={()=>setSelected(certificate.id)}><Status>{state}</Status><small className="cell-subtitle">{certificate.noExpiry?"No expiry":date(certificate.expiry)}</small></button>:<span>Missing</span>}</td>;
-      })}</tr>)}</tbody></table></div>
-      {!list.length&&<Empty>Record qualifications to build the competency matrix.</Empty>}
-      </div>;
+  const rotaPage = () => {
+    const dates = weekDays(week);
+    const weekRows = filtered.filter(
+      (r) =>
+        r.startTime && day(r.startTime) >= week && day(r.startTime) <= dates[6],
+    );
+    return (
+      <div>
+        <SectionHeading
+          eyebrow="SHIFT PLANNING"
+          title="Shift rotas"
+          description="Weekly staff assignments, coverage and leave conflicts."
+        >
+          {canCreate && (
+            <button
+              className="action-primary"
+              onClick={() => setCreating(true)}
+            >
+              <Plus size={16} /> Add shift
+            </button>
+          )}
+        </SectionHeading>
+        <div className="rota-header">
+          <label>
+            Week containing
+            <input
+              aria-label="Rota week containing"
+              type="date"
+              value={week}
+              onChange={(e) => {
+                if (e.target.value) setWeek(weekStart(e.target.value));
+              }}
+            />
+          </label>
+          <button
+            onClick={() => setWeek(nextDate(week, -7))}
+            aria-label="Previous rota week"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <strong>Week beginning {date(week)}</strong>
+          <button onClick={() => setWeek(weekStart(today()))}>This week</button>
+          <button
+            onClick={() => setWeek(nextDate(week, 7))}
+            aria-label="Next rota week"
+          >
+            <ArrowRight size={16} />
+          </button>
+        </div>
+        <RotaPlanner
+          days={dates}
+          people={people}
+          shifts={weekRows}
+          records={records}
+          orgId={org.id}
+          operations={org.workspaceConfig?.operations}
+          canEdit={canEdit}
+          onOpen={(id) => {
+            setShiftStart("");
+            setShiftEnd("");
+            setSelected(id);
+          }}
+        />
+        <section className="rota-linked-allocations">
+          <h3>Event & appointment allocations</h3>
+          <p>
+            Shared commitments for this week; these are not additional rota
+            shifts.
+          </p>
+          {records
+            .filter(
+              (r) =>
+                r.orgId === org.id &&
+                ["events", "bookings"].includes(moduleInfo(r.module).type) &&
+                r.recordType !== "booking" &&
+                r.recordType !== "resource" &&
+                !["Complete", "Cancelled"].includes(r.status) &&
+                r.startTime?.slice(0, 10) >= week &&
+                r.startTime?.slice(0, 10) <= dates[6],
+            )
+            .map((r) => (
+              <button
+                className="profile-linked-row"
+                key={r.id}
+                onClick={() => onNavigate(r.module, { recordId: r.id })}
+              >
+                <span>
+                  <strong>{r.title}</strong>
+                  <small>
+                    {r.startTime?.replace("T", " ")} ·{" "}
+                    {[...(r.staffIds || []), r.personId]
+                      .filter(Boolean)
+                      .map(
+                        (id) =>
+                          people.find((p) => p.id === id)?.title ||
+                          "Linked staff",
+                      )
+                      .join(", ") || "Unassigned"}
+                  </small>
+                </span>
+                <span>Open schedule →</span>
+              </button>
+            ))}
+        </section>
+        <p className="module-disclaimer">
+          Availability and overlap conflicts use current sample leave and shift
+          records; drag-and-drop shift moves are not enabled yet.
+        </p>
+      </div>
+    );
   };
-  const selectedDetails=r=><div className="people-details"><h3>{r.title}</h3><p>{r.detail}</p>
-    {type==="schedule"?<form onSubmit={async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.currentTarget));const result=validateAssignee(records,org.id,f.person,{kind:"schedule",startTime:f.startTime,endTime:f.endTime,excludedRecordId:r.id});if(!f.person||!result.eligible){setError(result.reasons.join("; ")||"Choose an eligible person");return;}if(await update(r,{...f,personId:people.find(p=>p.title===f.person)?.id||""})){setError("");setSelected(null);}}}><label>Shift start<input name="startTime" type="datetime-local" required defaultValue={r.startTime} onChange={e=>setShiftStart(e.target.value)}/></label><label>Shift end<input name="endTime" type="datetime-local" required defaultValue={r.endTime} onChange={e=>setShiftEnd(e.target.value)}/></label><QualifiedStaffSelect records={records} orgId={org.id} kind="schedule" startTime={shiftStart||r.startTime} endTime={shiftEnd||r.endTime} excludedRecordId={r.id} label="Reassign shift" name="person" value={r.person} required/><label>Shift location<input name="location" required defaultValue={r.location}/></label>{error&&<p role="alert">{error}</p>}<button disabled={!canEdit}>Save shift changes</button></form>:type==="people"?<StaffProfile person={r} records={records} canEdit={canEdit} canManage={canManage} onUpdate={onUpdate} onNavigate={onNavigate}/>:
-      <>{["person","startTime","endTime","startDate","endDate","location","qualification","expiry"].filter(key=>r[key]!==undefined).map(key=><label key={key}>{key}<input disabled={!canEdit} type={key==="startTime"||key==="endTime"?"datetime-local":key==="startDate"||key==="endDate"||key==="expiry"?"date":"text"} value={r[key]||""} onChange={e=>update(r,{[key]:e.target.value})}/></label>)}
-        <label>Approval<select disabled={!canApprove} value={r.approval||"Pending"} onChange={e=>approve(r,e.target.value)}>{(type==="leave"?["Pending","Approved","Rejected","Cancelled"]:["Pending","Approved","Rejected"]).map(x=><option key={x}>{x}</option>)}</select></label>
-        {type==="schedule"&&<div className="quick-actions">{canEdit&&<button onClick={()=>update(r,{swapRequested:true})}>Request shift swap</button>}{canApprove&&r.swapRequested&&<button onClick={()=>update(r,{swapRequested:false})}>Resolve swap request</button>}</div>}</>}
-    <p className="module-disclaimer">This is fictional demo information, not a live staff or payroll record.</p></div>;
-  const form=()=> <Modal title={type==="people"?"Add sample person":type==="schedule"?"Add sample shift":type==="timesheets"?"Add manual time entry":type==="leave"?"Request sample leave":"Record sample training"} onClose={()=>setCreating(false)}><form className="customer-form" onSubmit={created}>
-    {error&&<p role="alert">{error}</p>}
-    {type==="people"?<><label>Name<input name="title" maxLength={100} required autoFocus/></label><label>Role<input name="role" maxLength={80}/></label><label>Team<input name="team" maxLength={80}/></label><label>Sample contact<input name="contact" maxLength={100}/></label><label>Profile notes<textarea name="detail" maxLength={200}/></label></>:
-      <>{type==="schedule"?<QualifiedStaffSelect records={records} orgId={org.id} kind="schedule" label="Person" name="person" required startTime={shiftStart} endTime={shiftEnd} date={shiftStart}/>:<label>Person<select name="person" required><option value="">Select team member</option>{actorNames.map(x=><option key={x}>{x}</option>)}</select></label>}{""}
-        {["timesheets","schedule"].includes(type)&&<><label>Start<input name="startTime" type="datetime-local" required {...(type==="schedule"?{value:shiftStart,onChange:e=>setShiftStart(e.target.value)}:{})}/></label><label>End<input name="endTime" type="datetime-local" required={type==="schedule"} {...(type==="schedule"?{value:shiftEnd,onChange:e=>setShiftEnd(e.target.value)}:{})}/></label></>}
-        {type==="schedule"&&<label>Location<input name="location" maxLength={80}/></label>}
-        {type==="leave"&&<><label>First day<input name="startDate" type="date" required/></label><label>Last day<input name="endDate" type="date" required/></label></>}
-        {type==="training"&&<><label>Qualification<input name="qualification" maxLength={120} required/></label><label>Expiry<input name="expiry" type="date"/></label></>}
-        <label>Notes<textarea name="detail" maxLength={200}/></label></>}
-    <button type="submit" className="action-primary">Save sample {type==="people"?"person":"record"}</button>
-  </form></Modal>;
-  return <div className="people-operations">
-    {type==="people"?peoplePage():type==="timesheets"?timesheetPage():type==="schedule"?rotaPage():type==="leave"?leavePage():trainingPage()}
-    {creating&&form()}
-    {active&&<Modal title={"Review "+moduleInfo(module).title.toLowerCase()} onClose={()=>setSelected(null)}>{selectedDetails(active)}</Modal>}
-  </div>;
+  const leavePage = () => {
+    const pending = list.filter((r) => r.approval === "Pending");
+    const conflicts = (r) =>
+      rotas.filter(
+        (s) =>
+          s.person === r.person &&
+          day(s.startTime) >= r.startDate &&
+          day(s.startTime) <= r.endDate,
+      );
+    return (
+      <div>
+        <SectionHeading
+          eyebrow="AVAILABILITY & REQUESTS"
+          title="Leave & availability"
+          description="Review leave requests alongside scheduled shifts."
+        >
+          {canCreate && (
+            <button
+              className="action-primary"
+              onClick={() => setCreating(true)}
+            >
+              <Plus size={16} /> Request leave
+            </button>
+          )}
+        </SectionHeading>
+        <div className="customer-metrics">
+          <Measure
+            title="Requests"
+            value={list.length}
+            desc="Total submitted"
+          />
+          <Measure
+            title="Pending"
+            value={pending.length}
+            desc="Require a decision"
+          />
+          <Measure
+            title="Approved"
+            value={list.filter((r) => r.approval === "Approved").length}
+            desc="Recorded in the team calendar"
+          />
+        </div>
+        <p className="module-disclaimer">
+          Configured annual allowance:{" "}
+          {org.workspaceConfig?.operations?.leaveDays ?? 25} business days per
+          person. Approved requests affect assignment eligibility; holiday and
+          pro-rata payroll rules are not inferred.
+        </p>
+        <div className="leave-list">
+          {filtered.map((r) => (
+            <article key={r.id}>
+              <div>
+                <h3>{r.person || r.title}</h3>
+                <p>
+                  {date(r.startDate)} – {date(r.endDate)} ·{" "}
+                  <Status>{r.approval || "Pending"}</Status>
+                </p>
+                <small>{r.detail}</small>
+                {conflicts(r).length > 0 && (
+                  <div className="rota-warning">
+                    <AlertTriangle size={14} /> {conflicts(r).length} scheduled
+                    shifts overlap this request.
+                  </div>
+                )}
+              </div>
+              <div className="quick-actions">
+                {canApprove && r.approval === "Pending" && (
+                  <>
+                    <button onClick={() => approve(r, "Approved")}>
+                      Approve
+                    </button>
+                    <button onClick={() => approve(r, "Rejected")}>
+                      Reject
+                    </button>
+                  </>
+                )}
+                <button onClick={() => setSelected(r.id)}>Details</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    );
+  };
+  const trainingPage = () => {
+    const missing = people.filter(
+      (p) => !list.some((r) => r.person === p.title),
+    );
+    const expiring = list.filter(
+      (r) =>
+        r.expiry && r.expiry >= today() && r.expiry <= nextDate(today(), 45),
+    );
+    return (
+      <div>
+        <SectionHeading
+          eyebrow="COMPETENCY MANAGEMENT"
+          title="Training & qualifications"
+          description="Team certificates, renewal dates and competency coverage."
+        >
+          {canCreate && (
+            <button
+              className="action-primary"
+              onClick={() => setCreating(true)}
+            >
+              <Plus size={16} /> Record qualification
+            </button>
+          )}
+        </SectionHeading>
+        <div className="customer-metrics">
+          <Measure
+            title="Qualifications"
+            value={list.length}
+            desc="Example records"
+          />
+          <Measure
+            title="Expiring soon"
+            value={expiring.length}
+            desc="Within 45 days"
+          />
+          <Measure
+            title="No qualifications"
+            value={missing.length}
+            desc="Profiles without a linked record"
+          />
+        </div>
+        <label className="people-search">
+          Find qualification or person
+          <input
+            aria-label="Search competency matrix"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
+        <div className="table-wrap competency-matrix">
+          <table>
+            <caption>
+              Competency matrix · select a certificate to review its approval
+              and expiry
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Staff member</th>
+                {[...new Set(list.map((r) => r.qualification || r.title))].map(
+                  (q) => (
+                    <th scope="col" key={q}>
+                      {q}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {people
+                .filter(
+                  (p) =>
+                    !query ||
+                    p.title.toLowerCase().includes(query.toLowerCase()) ||
+                    list.some(
+                      (r) =>
+                        (r.personId === p.id ||
+                          (!r.personId && r.person === p.title)) &&
+                        (r.qualification || r.title)
+                          .toLowerCase()
+                          .includes(query.toLowerCase()),
+                    ),
+                )
+                .map((p) => (
+                  <tr key={p.id}>
+                    <th scope="row">
+                      {p.title}
+                      <small className="cell-subtitle">
+                        {p.team || "Department not recorded"}
+                      </small>
+                    </th>
+                    {[
+                      ...new Set(list.map((r) => r.qualification || r.title)),
+                    ].map((q) => {
+                      const certificates = list.filter(
+                        (r) =>
+                          (r.personId === p.id ||
+                            (!r.personId && r.person === p.title)) &&
+                          (r.qualification || r.title) === q,
+                      );
+                      const certificate =
+                        certificates.find(
+                          (r) =>
+                            r.approval === "Approved" &&
+                            (r.noExpiry || r.expiry >= today()),
+                        ) || certificates[0];
+                      const state = !certificate
+                        ? "Missing"
+                        : certificate.approval !== "Approved"
+                          ? "Awaiting approval"
+                          : !certificate.expiry && !certificate.noExpiry
+                            ? "Expiry not recorded"
+                            : certificate.expiry < today()
+                              ? "Expired"
+                              : certificate.expiry <= nextDate(today(), 45)
+                                ? "Expiring soon"
+                                : "Valid";
+                      return (
+                        <td key={q}>
+                          {certificate ? (
+                            <button
+                              aria-label={p.title + " · " + q + " · " + state}
+                              onClick={() => setSelected(certificate.id)}
+                            >
+                              <Status>{state}</Status>
+                              <small className="cell-subtitle">
+                                {certificate.noExpiry
+                                  ? "No expiry"
+                                  : date(certificate.expiry)}
+                              </small>
+                            </button>
+                          ) : (
+                            <span>Missing</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+        {!list.length && (
+          <Empty>Record qualifications to build the competency matrix.</Empty>
+        )}
+      </div>
+    );
+  };
+  const selectedDetails = (r) => (
+    <div className="people-details">
+      <h3>{r.title}</h3>
+      <p>{r.detail}</p>
+      {type === "schedule" ? (
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const f = Object.fromEntries(new FormData(e.currentTarget));
+            const result = validateAssignee(records, org.id, f.person, {
+              kind: "schedule",
+              startTime: f.startTime,
+              endTime: f.endTime,
+              excludedRecordId: r.id,
+            });
+            if (!f.person || !result.eligible) {
+              setError(
+                result.reasons.join("; ") || "Choose an eligible person",
+              );
+              return;
+            }
+            if (
+              await update(r, {
+                ...f,
+                personId: people.find((p) => p.title === f.person)?.id || "",
+              })
+            ) {
+              setError("");
+              setSelected(null);
+            }
+          }}
+        >
+          <label>
+            Shift start
+            <input
+              name="startTime"
+              type="datetime-local"
+              required
+              defaultValue={r.startTime}
+              onChange={(e) => setShiftStart(e.target.value)}
+            />
+          </label>
+          <label>
+            Shift end
+            <input
+              name="endTime"
+              type="datetime-local"
+              required
+              defaultValue={r.endTime}
+              onChange={(e) => setShiftEnd(e.target.value)}
+            />
+          </label>
+          <QualifiedStaffSelect
+            records={records}
+            orgId={org.id}
+            kind="schedule"
+            startTime={shiftStart || r.startTime}
+            endTime={shiftEnd || r.endTime}
+            excludedRecordId={r.id}
+            label="Reassign shift"
+            name="person"
+            value={r.person}
+            required
+          />
+          <label>
+            Shift location
+            <input name="location" required defaultValue={r.location} />
+          </label>
+          {error && <p role="alert">{error}</p>}
+          <button disabled={!canEdit}>Save shift changes</button>
+        </form>
+      ) : type === "people" ? (
+        <StaffProfile
+          person={r}
+          records={records}
+          canEdit={canEdit}
+          canManage={canManage}
+          onUpdate={onUpdate}
+          onNavigate={onNavigate}
+        />
+      ) : (
+        <>
+          {[
+            "person",
+            "startTime",
+            "endTime",
+            "startDate",
+            "endDate",
+            "location",
+            "qualification",
+            "expiry",
+          ]
+            .filter((key) => r[key] !== undefined)
+            .map((key) => (
+              <label key={key}>
+                {key}
+                <input
+                  disabled={!canEdit}
+                  type={
+                    key === "startTime" || key === "endTime"
+                      ? "datetime-local"
+                      : key === "startDate" ||
+                          key === "endDate" ||
+                          key === "expiry"
+                        ? "date"
+                        : "text"
+                  }
+                  value={r[key] || ""}
+                  onChange={(e) => update(r, { [key]: e.target.value })}
+                />
+              </label>
+            ))}
+          <label>
+            Approval
+            <select
+              disabled={!canApprove}
+              value={r.approval || "Pending"}
+              onChange={(e) => approve(r, e.target.value)}
+            >
+              {(type === "leave"
+                ? ["Pending", "Approved", "Rejected", "Cancelled"]
+                : ["Pending", "Approved", "Rejected"]
+              ).map((x) => (
+                <option key={x}>{x}</option>
+              ))}
+            </select>
+          </label>
+          {type === "schedule" && (
+            <div className="quick-actions">
+              {canEdit && (
+                <button onClick={() => update(r, { swapRequested: true })}>
+                  Request shift swap
+                </button>
+              )}
+              {canApprove && r.swapRequested && (
+                <button onClick={() => update(r, { swapRequested: false })}>
+                  Resolve swap request
+                </button>
+              )}
+            </div>
+          )}
+        </>
+      )}
+      <p className="module-disclaimer">
+        This is fictional demo information, not a live staff or payroll record.
+      </p>
+    </div>
+  );
+  const form = () => (
+    <Modal
+      title={
+        type === "people"
+          ? "Add sample person"
+          : type === "schedule"
+            ? "Add sample shift"
+            : type === "timesheets"
+              ? "Add manual time entry"
+              : type === "leave"
+                ? "Request sample leave"
+                : "Record sample training"
+      }
+      onClose={() => setCreating(false)}
+    >
+      <form className="customer-form" onSubmit={created}>
+        {error && <p role="alert">{error}</p>}
+        {type === "people" ? (
+          <>
+            <label>
+              Name
+              <input name="title" maxLength={100} required autoFocus />
+            </label>
+            <label>
+              Role
+              <input name="role" maxLength={80} />
+            </label>
+            <label>
+              Team
+              <input name="team" maxLength={80} />
+            </label>
+            <label>
+              Sample contact
+              <input name="contact" maxLength={100} />
+            </label>
+            <label>
+              Profile notes
+              <textarea name="detail" maxLength={200} />
+            </label>
+          </>
+        ) : (
+          <>
+            {type === "schedule" ? (
+              <QualifiedStaffSelect
+                records={records}
+                orgId={org.id}
+                kind="schedule"
+                label="Person"
+                name="person"
+                required
+                startTime={shiftStart}
+                endTime={shiftEnd}
+                date={shiftStart}
+              />
+            ) : (
+              <label>
+                Person
+                <select name="person" required>
+                  <option value="">Select team member</option>
+                  {actorNames.map((x) => (
+                    <option key={x}>{x}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {""}
+            {["timesheets", "schedule"].includes(type) && (
+              <>
+                <label>
+                  Start
+                  <input
+                    name="startTime"
+                    type="datetime-local"
+                    required
+                    {...(type === "schedule"
+                      ? {
+                          value: shiftStart,
+                          onChange: (e) => setShiftStart(e.target.value),
+                        }
+                      : {})}
+                  />
+                </label>
+                <label>
+                  End
+                  <input
+                    name="endTime"
+                    type="datetime-local"
+                    required={type === "schedule"}
+                    {...(type === "schedule"
+                      ? {
+                          value: shiftEnd,
+                          onChange: (e) => setShiftEnd(e.target.value),
+                        }
+                      : {})}
+                  />
+                </label>
+              </>
+            )}
+            {type === "schedule" && (
+              <label>
+                Location
+                <input name="location" maxLength={80} />
+              </label>
+            )}
+            {type === "leave" && (
+              <>
+                <label>
+                  First day
+                  <input name="startDate" type="date" required />
+                </label>
+                <label>
+                  Last day
+                  <input name="endDate" type="date" required />
+                </label>
+              </>
+            )}
+            {type === "training" && (
+              <>
+                <label>
+                  Qualification
+                  <input name="qualification" maxLength={120} required />
+                </label>
+                <label>
+                  Expiry
+                  <input name="expiry" type="date" />
+                </label>
+              </>
+            )}
+            <label>
+              Notes
+              <textarea name="detail" maxLength={200} />
+            </label>
+          </>
+        )}
+        <button type="submit" className="action-primary">
+          Save sample {type === "people" ? "person" : "record"}
+        </button>
+      </form>
+    </Modal>
+  );
+  return (
+    <div className="people-operations">
+      {type === "people"
+        ? peoplePage()
+        : type === "timesheets"
+          ? timesheetPage()
+          : type === "schedule"
+            ? rotaPage()
+            : type === "leave"
+              ? leavePage()
+              : trainingPage()}
+      {creating && form()}
+      {active && (
+        <Modal
+          title={"Review " + moduleInfo(module).title.toLowerCase()}
+          onClose={() => setSelected(null)}
+        >
+          {selectedDetails(active)}
+        </Modal>
+      )}
+    </div>
+  );
 }

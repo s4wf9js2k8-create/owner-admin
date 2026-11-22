@@ -94,6 +94,7 @@ export function decideApproval(record, request, org, records) {
     org.workspaceConfig?.disallowSelfApproval !== false &&
     (requester === actor.id ||
       [
+        ...(record.staffIds || []),
         record.personId,
         record.ownerId,
         record.engineerId,
@@ -370,6 +371,7 @@ export function recordInScope(record, scope = {}, person, records = []) {
   const owner =
     (record.id === person?.id && moduleInfo(record.module).type === "people") ||
     ([
+      ...(record.staffIds || []),
       record.createdById,
       record.personId,
       record.ownerId,
@@ -385,6 +387,7 @@ export function recordInScope(record, scope = {}, person, records = []) {
       p.orgId === record.orgId &&
       moduleInfo(p.module).type === "people" &&
       ([
+        ...(record.staffIds || []),
         record.personId,
         record.ownerId,
         record.engineerId,

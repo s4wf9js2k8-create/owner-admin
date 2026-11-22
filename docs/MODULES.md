@@ -1,25 +1,11 @@
-# Module specifications
+# Module catalogue and implementation reference
 
-All current modules use the same session-only record interface: title (100 characters), details (150), progress (Planned / In progress / Complete), organisation and module IDs. Search covers title and details. Records from disabled modules are retained but hidden from the customer workspace and report. Re-enabling restores them. Dependencies are automatically added; removing a prerequisite removes dependent access without deleting records.
+Updated 22 November 2026. The application no longer uses a single generic record page for all modules. The authoritative current inventory, purpose, actions, relationships, defects, mobile evidence and completion classifications are in [FULL-APPLICATION-AUDIT.md](FULL-APPLICATION-AUDIT.md). Acceptance/release evidence is tracked in [DEMO-ACCEPTANCE-CHECKLIST.md](DEMO-ACCEPTANCE-CHECKLIST.md).
 
-| Module             | Prerequisite | Production extension required                                            |
-| ------------------ | ------------ | ------------------------------------------------------------------------ |
-| Volunteers         | None         | Consent-aware directory, availability, revocation                        |
-| Attendance & Hours | Volunteers   | Clock-in/out, times, corrections, approval, duplicate-session prevention |
-| Staff              | None         | Membership linkage, assignments                                          |
-| Events             | None         | Dates, capacity, calendar, cancellation                                  |
-| Maintenance        | None         | Defects, severity, ownership, completion evidence                        |
-| Assets             | None         | Unique asset identifiers, locations, service history                     |
-| Archives           | None         | Collection identifiers, provenance, attachment policy                    |
-| Daily operations   | None         | Dated checklists and handover                                            |
-| Projects           | None         | Milestones and responsible teams                                         |
-| Donations          | None         | Manual ledger and reconciliation; never imply payments are collected     |
-| Tasks              | None         | Assignments, due dates, reminders                                        |
-| Work orders        | Assets       | Asset references, job transitions and supervisor sign-off                |
-| Inspections        | Assets       | Inspection template, outcomes and approvals                              |
-| Schedules          | None         | Recurrence, time zones, conflict handling                                |
-| Job records        | None         | Work performed and completion evidence                                   |
-| Visitor statistics | None         | Numeric counts, dates, validation, source                                |
-| Reporting          | None         | Current demo record counts; production needs permission-filtered exports |
+`src/model.js` defines stable entitlement names, prerequisites and industry presets. `src/customerModules.js` maps existing aliases to domain types. Dedicated React workspaces cover staffing/time/rotas, tasks/projects, assets/jobs/inspections, inventory, finance, events, appointments, CRM, documents, operations, reports and administration. Legacy module identities and their records are retained; disabling an entitlement hides access without deleting history.
 
-Module-specific configuration, custom fields, attachments, offline work and domain approvals are not implemented. Demo progress is deliberately generic and must not be represented as a valid financial or safety approval. Production catalogue entries should define their schema version, entitlement, dependencies, allowed actions, retention policy and migration strategy. Validate the catalogue is acyclic before accepting server-managed module definitions.
+Workflows use domain statuses: quotations follow approval/sent/acceptance states; invoices derive balances from fictional settlements; event reservations distinguish confirmation, waitlist, check-in and cancellation; appointments retain completed/cancelled history; approvals reject stale decisions. Some older modules still use generic progress states and remain PARTIAL in the audit.
+
+Dependencies are added when modules are enabled and dependent access is removed when prerequisites are disabled. Current event/appointment workspaces require the staff directory and CRM. Events combine the legacy and modern event sources; customer navigation shows one event destination when both are enabled. More legacy people/asset/job aliases still need careful consolidation without losing their records or permissions.
+
+All public records are fictional and in memory. Production entitlements, access checks, schema migrations, concurrency, retention and auditing must be server-owned. The self-hosted Node/PostgreSQL foundation remains separate; no live backend, file upload service, billing or external delivery is activated by the demo.

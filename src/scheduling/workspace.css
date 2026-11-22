@@ -1,0 +1,506 @@
+.scheduling-workspace,
+.crm-workspace {
+  min-width: 0;
+}
+.scheduling-workspace button,
+.crm-workspace button {
+  padding: 10px 12px;
+  border: 1px solid #c3d1c8;
+  border-radius: 4px;
+  background: #fff;
+  color: #244933;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 44px;
+}
+.scheduling-workspace button:hover,
+.crm-workspace button:hover {
+  background: #e9f0eb;
+}
+.scheduling-workspace .action-primary,
+.crm-workspace .action-primary {
+  background: var(--accent, #294d36);
+  color: white;
+}
+.scheduling-workspace strong,
+.crm-workspace strong {
+  display: inline;
+  font-size: inherit;
+  color: inherit;
+  margin: 0;
+}
+.scheduling-workspace h3,
+.crm-workspace h3 {
+  margin: 8px 0;
+  font-size: 16px;
+}
+.scheduling-workspace section,
+.crm-workspace section,
+.crm-follow-ups {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.schedule-summary,
+.schedule-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0;
+}
+.schedule-summary {
+  font-size: 13px;
+  background: #eaf0ed;
+  padding: 12px;
+  border-left: 4px solid #3c654a;
+}
+.schedule-toolbar label {
+  max-width: 220px;
+  margin: 0;
+}
+.schedule-calendar {
+  background: #fff;
+  border: 1px solid #cad7ce;
+  padding: 12px !important;
+  margin: 16px 0 !important;
+}
+.schedule-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  background: #d7e0da;
+  border: 1px solid #d7e0da;
+}
+.schedule-calendar-grid.schedule-day {
+  grid-template-columns: 1fr;
+}
+.schedule-weekday {
+  background: #eef3ef;
+  padding: 9px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+.schedule-date {
+  min-height: 100px;
+  background: #fff;
+  min-width: 0;
+  padding: 4px;
+}
+.schedule-date.is-chosen {
+  box-shadow: inset 0 0 0 2px #4d735b;
+}
+.schedule-date-number {
+  width: 100%;
+  border: 0 !important;
+  display: flex;
+  justify-content: space-between;
+  text-align: left;
+  gap: 4px;
+  padding: 6px !important;
+}
+.schedule-date-number small {
+  font-size: 10px;
+  font-weight: 400;
+}
+.schedule-calendar-entry {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  background: #eaf2ec !important;
+  border: 0 !important;
+  min-height: 36px !important;
+  padding: 6px !important;
+  margin: 4px 0 !important;
+  font-size: 12px !important;
+  overflow-wrap: anywhere;
+}
+.schedule-calendar-entry time {
+  font-weight: 400;
+}
+.schedule-calendar-entry span {
+  min-width: 0;
+}
+.schedule-staff-picker,
+.scheduling-workspace label {
+  display: block;
+  margin: 12px 0;
+}
+.schedule-staff-picker select[multiple],
+.scheduling-workspace select[multiple] {
+  min-height: 115px;
+}
+.schedule-staff-picker small,
+.schedule-staff-picker details {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.schedule-staff-picker ul {
+  padding-left: 20px;
+}
+.schedule-notice {
+  padding: 12px;
+  background: #fff6df;
+  color: #624a16;
+  border-left: 3px solid #a17d3a;
+  font-size: 13px;
+}
+.event-plan-list,
+.schedule-appointment-list {
+  display: grid;
+  gap: 10px;
+}
+.event-plan,
+.schedule-appointment {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: white;
+  border: 1px solid #d0dcd4;
+}
+.event-plan > div:nth-child(2),
+.schedule-appointment > div {
+  flex: 1;
+  min-width: 0;
+}
+.event-plan-date {
+  width: 85px;
+  display: flex;
+  flex-direction: column;
+  color: #315a40;
+  font-size: 12px;
+  border-right: 1px solid #d4ded7;
+  flex-shrink: 0;
+}
+.event-plan-date strong {
+  font-size: 27px;
+}
+.event-plan p,
+.schedule-appointment p {
+  margin: 7px 0;
+  font-size: 13px;
+}
+.event-plan small,
+.schedule-appointment small {
+  font-size: 12px;
+}
+.event-plan > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.event-capacity-strip {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #edf3ef;
+  padding: 16px;
+  margin: 15px 0;
+  font-size: 13px;
+}
+.event-capacity-strip progress {
+  width: 100%;
+}
+.event-section,
+.event-reservation-form,
+.schedule-resource-form {
+  padding: 18px !important;
+  background: white;
+  border: 1px solid #ced9d1;
+  margin: 15px 0 !important;
+}
+.schedule-linked {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.scheduling-workspace td small {
+  display: block;
+  margin-top: 5px;
+}
+.scheduling-workspace td strong {
+  color: #254630;
+}
+.schedule-appointment time {
+  width: 150px;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.schedule-appointment time small {
+  display: block;
+  margin-top: 5px;
+}
+.schedule-resource-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.schedule-resource-list article {
+  padding: 14px;
+}
+.crm-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 22px;
+}
+.crm-follow-ups {
+  background: #eaf0ed;
+  padding: 15px;
+  font-size: 13px;
+  border-left: 3px solid #54775e;
+}
+.crm-follow-ups button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 10px 0;
+}
+.crm-follow-ups small {
+  display: block;
+  margin-top: 5px;
+}
+.crm-workspace .crm-company {
+  gap: 12px;
+  justify-content: space-between;
+}
+.crm-workspace .crm-company h3 {
+  margin: 8px 0;
+}
+.crm-timeline article {
+  background: #f5f8f6;
+  border-left: 3px solid #769c82;
+  padding: 12px;
+  margin: 12px 0;
+  box-shadow: none;
+  border-radius: 2px;
+}
+.crm-timeline h4 {
+  font-size: 14px;
+  margin: 6px 0;
+}
+.crm-timeline p {
+  font-size: 13px;
+  margin: 6px 0;
+}
+.crm-profile .profile-tabs {
+  gap: 5px;
+}
+.crm-contact {
+  padding: 12px;
+  background: #f2f6f3;
+  margin: 10px 0;
+}
+.crm-contact h4 {
+  margin: 3px 0;
+}
+.crm-profile > header {
+  border-bottom: 1px solid #d8e1da;
+  padding-bottom: 12px;
+}
+@media (max-width: 850px) {
+  .crm-layout {
+    grid-template-columns: 1fr;
+  }
+  .crm-follow-ups {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .crm-follow-ups h3 {
+    grid-column: 1/-1;
+  }
+  .schedule-resource-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 540px) {
+  .schedule-calendar {
+    padding: 6px !important;
+  }
+  .schedule-calendar-grid {
+    gap: 1px;
+  }
+  .schedule-date {
+    padding: 1px;
+    min-height: 65px;
+  }
+  .schedule-date-number {
+    flex-direction: column;
+    font-size: 12px !important;
+    padding: 3px !important;
+    gap: 2px;
+    min-height: 44px;
+  }
+  .schedule-date-number small {
+    font-size: 8px;
+    word-break: break-word;
+  }
+  .schedule-calendar-entry {
+    font-size: 10px !important;
+    padding: 3px !important;
+    min-height: 38px !important;
+  }
+  .schedule-calendar-entry time {
+    display: none;
+  }
+  .schedule-calendar-entry span {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+  }
+  .schedule-weekday {
+    padding: 8px 2px;
+    font-size: 10px;
+  }
+  .event-plan,
+  .schedule-appointment {
+    flex-wrap: wrap;
+    padding: 12px;
+    gap: 12px;
+  }
+  .event-plan > div:last-child {
+    width: 100%;
+    flex-direction: row;
+  }
+  .schedule-appointment time {
+    width: 100%;
+  }
+  .schedule-appointment > div {
+    flex-basis: 65%;
+  }
+  .schedule-appointment > button {
+    width: 100%;
+  }
+  .schedule-resource-list,
+  .crm-follow-ups {
+    grid-template-columns: 1fr;
+  }
+  .schedule-toolbar label {
+    max-width: 100%;
+    flex: 1 1 130px;
+  }
+  .event-reservation-form,
+  .event-section {
+    padding: 12px !important;
+  }
+  .crm-workspace .crm-company {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .crm-workspace .crm-company button {
+    width: 100%;
+  }
+  .crm-profile .profile-tabs {
+    display: flex;
+  }
+  .crm-profile .profile-tabs button {
+    flex: 1 1 135px;
+    text-align: left;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+.shell nav .nav-section-toggle {
+  display: flex;
+  justify-content: space-between;
+  border: 0;
+  border-bottom: 1px solid #ffffff20;
+  border-radius: 0;
+  background: transparent;
+  color: #aac5b5;
+  padding: 13px 10px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  min-height: 44px;
+  margin: 7px 0 4px;
+  width: 100%;
+  text-align: left;
+}
+.shell nav .nav-section-toggle:hover {
+  background: #ffffff12;
+  color: #fff;
+}
+.shell .crm-follow-ups {
+  position: static;
+  transform: none;
+  background: #eaf0ed;
+  box-shadow: none;
+  max-height: none;
+  width: auto;
+  padding: 15px;
+}
+.rota-linked-allocations {
+  padding: 15px !important;
+  margin-top: 16px !important;
+  border: 1px solid #cfdcd3;
+  background: white;
+}
+@media (max-width: 540px) {
+  .reservation-table table,
+  .reservation-table tbody {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+  .reservation-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .reservation-table tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    border: 1px solid #cedbd2;
+    background: #fff;
+    padding: 12px;
+    margin: 10px 0;
+  }
+  .reservation-table td {
+    display: block;
+    border: 0;
+    padding: 4px;
+    min-width: 0;
+  }
+  .reservation-table td:first-child,
+  .reservation-table td:last-child {
+    grid-column: 1/-1;
+  }
+  .reservation-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #566c5e;
+    margin-bottom: 5px;
+  }
+  .reservation-table td select {
+    width: 100%;
+    margin-bottom: 7px;
+  }
+  .reservation-table td button {
+    width: 100%;
+    margin: 4px 0;
+  }
+}

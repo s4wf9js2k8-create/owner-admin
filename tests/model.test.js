@@ -32,8 +32,17 @@ test("enabling dependent modules adds dependencies, disabling removes dependents
     new Set(["Volunteers", "Attendance & Hours"]),
   );
   assert.deepEqual(
-    toggleModule(["Volunteers", "Attendance & Hours", "Events"], "Volunteers"),
-    ["Events"],
+    toggleModule(
+      [
+        "Volunteers",
+        "Attendance & Hours",
+        "Events",
+        "Staff & volunteers",
+        "Customers / CRM",
+      ],
+      "Volunteers",
+    ),
+    ["Events", "Staff & volunteers", "Customers / CRM"],
   );
   assert.deepEqual(
     new Set(toggleModule([], "Work orders")),

@@ -1,6 +1,6 @@
 # Overhaul page checklist
 
-Updated 21 November 2026. A checked batch item means that specific interaction is implemented and covered by browser tests, not that every feature in the full specification is complete. Every page still requiring work remains listed below. Public demo data resets on refresh.
+Updated 22 November 2026. A checked batch item means that specific interaction is implemented and covered by browser tests, not that every feature in the full specification is complete. Every page still requiring work remains listed below. Public demo data resets on refresh.
 
 ## Current visible batch — implemented; verification recorded in PR checks
 
@@ -16,22 +16,22 @@ Updated 21 November 2026. A checked batch item means that specific interaction i
 - [x] Inspections: reusable question templates, asset/recorded-location selection, eligible inspector, required responses and browser-local evidence, draft/submission/review, failed-result corrective maintenance and asset history.
 - [ ] Fleet Management: detailed profile tabs, per-item daily checks and driver-specific qualification fixtures. Existing vehicle cards and basic checks are preserved.
 - [x] Inventory: receive/issue/allocation, returns, transfers, reasoned adjustments, suppliers, purchase orders and partial deliveries; linked stock/job/order transactions publish atomically. See WORKSPACE-RECOVERY.md.
-- [ ] CRM: full profile tabs, linked follow-up tasks and quote activity timeline. Existing customers/contacts/notes/quote links are preserved.
+- [x] CRM: searchable directory, profile tabs, contact IDs, local activity/opportunity entries, linked follow-up tasks, jobs/appointments/bookings/documents and financial history; quotations start with the selected customer.
 
-**Next Stage 3 module: Fleet Management**, then CRM. Inventory is implemented. Stage 3 is not complete.
+**Next Stage 3 module: Fleet Management**. Inventory and the core CRM dossier workflows are implemented. Stage 3 is not complete.
 
 ## Stage 4 financial batch
 
 - [x] Quotations: draft builder, calculations, CRM links, approval/sent/accepted/rejected/expired states, editing, duplication and printable previews.
 - [x] Invoices: accepted-quote conversion, draft/issued/cancelled states, partial fictional payments, outstanding balances, basic credit notes and CRM financial history.
-- [ ] Financial extensions: product/service catalogue, contact-ID registry, advanced tax rules and refunds. Company address/contact branding is now configurable.
-- [ ] Events and Bookings — next Stage 4 batch: calendar, linked eligible staff/equipment, CRM reservations and resource/capacity checks.
-- [ ] Appointments — scheduling views, rescheduling, outcomes, follow-up tasks and CRM history.
+- [ ] Financial extensions: product/service catalogue, advanced tax rules and refunds. Financial contact IDs and company address/contact branding are implemented.
+- [x] Events and Bookings — month/week calendar, exact-record links, eligible staff/competency and equipment allocation, preparation tasks/documents, CRM reservations, capacity/waitlist/check-in/cancellation, linked draft invoices and derived reports. Ticket categories and individual attendee identities remain incomplete.
+- [x] Appointments — day/week diary, registered resource IDs/conflict checks, eligible staff, rescheduling/cancellation, outcomes, one linked follow-up task and CRM/staff/calendar history.
 - [x] Documents — browser-local files, image previews/downloads, versions, classification, stable links and asset/staff profile access.
 - [ ] Business-record Archives — archive/restore eligible records without losing their links. Existing historical collection catalogue remains distinct.
 - [ ] Forms — publish/archive lifecycle, conditional sections and associated-record responses.
 
-Stage 4 is not complete. The earlier Stage 3 Fleet/CRM gaps above remain outstanding.
+Stage 4 is not complete. The earlier Stage 3 Fleet gap above remains outstanding.
 
 ## Stage 5 reporting and communications batch
 
@@ -66,10 +66,10 @@ The core Stage 5 browser-demonstration workflows are implemented. Reporting/pers
 - [x] Inventory — returns/transfers, suppliers, purchase orders/deliveries and atomic stock/job movements.
 - [ ] Health & safety — risk scoring, reviews and linked corrective workflow.
 - [ ] Fleet — insurance, service history and driver fixtures.
-- [ ] CRM — complete linked job, appointment and document tabs.
+- [x] CRM — connected profile tabs for contacts, activity, tasks, jobs/schedule, finance and documents.
 - [ ] Quotes/invoices — advanced financial extensions noted above; the core financial document workflow is implemented.
-- [ ] Events/bookings — calendar, ticket categories, eligible staff/equipment.
-- [ ] Appointments/resources — shared resource registry and conflict prevention.
+- [ ] Events/bookings extensions — ticket categories, individual visitor identity, automatic cancellation credits and structured event checklist. The core calendar/staff/resources/CRM reservation workflow is implemented.
+- [x] Appointments/resources — shared resource registry and cross-event/appointment conflicts; rescheduling, outcomes and follow-ups.
 - [x] Documents — actual browser-local files, image previews/downloads, versions and record links.
 - [ ] Archives — provenance, historical dates and digital references.
 - [ ] Forms — conditional sections and workflow triggers.
@@ -93,3 +93,7 @@ The core Stage 5 browser-demonstration workflows are implemented. Reporting/pers
 - [ ] Server management — verified diagnostics only; self-hosted production approval remains separate.
 
 See OVERHAUL-AUDIT.md for the earlier baseline inventory. This checklist supersedes its descriptions of the five redesigned interfaces. No EVLT access/modification, Vercel hosting, paid infrastructure or real customer data is involved.
+
+## Stage 7 integration batch
+
+See [FULL-APPLICATION-AUDIT.md](FULL-APPLICATION-AUDIT.md) for the complete per-page inventory and [DEMO-ACCEPTANCE-CHECKLIST.md](DEMO-ACCEPTANCE-CHECKLIST.md) for exact acceptance/release evidence. This batch connects scheduling, commercial records and customer dossiers; it does not claim that all earlier unfinished requirements are complete. Event aliases are consolidated in customer navigation; other legacy alias consolidation remains pending. Production infrastructure is unchanged.

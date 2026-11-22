@@ -112,7 +112,9 @@ test("explicit reset clears records, settings, activity and navigation", async (
     .click();
   await navigate(page, "Volunteers");
   await page.getByRole("button", { name: "Add person" }).click();
-  await page.getByRole("textbox", { name: "Name", exact: true }).fill("Fictional reset example");
+  await page
+    .getByRole("textbox", { name: "Name", exact: true })
+    .fill("Fictional reset example");
   await page.getByLabel("Profile notes", { exact: true }).fill("Session only");
   await page.getByRole("button", { name: "Save sample person" }).click();
   await expect(
@@ -138,7 +140,10 @@ test("drawer traps keyboard focus and closes after mobile navigation", async ({
   await open.click();
   const nav = page.getByRole("navigation");
   await expect(
-    nav.getByRole("button", { name: "Overview", exact: true }),
+    nav.getByRole("button", {
+      name: "Toggle OVERVIEW navigation",
+      exact: true,
+    }),
   ).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(

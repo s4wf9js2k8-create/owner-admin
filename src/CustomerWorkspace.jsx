@@ -22,18 +22,28 @@ import { noticeRelevant } from "./communicationRules";
 const FinancialWorkspace = React.lazy(() => import("./FinancialWorkspace"));
 import DailyOperations from "./DailyOperations";
 import OperationalDashboard from "./OperationalDashboard";
-import CustomerPeopleOps from "./CustomerPeopleOps";
-import CustomerAssetOps from "./CustomerAssetOps";
-import CustomerEventsOps from "./CustomerEventsOps";
+const CustomerPeopleOps = React.lazy(() => import("./CustomerPeopleOps"));
+const CustomerAssetOps = React.lazy(() => import("./CustomerAssetOps"));
+const CustomerEventsOps = React.lazy(
+  () => import("./scheduling/EventsWorkspace"),
+);
+const AppointmentsWorkspace = React.lazy(
+  () => import("./scheduling/AppointmentsWorkspace"),
+);
+const CustomerDirectory = React.lazy(
+  () => import("./scheduling/CustomerDirectory"),
+);
 import CustomerFormsOps, { initialFormTemplates } from "./CustomerFormsOps";
-import CustomerCommercialOps from "./CustomerCommercialOps";
-import CustomerResourcesOps from "./CustomerResourcesOps";
+const CustomerCommercialOps = React.lazy(
+  () => import("./CustomerCommercialOps"),
+);
+const CustomerResourcesOps = React.lazy(() => import("./CustomerResourcesOps"));
 import {
   moduleAllowed,
   demoRoleDefaults,
   scopedRecords,
 } from "./customerWorkflows";
-import CustomerTaskBoard from "./CustomerTaskBoard";
+const CustomerTaskBoard = React.lazy(() => import("./CustomerTaskBoard"));
 import CustomerModulePage from "./CustomerModulePage";
 import CustomerCommandBar from "./CustomerCommandBar";
 import { CustomerMyWork, CustomerCalendar } from "./CustomerEssentialPages";
@@ -91,6 +101,7 @@ export default function CustomerWorkspace({
       );
   };
   const [createRequest, setCreateRequest] = useState(0);
+  const [createContext, setCreateContext] = useState({});
   const [focus, setFocus] = useState(null);
   const roleActions =
     customerRoles[customerRole] || demoRoleDefaults[customerRole] || [];
@@ -230,8 +241,10 @@ export default function CustomerWorkspace({
     setAccessMessage("");
     if (options.recordId) setFocus({ page: target, id: options.recordId });
     else setFocus(null);
-    if (options.create) setCreateRequest((v) => v + 1);
-    else setCreateRequest(0);
+    if (options.create) {
+      setCreateRequest((v) => v + 1);
+      setCreateContext(options);
+    } else setCreateRequest(0);
     setPage(target);
   };
   const deny = (message) => {
@@ -271,6 +284,11 @@ export default function CustomerWorkspace({
     )
       return deny("This role can assign work to itself only.");
     if (
+      scope.ownership === "Mine" &&
+      patch.staffIds?.some((id) => id !== currentPerson?.id)
+    )
+      return deny("This role can assign work to itself only.");
+    if (
       patch._stockMovement?.orderId &&
       !accessibleRecords.some((r) => r.id === patch._stockMovement.orderId)
     )
@@ -292,6 +310,7 @@ export default function CustomerWorkspace({
         );
       if (
         [
+          ...(payload.staffIds || []),
           payload.ownerId,
           payload.personId,
           payload.engineerId,
@@ -509,6 +528,30 @@ export default function CustomerWorkspace({
         canCreate={canCreate}
       />
     );
+  else if (moduleInfo(current).type === "bookings")
+    content = (
+      <AppointmentsWorkspace
+        key={current}
+        {...shared}
+        module={current}
+        onAdd={safeAdd}
+        canCreate={canCreate}
+        focusId={focusId}
+        createRequest={createRequest}
+      />
+    );
+  else if (moduleInfo(current).type === "crm")
+    content = (
+      <CustomerDirectory
+        key={current}
+        {...shared}
+        module={current}
+        onAdd={safeAdd}
+        canCreate={canCreate}
+        focusId={focusId}
+        createRequest={createRequest}
+      />
+    );
   else if (
     [
       "documents",
@@ -545,6 +588,8 @@ export default function CustomerWorkspace({
         canCreate={canCreate}
         canApprove={canApprove}
         focusId={focusId}
+        createRequest={createRequest}
+        initialCustomerId={createContext.customerId}
       />
     );
   else if (["crm", "finance", "donations"].includes(moduleInfo(current).type))
@@ -587,6 +632,9 @@ export default function CustomerWorkspace({
         onUpdate={safeUpdate}
         canCreate={canCreate}
         canEdit={canEdit}
+        onNavigate={navigate}
+        focusId={focusId}
+        createRequest={createRequest}
       />
     );
   else if (

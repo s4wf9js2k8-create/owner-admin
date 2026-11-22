@@ -1,3 +1,4 @@
+import { validateScheduledRecord } from "../scheduling/rules.js";
 import { moveStock } from "../stockTransactions.js";
 import { validateDemoAssignment } from "../demoAssignmentRules.js";
 import {
@@ -153,6 +154,7 @@ export function createFictionalBackend({
           ],
         };
         validateDemoAssignment(record, record, state.records, true);
+        validateScheduledRecord(record, null, state.records, org);
         const automated = processAutomations(
           [...state.records, record],
           record,
@@ -267,6 +269,7 @@ export function createFictionalBackend({
         const next = updateRecord(state.records, orgId, id, values),
           changed = next.find((r) => r.id === id && r.orgId === orgId);
         validateDemoAssignment(changed, fields, state.records);
+        validateScheduledRecord(changed, record, state.records, org);
         const automated = processAutomations(
           next,
           changed,

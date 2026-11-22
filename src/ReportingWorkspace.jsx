@@ -404,7 +404,7 @@ export default function ReportingWorkspace({
                       const person = reportPerson(r, records);
                       const fields = {
                         title: r.title,
-                        date: reportDate(r) || "Undated",
+                        date: reportDate(r, records) || "Undated",
                         status: reportStatus(r),
                         staff:
                           person?.title || r.person || r.owner || "Unassigned",

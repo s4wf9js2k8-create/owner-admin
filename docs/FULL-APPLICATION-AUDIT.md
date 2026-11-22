@@ -1,0 +1,520 @@
+# Full application audit — Stage 7
+
+Audit started 22 November 2026 on main `806a9c1` (PRs #25–#32 reviewed). This is a public, session-only fictional demonstration, not a production readiness review. Source inspection and the existing browser regression suite are the baseline. Screenshots/navigation observations were collected for every owner destination and enabled customer module across all four sample organisations, then repeated after implementation at desktop, phone and tablet widths. Release verification is recorded below after execution.
+
+Classifications: **COMPLETE** means the currently advertised core demo workflow is connected and covered by passing tests; **PARTIAL** means important specification features are missing; **PLACEHOLDER**, **BROKEN** and **REDUNDANT** identify non-useful, failed or duplicate destinations. Production-only services are explicitly unavailable, rather than counted as implemented.
+
+## Customer page-by-page inventory
+
+Every page below has a distinct purpose; aliases refer to existing retained data identities. Mobile baseline: existing suite at 390/820/1440px; current screenshots and overflow observations are assessed during this stage. Named regression files are under `tests/browser/`.
+
+### Dashboard — PARTIAL
+
+- Implementation/purpose: `OperationalDashboard.jsx` — Operational control centre.
+- Primary actions: Clock in/out; open urgent work. Secondary: Configure widgets and presets.
+- Connected modules: Attendance, rotas, tasks, inspections, stock.
+- Defects/missing: Booking widgets now exclude resource definitions/completed appointments; finer widget filters remain.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `operational-redesign; administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### My Work — PARTIAL
+
+- Implementation/purpose: `CustomerEssentialPages.jsx` — Personal and team work queue.
+- Primary actions: Filter assignments; open work. Secondary: Complete supported task types.
+- Connected modules: Tasks, maintenance, staff, schedule.
+- Defects/missing: Some related assignment names remain legacy text; schedule integration needs expansion.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `customer-overhaul`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Calendar — PARTIAL
+
+- Implementation/purpose: `CustomerEssentialPages.jsx` — Cross-module dated agenda.
+- Primary actions: Choose day/month; open activity. Secondary: Browse upcoming dates.
+- Connected modules: All dated records.
+- Defects/missing: Exact-record links and cancelled/resource-row exclusion implemented; external calendar/time-zone integrations remain unavailable.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `customer-overhaul`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Tasks & Projects (Tasks / Projects aliases) — PARTIAL
+
+- Implementation/purpose: `CustomerTaskBoard.jsx` — Task delivery and project milestones.
+- Primary actions: Create/edit tasks; checklist; time; status. Secondary: Board/list/calendar; project views; comments.
+- Connected modules: Staff, projects, approvals, automations.
+- Defects/missing: Project resources, dependencies and full budgets remain; team field still text.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `customer-overhaul; administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Staff & Volunteers (Staff / Volunteers aliases) — PARTIAL
+
+- Implementation/purpose: `CustomerPeopleOps.jsx; StaffProfile.jsx` — People directory and personnel dossier.
+- Primary actions: Create/edit people; profile tabs. Secondary: Open qualifications, schedule, work, files.
+- Connected modules: Qualifications, attendance, leave, rotas, work.
+- Defects/missing: Events and appointments now linked in Schedule; individual permission editing remains.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
+- Coverage: `operational-redesign; staff-eligibility`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Attendance & Timesheets (Attendance & Hours alias) — PARTIAL
+
+- Implementation/purpose: `CustomerPeopleOps.jsx` — Clock sessions and weekly hours.
+- Primary actions: Clock in/out; review hours. Secondary: Correction requests; CSV; weekly summary.
+- Connected modules: Staff, approvals, reporting.
+- Defects/missing: Project/job allocation and configurable overtime incomplete; aliases duplicate navigation.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `operational-redesign; staff-eligibility`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Shift Rotas (Schedules alias) — PARTIAL
+
+- Implementation/purpose: `CustomerPeopleOps.jsx; RotaPlanner.jsx` — Weekly staffing planner.
+- Primary actions: Create/edit validated shifts. Secondary: Week/day views; coverage warnings.
+- Connected modules: Staff, qualifications, leave, availability.
+- Defects/missing: Event/appointment commitments now visible separately from shifts; competency minima, templates and swaps incomplete.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
+- Coverage: `staff-eligibility; operational-redesign`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Leave & Availability — PARTIAL
+
+- Implementation/purpose: `CustomerPeopleOps.jsx` — Availability requests and decisions.
+- Primary actions: Request, approve/reject/cancel leave. Secondary: Record unavailable dates.
+- Connected modules: Staff, eligibility, approvals.
+- Defects/missing: Complete calendar and accrual/balance logic incomplete.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `staff-eligibility; administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Training & Qualifications — PARTIAL
+
+- Implementation/purpose: `CustomerPeopleOps.jsx` — Competency matrix and renewal records.
+- Primary actions: Record training; expiry; approval. Secondary: Filter staff/qualifications.
+- Connected modules: Staff, eligibility, notifications.
+- Defects/missing: Training sessions, assessments and evidence upload incomplete.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `staff-eligibility`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Assets & Equipment (Assets alias) — PARTIAL
+
+- Implementation/purpose: `CustomerAssetOps.jsx` — Equipment register and history.
+- Primary actions: Create asset; inspect; report defect. Secondary: Custodian, condition, maintenance/files tabs.
+- Connected modules: Staff, maintenance, inspections, documents.
+- Defects/missing: Purchase details/QR deep links incomplete; duplicate alias navigation remains.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
+- Coverage: `operational-redesign; stock-recovery`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Maintenance & Work Orders (Maintenance / Work orders / Job records aliases) — PARTIAL
+
+- Implementation/purpose: `CustomerAssetOps.jsx` — Repair board and job execution.
+- Primary actions: Assign engineer; checklist; parts; labour; complete. Secondary: Supervisor review; asset/inspection navigation.
+- Connected modules: Assets, inspections, stock, staff, approvals.
+- Defects/missing: Completion gate and recurring templates incomplete; untimed/due-date-only jobs do not prove availability over a working interval; Job records overlaps active maintenance.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `operational-redesign; stock-recovery`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Inspections & Checklists (Inspections alias) — PARTIAL
+
+- Implementation/purpose: `InspectionTemplates.jsx; InspectionRun.jsx` — Template-based checks and corrective work.
+- Primary actions: Build template; run; submit; review. Secondary: Local evidence; corrective maintenance.
+- Connected modules: Assets, staff/qualifications, maintenance, automations.
+- Defects/missing: Template version editing and recurrence incomplete.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `stage3-operations; administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Health & Safety — PARTIAL
+
+- Implementation/purpose: `CustomerResourcesOps.jsx` — Risk-priority hazard board.
+- Primary actions: Report hazard; assign competent responsible person. Secondary: Edit risk/action/status.
+- Connected modules: Staff and training.
+- Defects/missing: Scored risk assessments and linked corrective work incomplete.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Fleet Management — PARTIAL
+
+- Implementation/purpose: `CustomerResourcesOps.jsx` — Vehicle register and checks.
+- Primary actions: Register vehicle; mileage; pass/defect check. Secondary: Driver selection; defects; linked repair.
+- Connected modules: Staff, qualifications, maintenance.
+- Defects/missing: Per-item check workflow, insurance/service history and eligible driver fixtures missing.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Inventory & Stock — COMPLETE
+
+- Implementation/purpose: `InventoryWorkspace.jsx; stockTransactions.js` — Stock control and purchasing.
+- Primary actions: Receive/issue/return/transfer/adjust; deliveries. Secondary: Suppliers, orders, movement history.
+- Connected modules: Maintenance, assets, suppliers.
+- Defects/missing: Core advertised demo movements validated atomically; no real procurement/storage.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `stock-recovery`. Completion: COMPLETE; no assertion that every requested extension is delivered.
+
+### Customers & CRM — PARTIAL
+
+- Implementation/purpose: `scheduling/CustomerDirectory.jsx` — Customer directory and relationship management.
+- Primary actions: Create customer; stage/account manager; activity. Secondary: Financial links and follow-up date.
+- Connected modules: Staff, contacts, tasks, jobs, quotes/invoices/payments, bookings, appointments and documents.
+- Defects/missing: Directory, profile tabs, contact IDs, calls/notes/opportunity activity, assigned tasks, quote initiation and combined commercial/scheduling/job/document links implemented. Remaining: richer opportunity valuations and customer merge/deduplication tools.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
+- Coverage: `bespoke-pages; financial-workflows`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Quotations — PARTIAL
+
+- Implementation/purpose: `FinancialWorkspace.jsx` — Itemised quotations and approvals.
+- Primary actions: Create/edit/duplicate; approve/send/accept. Secondary: Print; convert to invoice.
+- Connected modules: CRM, staff, jobs.
+- Defects/missing: Contacts now use stable IDs and CRM quotations preselect customer; catalogue/tax extensions incomplete.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `financial-workflows`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Invoices — PARTIAL
+
+- Implementation/purpose: `FinancialWorkspace.jsx` — Invoice balances and fictional settlement.
+- Primary actions: Convert quote; issue; record partial/full payment. Secondary: Credit note; print/history.
+- Connected modules: CRM, quotes, reports.
+- Defects/missing: Booking-generated drafts and contact IDs implemented; advanced credits/refunds incomplete.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `financial-workflows`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Events (Events & bookings alias) — PARTIAL
+
+- Implementation/purpose: `scheduling/EventsWorkspace.jsx` — Event plan and visitor booking desk.
+- Primary actions: Create event; reserve; waitlist; check-in. Secondary: Cancel booking and recompute totals.
+- Connected modules: Staff, assets/resources, CRM, tasks, rotas, documents, reporting and booking IDs.
+- Defects/missing: Month/week planner; existing staff and equipment; optional recorded competency; end times and save-time conflicts; linked preparation tasks/documents. Remaining: ticket categories, finer event statuses and a structured event checklist beyond linked tasks.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
+- Coverage: `connected-business`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Bookings (event booking desk) — PARTIAL
+
+- Implementation/purpose: `scheduling/EventsWorkspace.jsx` — Capacity reservations and admissions.
+- Primary actions: Reserve, waitlist, check-in, cancel. Secondary: Promote waitlist with capacity guard.
+- Connected modules: Events, CRM, invoices, reports and live capacity.
+- Defects/missing: CRM/price/invoice linkage and adapter capacity checks implemented; waitlist/check-in/cancellation preserve history. Remaining: individual attendee identities/ticket types; cancellations do not automatically create financial credits.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
+- Coverage: `connected-business`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Appointments / Resource Bookings — PARTIAL
+
+- Implementation/purpose: `scheduling/AppointmentsWorkspace.jsx` — Customer/staff scheduling.
+- Primary actions: Create appointment; change generic status. Secondary: Eligible staff and optional customer selector.
+- Connected modules: Staff, leave/qualifications, CRM, resources, tasks, calendar, notifications and reporting.
+- Defects/missing: Day/week diary, stable room/resource IDs, conflicts, rescheduling, completion outcome, follow-up tasks and history implemented. Remaining: recurrent appointments and external calendar adapters.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
+- Coverage: `bespoke-pages; staff-eligibility`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Documents — COMPLETE
+
+- Implementation/purpose: `DocumentWorkspace.jsx` — Controlled browser-local library.
+- Primary actions: Select local file; create/edit/link/version. Secondary: Preview/download; classification; approval.
+- Connected modules: Staff, assets, jobs, customers, events, inspections.
+- Defects/missing: Browser-memory storage only; no permanent cloud upload; linked-record profile access varies.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `stock-recovery`. Completion: COMPLETE; no assertion that every requested extension is delivered.
+
+### Archives & Collections (Archives alias) — PARTIAL
+
+- Implementation/purpose: `CustomerResourcesOps.jsx` — Historical collection catalogue.
+- Primary actions: Accession item; view condition/location. Secondary: Search and condition changes.
+- Connected modules: Independent collection records.
+- Defects/missing: Provenance/dates/export and separate business-record archive/restore missing.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Forms & Surveys — PARTIAL
+
+- Implementation/purpose: `CustomerFormsOps.jsx` — Custom questions and response collection.
+- Primary actions: Create template; reorder fields; submit. Secondary: Preview responses.
+- Connected modules: Standalone session templates/responses.
+- Defects/missing: Publish/archive lifecycle, conditional fields and related-record links missing.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `connected-business`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Donations & Fundraising (Donations alias) — PARTIAL
+
+- Implementation/purpose: `CustomerCommercialOps.jsx` — Illustrative campaign contribution ledger.
+- Primary actions: Record donation; browse campaign. Secondary: View contribution details.
+- Connected modules: Campaign names.
+- Defects/missing: Targets/donor/event links incomplete; no payment processing or Gift Aid claims.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Visitor Statistics — PARTIAL
+
+- Implementation/purpose: `CustomerResourcesOps.jsx` — Recorded daily counts and trends.
+- Primary actions: Record count; browse chart. Secondary: Open recorded day.
+- Connected modules: Reporting.
+- Defects/missing: Category/period aggregation and event reconciliation incomplete.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `bespoke-pages`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Daily Operations — PARTIAL
+
+- Implementation/purpose: `DailyOperations.jsx` — Daily checks and accountable handover.
+- Primary actions: Complete/approve opening and closing checks. Secondary: Create/acknowledge linked handover.
+- Connected modules: Staff, attendance, shifts, work, maintenance.
+- Defects/missing: Reusable recurring templates and bulk-day preparation remain.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `stage3-operations`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Reports & Analytics (Reporting / Insights aliases) — PARTIAL
+
+- Implementation/purpose: `ReportingWorkspace.jsx; reportingRules.js` — Filtered records and grouped analysis.
+- Primary actions: Filter/build/save reports; CSV/print. Secondary: Comparisons and chart drilldown.
+- Connected modules: Current enabled module records.
+- Defects/missing: Confirmed places, checked-in visitors and illustrative booking value now derive from reservations using event dates. CSV and grouped dates share the same derivation. Overtime/project metrics, Excel and scheduling remain unavailable.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `stage5-workspaces`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Notifications — COMPLETE
+
+- Implementation/purpose: `NotificationInbox.jsx` — Actionable record-based inbox.
+- Primary actions: Open record; read/dismiss; mark all read. Secondary: Categories/reminders/preferences.
+- Connected modules: Tasks, stock, qualifications, approvals, bookings.
+- Defects/missing: Session state only; no external delivery/background processing claimed.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `stage5-workspaces`. Completion: COMPLETE; no assertion that every requested extension is delivered.
+
+### Staff Communications — COMPLETE
+
+- Implementation/purpose: `CommunicationsWorkspace.jsx` — Targeted notices and acknowledgements.
+- Primary actions: Draft/publish/archive; acknowledge. Secondary: Department/person targeting; handover links.
+- Connected modules: Staff, roles, Daily Operations.
+- Defects/missing: No email/chat delivery; audience and acknowledgement are fictional/session-only.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `stage5-workspaces`. Completion: COMPLETE; no assertion that every requested extension is delivered.
+
+### Approvals — COMPLETE
+
+- Implementation/purpose: `AdministrationPages.jsx` — Central supported review decisions.
+- Primary actions: Approve/reject/request changes; comments. Secondary: Assign approver; open source.
+- Connected modules: Leave, timesheets, jobs, inspection, document, quote.
+- Defects/missing: Supported demo transitions only; no durable authorisation boundary.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `administration-finish`. Completion: COMPLETE; no assertion that every requested extension is delivered.
+
+### Automations — COMPLETE
+
+- Implementation/purpose: `AdministrationPages.jsx; administrationRules.js` — Session trigger/action configuration.
+- Primary actions: Create/enable/disable/evaluate rules. Secondary: History and errors.
+- Connected modules: Inspections, maintenance, tasks.
+- Defects/missing: Supported trigger set only; no closed-browser server schedule.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `administration-finish`. Completion: COMPLETE; no assertion that every requested extension is delivered.
+
+### Global Search — PARTIAL
+
+- Implementation/purpose: `CustomerCommandBar.jsx` — Permitted records and creation commands.
+- Primary actions: Search/filter/open record; quick command. Secondary: Save search; keyboard dialog.
+- Connected modules: All accessible records.
+- Defects/missing: Event and reservation focus now resolves the correct event; appointment/resource results and quick creation are wired. Resource definitions are excluded from record search. Older form quick-creation consistency remains partial.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Stage 7 integration coverage: `stage7-scheduling.spec.js` (desktop/phone/tablet).
+- Coverage: `administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+### Activity History — COMPLETE
+
+- Implementation/purpose: `AdministrationPages.jsx` — Record-change timeline.
+- Primary actions: Filter and open source. Secondary: Actor/date/action scope.
+- Connected modules: Record activity and company settings.
+- Defects/missing: Bounded, mutable session history; not a legal audit ledger.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `administration-finish`. Completion: COMPLETE; no assertion that every requested extension is delivered.
+
+### Company Settings / Roles — PARTIAL
+
+- Implementation/purpose: `CompanyConfiguration.jsx` — Company-scoped operating configuration.
+- Primary actions: Edit profile, modules, roles and workflows. Secondary: Branding, widgets, notifications, locations.
+- Connected modules: Navigation, eligibility, approvals, dashboard.
+- Defects/missing: Production enforcement and granular per-person exceptions remain.
+- Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
+- Coverage: `administration-finish`. Completion: PARTIAL; no assertion that every requested extension is delivered.
+
+## Owner page-by-page inventory
+
+Packages and subscriptions, server monitoring/backups, accounts/permissions and client configuration are internal sections of their related destinations; separate redundant navigation pages are not invented.
+
+### Owner Home — COMPLETE
+
+- Implementation/purpose: `src/owner/BusinessDashboard.jsx` — Connected operational owner widgets.
+- Primary/secondary actions: Customise widgets; quick actions. Connected modules: Company, support, sales, plan, modules.
+- Defects/missing: Current demo overview covered; no revenue/telemetry claims.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; COMPLETE for stated demo scope.
+
+### Companies — COMPLETE
+
+- Implementation/purpose: `src/owner/CompanyDirectory.jsx` — Searchable business directory.
+- Primary/secondary actions: Search/filter; profile; preview. Connected modules: Company/status/package/onboarding.
+- Defects/missing: Suspended/archived previews guarded.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; COMPLETE for stated demo scope.
+
+### Company Profiles / Client Configuration — PARTIAL
+
+- Implementation/purpose: `src/owner/CompanyProfile.jsx` — Tabbed customer administration.
+- Primary/secondary actions: Edit contacts; configure modules/subscription; open support. Connected modules: Modules/users/packages/branding/support/activity.
+- Defects/missing: Contact/address and role metadata only; advanced per-module controls remain.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; PARTIAL for stated demo scope.
+
+### Company Onboarding — COMPLETE
+
+- Implementation/purpose: `src/owner/OnboardingWizard.jsx` — Nine-stage real demo workspace creation.
+- Primary/secondary actions: Back/next/review/create/open workspace. Connected modules: Industry/modules/package/branding/roles/locations/leads.
+- Defects/missing: No real account invitations; retries reuse company ID.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; COMPLETE for stated demo scope.
+
+### Module Catalogue — PARTIAL
+
+- Implementation/purpose: `src/pages/ModulesPage.jsx` — Product capabilities and dependencies.
+- Primary/secondary actions: Search/filter; enable/disable for company. Connected modules: Companies/packages/industry presets.
+- Defects/missing: Development status is broad functional/partial demo, not independently verified production status.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; PARTIAL for stated demo scope.
+
+### Packages & Pricing / Subscriptions — PARTIAL
+
+- Implementation/purpose: `src/pages/SubscriptionsPage.jsx; src/owner/CommercialControls.jsx` — Configured packages and illustrative agreements.
+- Primary/secondary actions: Create package; assign; negotiated amount; fictional payment. Connected modules: Companies/modules/plans.
+- Defects/missing: Add-on price editor, editing all package allowances and period ledger missing.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; PARTIAL for stated demo scope.
+
+### Sales Leads — PARTIAL
+
+- Implementation/purpose: `src/OwnerBusinessPages.jsx` — Seven-stage opportunity pipeline.
+- Primary/secondary actions: Add/move lead; follow-up/activity; won conversion. Connected modules: Onboarding/companies.
+- Defects/missing: Detailed ownership and complete proposal lifecycle remain.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; PARTIAL for stated demo scope.
+
+### Support — COMPLETE
+
+- Implementation/purpose: `src/pages/SupportPage.jsx` — Ticket inbox and resolution.
+- Primary/secondary actions: Create/assign/filter; note/respond locally; resolve/reopen. Connected modules: Companies/modules/feature requests.
+- Defects/missing: Metrics use valid timestamps only; no external messages.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; COMPLETE for stated demo scope.
+
+### Feature Requests — PARTIAL
+
+- Implementation/purpose: `src/OwnerBusinessPages.jsx` — Customer feedback backlog.
+- Primary/secondary actions: Add/link/vote/prioritise/status. Connected modules: Companies/tickets/roadmap.
+- Defects/missing: Formal weighted demand scoring remains.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; PARTIAL for stated demo scope.
+
+### Product Roadmap — PARTIAL
+
+- Implementation/purpose: `src/owner/Roadmap.jsx` — Shared request delivery board.
+- Primary/secondary actions: Move states; target dates; notes. Connected modules: Feature request IDs.
+- Defects/missing: Release-to-announcement associations remain.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; PARTIAL for stated demo scope.
+
+### Customer Branding — COMPLETE
+
+- Implementation/purpose: `src/owner/BrandingEditor.jsx` — Selected-company live appearance preview.
+- Primary/secondary actions: Preview/apply/reset logo/colours/labels/preset. Connected modules: Company/workspace/document branding.
+- Defects/missing: Small local logo bytes only; changes isolated in demo.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; COMPLETE for stated demo scope.
+
+### Customer Announcements — COMPLETE
+
+- Implementation/purpose: `src/OwnerBusinessPages.jsx` — Audience-targeted local service notices.
+- Primary/secondary actions: Draft/edit/preview/publish/archive. Connected modules: Company/package audiences/customer communications.
+- Defects/missing: Scheduling explicitly unavailable; no delivery claims.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; COMPLETE for stated demo scope.
+
+### Client Analytics — COMPLETE
+
+- Implementation/purpose: `src/OwnerBusinessPages.jsx` — Available company/module/record comparisons.
+- Primary/secondary actions: Filter industry and compare counts. Connected modules: Companies/modules/current records.
+- Defects/missing: Demo information only; no production usage telemetry.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; COMPLETE for stated demo scope.
+
+### Server Management / Monitoring / Backup Status — PARTIAL
+
+- Implementation/purpose: `src/OwnerBusinessPages.jsx; ServerManagement.jsx` — Honest platform boundary/diagnostic view.
+- Primary/secondary actions: Open separate private workspace; inspect available status. Connected modules: Preserved Node/Postgres backend.
+- Defects/missing: Public disconnected diagnostics and disabled backup controls; real services unavailable.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; PARTIAL for stated demo scope.
+
+### Owner Activity — COMPLETE
+
+- Implementation/purpose: `src/owner/ActivityCentre.jsx` — Chronological administrative change log.
+- Primary/secondary actions: Filter company/action/module/date. Connected modules: Owner actions/companies.
+- Defects/missing: Fictional actor and browser-side mutable history.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; COMPLETE for stated demo scope.
+
+### Company Administrators — PARTIAL
+
+- Implementation/purpose: `src/pages/UsersPage.jsx` — Fictional company administrator metadata.
+- Primary/secondary actions: Add/edit role/name entries. Connected modules: Company memberships.
+- Defects/missing: Not real accounts or invitations.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; PARTIAL for stated demo scope.
+
+### Owner Accounts / Permissions — PARTIAL
+
+- Implementation/purpose: `src/owner/OwnerAccess.jsx` — Five fictional owner-role previews.
+- Primary/secondary actions: Select role; inspect allowed pages/actions. Connected modules: Navigation/controller guards.
+- Defects/missing: Custom accounts/invitations/permission matrix missing.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; PARTIAL for stated demo scope.
+
+### Business Settings — PARTIAL
+
+- Implementation/purpose: `src/owner/BusinessSettings.jsx; src/pages/SettingsPage.jsx` — Owner business defaults.
+- Primary/secondary actions: Edit profile/default package/planning response target. Connected modules: Overview/onboarding/support.
+- Defects/missing: Support categories, notification/default templates incomplete.
+- Mobile: responsive cards/tabs/inbox/wizard covered by `owner-stage6.spec.js` on 390/820/1440px.
+- Coverage/completion: nine Stage 6 owner scenarios; PARTIAL for stated demo scope.
+
+## Duplication and architecture findings
+
+- Tasks/Projects already share one module and tabs; do not split them.
+- Attendance/Timesheets share session data but their live board and weekly review serve different needs.
+- Event bookings, staff appointments and equipment/room reservations are distinct workflows that must share capacity/conflict rules.
+- Documents are browser-local working files; collection archives are historical objects. A separate business-record archiving workflow is still missing.
+- Notifications are per-user actions; communications are published, acknowledged notices.
+- Owner settings administer Channel Systems; company settings configure a single fictional workspace.
+- Support tickets resolve incidents; linked feature requests/roadmap manage product demand.
+- **REDUNDANT navigation aliases remain:** Assets/Assets & equipment, Staff/Staff & volunteers/Volunteers and Maintenance/Work orders/Job records. Events/Events & bookings are consolidated to the modern destination when both are enabled; the shared workspace retains both sources and search links keep their original IDs. Data identities must be retained and all related rows must remain reachable if navigation is consolidated.
+- Existing Node/PostgreSQL/Docker foundation, migrations, tenant policy, private workspace and backup scripts remain separate and unchanged. No production backend is deployed.
+
+## Stage 7 implementation checklist
+
+- [x] Complete baseline page navigation/screenshot audit and regression checks.
+- [x] Shared event/reservation/appointment validation at the fictional adapter boundary.
+- [x] Event calendar, linked eligible team/resources, tasks and documents.
+- [x] CRM-linked reservations, safe capacity/waitlist/check-in/cancellation and invoice linkage.
+- [x] Day/week appointment diary, resource registry/conflicts, rescheduling/outcomes/follow-up.
+- [x] Customer profile tabs, stable contact IDs, combined activity and linked operational records.
+- [x] Staff/rota/asset/calendar/search/report connections for the new scheduling workflows.
+- [x] Responsive page sweeps at all three widths, workflow overflow checks, group keyboard/focus behavior, dialog Escape/focus, validation/error states, and reduced-motion support.
+Release tracking: [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull/33) contains the final full-suite CI result, merge commit, Pages deployment run and deployed workflow checks. These external release states are not inferred from source completion.
+
+## Verification and remaining work
+
+Baseline evidence: `npm ci`, lint, 102 unit tests, build and **195 browser tests passed** before changes. A scripted sweep inspected 122 destinations (18 owner and 104 customer page visits across the four organisations), captured desktop screenshots, and reported zero page errors or root horizontal overflow. This is automated navigation evidence, not a claim that every advanced control was manually inspected.
+
+Stage 7 adds a coherent scheduling/commercial integration batch, not completion of all stages. The seven scenario implementations are in `tests/browser/stage7-scheduling.spec.js`; new rule/adapter cases are in `tests/scheduling.test.js`. Local acceptance: lint, **117 unit tests**, build, **18 PostgreSQL integration tests**, and **21 expanded scheduling/commercial browser workflows** passed. The 15 scheduling rule/adapter cases also passed under `TZ=Europe/London`. Final full-suite CI and Pages evidence are recorded in [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull/33). The final application code remains unchanged during the final regression run; documentation updates do not alter its behavior.
+
+Performance: the initial main JavaScript chunk fell from 560.01 kB / 152.48 kB gzip to approximately 423.30 kB / 123.14 kB gzip by loading specialist customer modules on demand; no dependencies added.
+
+Remaining highest-priority functional areas: full Fleet checks/history/driver fixtures; business-record archive/restore; published/conditional/linked forms; structured safety assessments; full project resources/dependencies; training sessions; donation donor/target links; visitor aggregations. Earlier owner billing/accounts/settings extensions remain in STAGE6-CHECKLIST.md. Complete requests A–D and F are covered in part by existing scenario suites; a single uninterrupted employee-to-payroll scenario and all advanced financial/maintenance supervisor gates are not claimed implemented.
+
+Collection archives remain distinct from documents, and persistent/external production services remain explicitly unavailable. Earlier unchecked requirements in PAGE-CHECKLIST.md remain unfinished.
+
+### Post-implementation viewport sweep
+
+The updated navigation/screenshot sweep completed **126 page visits at each of 390px, 820px and 1440px** (378 visits total), with no recorded page errors and no root horizontal overflow. This includes owner pages, all enabled customer pages and newly enabled CRM/asset records; bounded horizontal scroll inside existing tables/rotas is intentional. Relevant desktop/mobile screenshots were reviewed for events, the appointment diary and CRM. The sweep is a navigation/layout observation, not a replacement for the workflow tests.
