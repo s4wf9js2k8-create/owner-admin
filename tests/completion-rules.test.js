@@ -417,3 +417,70 @@ test("editing a seeded campaign changes only the selected fundraising module", a
     2500,
   );
 });
+
+test("safety corrective assignment validates the selected deadline and leaves no invalid work order", async () => {
+  const o = { ...org, modules: [...org.modules, "Leave and availability"] },
+    safety = {
+      id: "safety",
+      orgId: "o",
+      module: "Health & safety",
+      title: "Guard hazard",
+      action: "Repair guard",
+      status: "Reported",
+    },
+    engineer = {
+      id: "engineer-qualification",
+      orgId: "o",
+      module: "Training and qualifications",
+      personId: "p",
+      person: person.title,
+      qualification: "Maintenance engineering",
+      approval: "Approved",
+      noExpiry: true,
+    },
+    leave = {
+      id: "leave",
+      orgId: "o",
+      module: "Leave and availability",
+      personId: "p",
+      person: person.title,
+      startDate: "2027-04-01",
+      endDate: "2027-04-01",
+      approval: "Approved",
+      status: "Planned",
+    };
+  const b = createFictionalBackend({
+      fixtures: () => ({
+        orgs: [o],
+        records: [...base, safety, engineer, leave],
+        plans: [],
+        tickets: [],
+        flags: {},
+        logs: [],
+      }),
+    }),
+    command = {
+      kind: "correctiveSafety",
+      target: "maintenance",
+      personId: "p",
+      assetRefId: "a",
+      dueDate: "2027-04-01",
+    },
+    count = b.getSnapshot().records.length;
+  await assert.rejects(
+    b.records.update("o", "safety", { _workflow: command }),
+    /leave/i,
+  );
+  assert.equal(b.getSnapshot().records.length, count);
+  assert.equal(
+    b.getSnapshot().records.find((r) => r.id === "safety").correctiveId,
+    undefined,
+  );
+  await b.records.update("o", "leave", { approval: "Cancelled" });
+  await b.records.update("o", "safety", { _workflow: command });
+  const current = b.getSnapshot().records.find((r) => r.id === "safety"),
+    job = b.getSnapshot().records.find((r) => r.id === current.correctiveId);
+  assert.equal(job.dueDate, "2027-04-01");
+  assert.equal(job.assetRefId, "a");
+  assert.equal(job.asset, "Van asset");
+});

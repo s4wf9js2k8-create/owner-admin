@@ -559,9 +559,14 @@ export function businessCommand(records, org, id, command, actor = {}) {
   } else if (command.kind === "correctiveSafety") {
     assert(type(record) === "safety", "Select a safety record.");
     if (record.correctiveId) return records;
+    assert(
+      validDate(command.dueDate),
+      "Set a valid corrective-action deadline.",
+    );
     const person = eligible(
       command.personId,
       command.target === "maintenance" ? "maintenance" : "projects",
+      command.dueDate,
     );
     const asset = command.assetRefId
       ? find(command.assetRefId, "assets")
@@ -574,7 +579,7 @@ export function businessCommand(records, org, id, command, actor = {}) {
         detail: record.action || record.detail,
         sourceSafetyId: id,
         assetRefId: asset?.id || "",
-        asset: asset?.asset || "",
+        asset: asset?.asset || asset?.title || "",
         ownerId: person.id,
         engineerId: command.target === "maintenance" ? person.id : "",
         owner: person.title,

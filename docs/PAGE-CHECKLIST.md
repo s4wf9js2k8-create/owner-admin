@@ -130,8 +130,10 @@ This list supersedes earlier descriptions of missing interactions; earlier unche
 
 - Main operational follow-up: [PR #35](https://github.com/s4wf9js2k8-create/owner-admin/pull/35).
 - Campaign-ID integrity correction and regression: [PR #36](https://github.com/s4wf9js2k8-create/owner-admin/pull/36).
-- Final functional release source: `56715076948a721333e1af5d8fe731047a7c906f`.
+- Verified baseline functional release source: `56715076948a721333e1af5d8fe731047a7c906f`.
 - CI passed lint/build, **137 unit tests, 252 browser tests and 18 PostgreSQL integration tests**. Browser coverage uses 1440px, 390px and 820px Chromium viewports, not physical-device certification.
 - [Pages deployment](https://github.com/s4wf9js2k8-create/owner-admin/actions/runs/45068016291) succeeded; public JS and CSS byte hashes match the built artifact. All **93 deployed browser workflow checks passed**, including the campaign-edit isolation scenario at each viewport. Details are recorded in PR #36.
 
 The next unfinished customer workflow is competency-specific rota staffing and completed shift swaps. Outstanding items remain unchecked above. Production-only services remain unavailable; this checklist does not declare the full multi-stage specification complete.
+
+Final follow-up: [PR #37](https://github.com/s4wf9js2k8-create/owner-admin/pull/37) validates safety-generated corrective assignments at the selected deadline, including future approved leave and qualification expiry. Staff choices recalculate on date changes. All 138 unit tests and the expanded safety scenario at the three widths passed locally; the PR records final full-suite and deployment outcomes.
