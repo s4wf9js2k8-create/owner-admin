@@ -106,7 +106,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `CustomerAssetOps.jsx` — Repair board and job execution.
 - Primary actions: Assign engineer; checklist; parts; labour; complete. Secondary: Supervisor review; asset/inspection navigation.
 - Connected modules: Assets, inspections, stock, staff, approvals.
-- Defects/missing: Completion gate and recurring templates incomplete; Job records overlaps active maintenance.
+- Defects/missing: Completion gate and recurring templates incomplete; untimed/due-date-only jobs do not prove availability over a working interval; Job records overlaps active maintenance.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `operational-redesign; stock-recovery`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -507,7 +507,7 @@ Release tracking: [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull
 
 Baseline evidence: `npm ci`, lint, 102 unit tests, build and **195 browser tests passed** before changes. A scripted sweep inspected 122 destinations (18 owner and 104 customer page visits across the four organisations), captured desktop screenshots, and reported zero page errors or root horizontal overflow. This is automated navigation evidence, not a claim that every advanced control was manually inspected.
 
-Stage 7 adds a coherent scheduling/commercial integration batch, not completion of all stages. The seven scenario implementations are in `tests/browser/stage7-scheduling.spec.js`; new rule/adapter cases are in `tests/scheduling.test.js`. Local acceptance: lint, **117 unit tests**, build, **18 PostgreSQL integration tests**, and **21 expanded scheduling/commercial browser workflows** passed. The 15 scheduling rule/adapter cases also passed under `TZ=Europe/London`. Final full-suite CI and Pages evidence are recorded in [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull/33). No application code is modified while the final regression suite runs.
+Stage 7 adds a coherent scheduling/commercial integration batch, not completion of all stages. The seven scenario implementations are in `tests/browser/stage7-scheduling.spec.js`; new rule/adapter cases are in `tests/scheduling.test.js`. Local acceptance: lint, **117 unit tests**, build, **18 PostgreSQL integration tests**, and **21 expanded scheduling/commercial browser workflows** passed. The 15 scheduling rule/adapter cases also passed under `TZ=Europe/London`. Final full-suite CI and Pages evidence are recorded in [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull/33). The final application code remains unchanged during the final regression run; documentation updates do not alter its behavior.
 
 Performance: the initial main JavaScript chunk fell from 560.01 kB / 152.48 kB gzip to approximately 423.30 kB / 123.14 kB gzip by loading specialist customer modules on demand; no dependencies added.
 
