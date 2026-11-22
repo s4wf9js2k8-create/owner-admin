@@ -164,6 +164,15 @@ test("safety risk scoring and corrective action share a maintenance record", asy
   await page.getByRole("button", { name: "Save risk assessment" }).click();
   await expect(page.getByText("Risk assessment saved.")).toBeVisible();
   await page.getByLabel("Action type").selectOption("maintenance");
+  await page.getByLabel("Action deadline", { exact: true }).fill("2030-01-01");
+  await expect(
+    page
+      .getByLabel("Assigned employee")
+      .getByRole("option", { name: "Sample coordinator A", exact: true }),
+  ).toHaveCount(0);
+  await page.getByText("Eligibility exclusions", { exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText(/expired/i);
+  await page.getByLabel("Action deadline", { exact: true }).fill("2027-04-01");
   await page
     .getByLabel("Assigned employee")
     .selectOption({ label: "Sample coordinator A" });

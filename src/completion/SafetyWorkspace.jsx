@@ -30,6 +30,7 @@ export default function SafetyWorkspace({
     [evidence, setEvidence] = useState(null),
     [message, setMessage] = useState(""),
     [target, setTarget] = useState("projects"),
+    [actionDate, setActionDate] = useState(day()),
     [reviewDate, setReviewDate] = useState(day());
   useEffect(() => {
     if (focusId) setSelected(focusId);
@@ -41,7 +42,7 @@ export default function SafetyWorkspace({
   const current = rows.find((r) => r.id === selected),
     eligible = eligibleStaff(records, org.id, {
       kind: target === "maintenance" ? "maintenance" : "projects",
-      date: day(),
+      date: actionDate,
     }),
     corrective = records.find((r) => r.id === current?.correctiveId);
   const severity = (r) => Number(r.likelihood || 0) * Number(r.impact || 0),
@@ -356,7 +357,8 @@ export default function SafetyWorkspace({
                     name="dueDate"
                     type="date"
                     required
-                    defaultValue={day()}
+                    value={actionDate}
+                    onChange={(e) => setActionDate(e.target.value)}
                   />
                 </label>
                 <button>Create corrective work</button>
