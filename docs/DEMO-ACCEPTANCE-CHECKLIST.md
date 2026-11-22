@@ -35,13 +35,31 @@ The checked implementation rows refer to the source-frozen batch. Final automate
 - [x] PostgreSQL integration suite: 18 passing locally with Docker, also exercised by PR CI.
 The cancellation-active-queue/history scenario passed on all three viewports. Its final release state is recorded in [PR #34](https://github.com/s4wf9js2k8-create/owner-admin/pull/34); original Stage 7 release evidence is in [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull/33): required CI checks, merge SHA, existing GitHub Pages build/deployment, public HTML/assets and live owner/customer workflow results. No deployment or live checks are claimed from source-only verification.
 
-## Explicitly not accepted as finished
+## Remaining-workflow follow-up acceptance — PR #35
 
-- [ ] Fleet per-question checks, complete vehicle history and driving fixtures.
-- [ ] Business-record archive/restore; collection archives are retained independently.
-- [ ] Form publish/archive/conditional/record-link lifecycle.
-- [ ] Full safety risk scoring, project resources/dependencies, training sessions, donor targets and visitor-period analytics.
-- [ ] Owner add-on billing/period ledger, custom owner accounts and expanded settings/templates.
+- [x] Fleet profiles, qualified driving fixtures, per-question checks, mileage/defects and linked corrective maintenance.
+- [x] Business archive/restore retains completed records, history and IDs; CSV and restoration scenario.
+- [x] Published/versioned/conditional/linked forms; submitted defect creates maintenance and retains response schema.
+- [x] Training sessions, attendee assessments and local evidence; pending qualifications update the matrix.
+- [x] Scored safety assessment creates linked corrective maintenance.
+- [x] Campaign target/donor links and fictional reconciliation update the contribution ledger.
+- [x] Visitor category/date totals, daily chart, comparison and CSV use current records.
+- [x] Asset purchase controls and locally generated QR link open the exact asset profile.
+- [x] Recurring operational templates create one check per date, including repeated generation.
+- [x] Owner package allowances/add-ons and illustrative billing-period balances; overlap is rejected.
+- [x] Existing maintenance stock/history scenario now includes completed checklist, assigned engineer and supervisor approval.
+- [x] `npm ci`, lint, 133 unit tests, build, all 246 browser cases and 18 PostgreSQL integration tests passed locally.
+- [x] Screenshots reviewed for Fleet, Safety and Business Archives at 390px and 1440px. Automated new-flow tests check root overflow at 390/820/1440px.
+
+Remote CI, merge and deployment/live verification are tracked in [PR #35](https://github.com/s4wf9js2k8-create/owner-admin/pull/35). These statuses are reported only after verification.
+
+## Explicitly still unfinished
+
+- [ ] Competency-specific staffing minima, full shift swaps, granular per-person permissions and recurring inspection generation.
+- [ ] Event ticket categories/individual attendees/checklists/cancellation-credit extensions.
+- [ ] Products/services, advanced tax/refunds and collection provenance/historical-date controls.
+- [ ] Dedicated overtime/project report measures; XML export is Excel-compatible SpreadsheetML, not native XLSX.
+- [ ] Custom owner accounts/matrix, expanded defaults/templates, sales ownership and release-announcement associations.
 - [ ] Durable authentication/authorisation, hosted storage, external delivery, background schedules, live telemetry and backup operations in the public app.
 
-No EVLT resource, Vercel hosting, paid infrastructure, real customer data, payment provider or external messaging is involved. Refresh and Reset Demo restore the connected fictional fixtures.
+See FULL-APPLICATION-AUDIT.md and PAGE-CHECKLIST.md for the page inventory. No EVLT resource, Vercel hosting, paid infrastructure, real customer data, payment provider or external messaging is involved. Refresh and Reset Demo restore the connected fictional fixtures.
