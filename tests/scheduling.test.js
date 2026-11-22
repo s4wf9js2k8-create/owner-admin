@@ -8,7 +8,7 @@ import {
   calendarDays,
   validDateTime,
 } from "../src/scheduling/rules.js";
-import { buildReport, reportCsv } from "../src/reportingRules.js";
+import { buildReport, reportCsv, reportDate } from "../src/reportingRules.js";
 const org = {
   id: "o",
   name: "Fictional business",
@@ -433,4 +433,56 @@ test("local summer dates include leave after midnight but a midnight finish rele
       }),
     ),
   );
+});
+test("booking report filters and exports follow changes to the event venue and staff", async () => {
+  const b = api([booking]);
+  await b.records.update("o", "event", { location: "Main hall" });
+  const config = {
+    source: "Events & bookings",
+    metric: "places",
+    group: "location",
+    calculation: "total",
+    location: "Main hall",
+    staff: "person",
+  };
+  let rows = b.getSnapshot().records;
+  let result = buildReport(rows, "o", config);
+  assert.equal(result.total, 3);
+  assert.equal(result.groups[0].label, "Main hall");
+  let csv = reportCsv(
+    result,
+    { ...config, fields: ["location", "staff", "value"] },
+    rows,
+  );
+  assert.match(csv, /Main hall/);
+  assert.match(csv, /Sample Person/);
+  await b.records.update("o", "event", {
+    location: "Workshop",
+    staffIds: ["other"],
+  });
+  rows = b.getSnapshot().records;
+  assert.equal(buildReport(rows, "o", config).total, 0);
+  result = buildReport(rows, "o", {
+    ...config,
+    location: "Workshop",
+    staff: "other",
+  });
+  assert.equal(result.total, 3);
+  csv = reportCsv(
+    result,
+    { ...config, fields: ["location", "staff", "value"] },
+    rows,
+  );
+  assert.match(csv, /Workshop/);
+  assert.match(csv, /Sample Other/);
+});
+test("a preparation task reports its own deadline rather than inheriting the event date", () => {
+  const task = {
+    module: "Tasks & projects",
+    recordType: "task",
+    orgId: "o",
+    eventId: "event",
+    dueDate: "2026-12-09",
+  };
+  assert.equal(reportDate(task, fixture().records), "2026-12-09");
 });

@@ -20,7 +20,7 @@ Updated 22 November 2026. This checklist records the current fictional, browser-
 - [x] CRM provides contacts with IDs, editable customer details, local call/meeting/note/opportunity activity, assigned follow-ups and linked commercial/scheduling/job/document records.
 - [x] Quotations started from CRM preselect the customer. Contact selections use IDs and invoice conversion retains the link.
 - [x] Maintenance creation selects an optional CRM customer; the linked customer dossier shows the job.
-- [x] Reports derive reservation places, admissions and fictional booking values using the event date, including CSV/grouping.
+- [x] Reports derive reservation places, admissions and fictional booking values using linked event dates/venues/staff, including filters, CSV and grouping; preparation tasks retain their own deadlines.
 - [x] Dates span approved leave correctly, including local summer dates and a half-open midnight finish.
 - [x] Navigation groups collapse by keyboard; active state survives legacy event search links. Reduced motion is respected.
 - [x] Customer modules load on demand; initial JS is reduced without adding dependencies.
@@ -29,7 +29,7 @@ The checked implementation rows refer to the source-frozen batch. Final automate
 
 ## Final release verification
 
-- [x] Dependency installation, lint, 117 unit tests and build passed; the 15 scheduling rule cases also passed under Europe/London.
+- [x] Dependency installation, lint, 119 unit tests and build passed; the 17 scheduling/report rule cases also passed under Europe/London.
 - Full regression outcomes: PR #33 passed 216 cases; the cancellation follow-up in [PR #34](https://github.com/s4wf9js2k8-create/owner-admin/pull/34) expands this to 219 cases. Check its final CI before release.
 - [x] All 21 expanded workflows pass at desktop 1440px, phone 390px and tablet 820px, including error/reset/keyboard checks. The per-width 126-page sweep reported no page errors/root overflow (378 visits).
 - [x] PostgreSQL integration suite: 18 passing locally with Docker, also exercised by PR CI.

@@ -188,6 +188,10 @@ test("capacity, waiting list, check-in, cancellation, booking invoice and custom
   await page.getByLabel("Report measure").selectOption("places");
   await page.getByLabel("Report from date").fill("2026-12-16");
   await page.getByLabel("Report to date").fill("2026-12-16");
+  await page
+    .getByText("People, location and status filters", { exact: true })
+    .click();
+  await page.getByLabel("Report location").selectOption("Main hall");
   await expect(
     page
       .getByLabel("Report results")

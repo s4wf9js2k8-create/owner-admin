@@ -4,6 +4,7 @@ import { moduleInfo, isTaskModule } from "./customerModules";
 import {
   buildReport,
   reportDate,
+  reportLocation,
   reportStatus,
   reportPerson,
   metricOptions,
@@ -409,7 +410,7 @@ export default function ReportingWorkspace({
                         staff:
                           person?.title || r.person || r.owner || "Unassigned",
                         department: r.team || person?.team || "Not recorded",
-                        location: r.location || "Not recorded",
+                        location: reportLocation(r, records) || "Not recorded",
                         value: format(value),
                       };
                       return (

@@ -263,7 +263,7 @@ Every page below has a distinct purpose; aliases refer to existing retained data
 - Implementation/purpose: `ReportingWorkspace.jsx; reportingRules.js` — Filtered records and grouped analysis.
 - Primary actions: Filter/build/save reports; CSV/print. Secondary: Comparisons and chart drilldown.
 - Connected modules: Current enabled module records.
-- Defects/missing: Confirmed places, checked-in visitors and illustrative booking value now derive from reservations using event dates. CSV and grouped dates share the same derivation. Overtime/project metrics, Excel and scheduling remain unavailable.
+- Defects/missing: Confirmed places, checked-in visitors and illustrative booking value derive from reservations using linked event dates, venues and staff. Filters, CSV and grouped summaries share the same joins; preparation tasks keep their own deadlines. Overtime/project metrics, Excel and scheduling remain unavailable.
 - Mobile: navigation/rendering inspected at 390px, 820px and 1440px, with no root overflow or page errors in the 126-page sweep at each width; listed workflow tests cover interactions, and unimplemented advanced paths are not asserted tested.
 - Coverage: `stage5-workspaces`. Completion: PARTIAL; no assertion that every requested extension is delivered.
 
@@ -522,3 +522,5 @@ The updated navigation/screenshot sweep completed **126 page visits at each of 3
 ### Cancellation status integration follow-up
 
 [PR #34](https://github.com/s4wf9js2k8-create/owner-admin/pull/34) excludes completed/cancelled events and shifts from upcoming dashboard widgets; removes cancelled appointments/events from My Work outstanding/today/overdue queues; retains them in All/history; and derives assignment names/team matching from staff IDs. Its new scenario passed at all three viewports. The expanded suite contains 219 browser cases (24 Stage 7 cases); final CI and deployed checks are recorded in the PR.
+
+The PR #34 report follow-up also joins reservation dates/locations/staff to the linked event for filters, grouped summaries, screen rows and CSV, without copying event details into reservations. Changing the event venue/staff updates the report. Event preparation tasks retain their own report deadline. These two new rule cases failed before the correction and pass after it. Local final follow-up checks: lint, 119 unit tests, build, 17 Europe/London rule cases, and six focused cancellation/booking-report browser cases across all three viewports. The full 219-case CI run remains the release gate.
