@@ -30,10 +30,10 @@ The checked implementation rows refer to the source-frozen batch. Final automate
 ## Final release verification
 
 - [x] Dependency installation, lint, 117 unit tests and build passed; the 15 scheduling rule cases also passed under Europe/London.
-- Full 216-case browser regression outcome: see final CI in PR #33 before merge.
+- Full regression outcomes: PR #33 passed 216 cases; the cancellation follow-up in [PR #34](https://github.com/s4wf9js2k8-create/owner-admin/pull/34) expands this to 219 cases. Check its final CI before release.
 - [x] All 21 expanded workflows pass at desktop 1440px, phone 390px and tablet 820px, including error/reset/keyboard checks. The per-width 126-page sweep reported no page errors/root overflow (378 visits).
 - [x] PostgreSQL integration suite: 18 passing locally with Docker, also exercised by PR CI.
-Release state is recorded in [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull/33): required CI checks, merge SHA, existing GitHub Pages build/deployment, public HTML/assets and live owner/customer workflow results. No deployment or live checks are claimed from source-only verification.
+The cancellation-active-queue/history scenario passed on all three viewports. Its final release state is recorded in [PR #34](https://github.com/s4wf9js2k8-create/owner-admin/pull/34); original Stage 7 release evidence is in [PR #33](https://github.com/s4wf9js2k8-create/owner-admin/pull/33): required CI checks, merge SHA, existing GitHub Pages build/deployment, public HTML/assets and live owner/customer workflow results. No deployment or live checks are claimed from source-only verification.
 
 ## Explicitly not accepted as finished
 
