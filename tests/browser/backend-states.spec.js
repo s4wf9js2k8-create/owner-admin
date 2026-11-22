@@ -138,7 +138,7 @@ test("drawer traps keyboard focus and closes after mobile navigation", async ({
   await open.click();
   const nav = page.getByRole("navigation");
   await expect(
-    nav.getByRole("button", { name: "Overview", exact: true }),
+    nav.getByRole("button", { name: "Toggle OVERVIEW navigation", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(

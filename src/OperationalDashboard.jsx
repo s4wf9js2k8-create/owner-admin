@@ -188,7 +188,9 @@ export default function OperationalDashboard({
     ),
     bookings: all.filter(
       (r) =>
-        (type(r) === "bookings" && r.status !== "Cancelled") ||
+        (type(r) === "bookings" &&
+          r.recordType !== "resource" &&
+          !["Cancelled", "Complete"].includes(r.status)) ||
         (type(r) === "events" &&
           r.recordType === "booking" &&
           ["Confirmed", "Checked in"].includes(r.bookingStatus)),

@@ -53,7 +53,10 @@ export default function CustomerCommandBar({
   const search = query.trim().toLowerCase();
   const matches = records
     .filter(
-      (r) => !["inspection-template", "report-config"].includes(r.recordType),
+      (r) =>
+        !["inspection-template", "report-config", "resource"].includes(
+          r.recordType,
+        ),
     )
     .filter(
       (r) =>

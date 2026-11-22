@@ -5,9 +5,13 @@ import {
   balancePence,
   financialStatus,
 } from "./financialRules.js";
-export const reportDate = (r) =>
+export const reportDate = (r, records = []) =>
   String(
-    r.startTime ||
+    (r.eventId
+      ? records.find((e) => e.id === r.eventId && e.orgId === r.orgId)
+          ?.startTime
+      : "") ||
+      r.startTime ||
       r.operationDate ||
       r.date ||
       r.creationDate ||
@@ -17,6 +21,7 @@ export const reportDate = (r) =>
   ).slice(0, 10);
 export function reportStatus(r) {
   const type = moduleInfo(r.module).type;
+  if (r.recordType === "booking") return r.bookingStatus || r.status;
   if (type === "finance") return financialStatus(r);
   if (type === "inspections") return r.result || r.status || "Not recorded";
   if (type === "people")
@@ -54,6 +59,18 @@ export function reportPerson(r, records) {
 }
 export const metricOptions = (type) => [
   { id: "count", label: "Record count", unit: "records" },
+  ...(type === "events"
+    ? [
+        { id: "places", label: "Confirmed reservation places", unit: "places" },
+        { id: "admissions", label: "Checked-in visitors", unit: "visitors" },
+        {
+          id: "bookingValue",
+          label: "Fictional confirmed booking value",
+          unit: "GBP",
+        },
+        { id: "capacity", label: "Planned event capacity", unit: "places" },
+      ]
+    : []),
   ...(type === "timesheets"
     ? [
         {
@@ -91,6 +108,20 @@ export const metricOptions = (type) => [
 ];
 export function reportValue(r, metric) {
   if (metric === "count") return 1;
+  if (["places", "admissions", "bookingValue"].includes(metric)) {
+    if (r.recordType !== "booking") return null;
+    const active = ["Confirmed", "Checked in"].includes(r.bookingStatus);
+    return metric === "admissions"
+      ? r.bookingStatus === "Checked in"
+        ? Number(r.guests)
+        : 0
+      : active
+        ? Number(r.guests) *
+          (metric === "bookingValue" ? Number(r.unitPrice || 0) : 1)
+        : 0;
+  }
+  if (metric === "capacity")
+    return r.recordType === "booking" ? null : Number(r.capacity || 0);
   if (metric === "hours") {
     if (!r.startTime || !r.endTime) return null;
     const minutes = (Date.parse(r.endTime) - Date.parse(r.startTime)) / 60000,
@@ -130,17 +161,25 @@ export function buildReport(records, orgId, config) {
   const scoped = records.filter(
     (r) =>
       r.orgId === orgId &&
-      !["report-config", "inspection-template","supplier","purchase-order"].includes(r.recordType),
+      ![
+        "report-config",
+        "inspection-template",
+        "supplier",
+        "purchase-order",
+        "resource",
+      ].includes(r.recordType),
   );
   const rows = scoped
     .filter((r) => r.module === config.source)
     .filter((r) => {
       const person = reportPerson(r, records),
-        date = reportDate(r);
+        date = reportDate(r, records);
       return (
         (!config.from || (date && date >= config.from)) &&
         (!config.to || (date && date <= config.to)) &&
-        (!config.staff || person?.id === config.staff) &&
+        (!config.staff ||
+          person?.id === config.staff ||
+          r.staffIds?.includes(config.staff)) &&
         (!config.department ||
           (r.team || person?.team || person?.department) ===
             config.department) &&
@@ -168,7 +207,7 @@ export function buildReport(records, orgId, config) {
       : config.group === "department"
         ? r.team || reportPerson(r, records)?.team || "Not recorded"
         : config.group === "date"
-          ? reportDate(r) || "Undated"
+          ? reportDate(r, records) || "Undated"
           : config.group === "location"
             ? r.location || "Not recorded"
             : config.group === "category"
@@ -201,7 +240,7 @@ export function buildReport(records, orgId, config) {
       count: list.length,
       ids: list.map((r) => r.record.id),
     })),
-    undated: rows.filter((r) => !reportDate(r)).length,
+    undated: rows.filter((r) => !reportDate(r, records)).length,
   };
 }
 export function previousPeriod(config) {
@@ -241,7 +280,7 @@ export function reportCsv(report, config, records) {
       const person = reportPerson(r, records);
       const values = {
         title: r.title,
-        date: reportDate(r),
+        date: reportDate(r, records),
         status: reportStatus(r),
         staff: person?.title || r.person || r.owner || "",
         department: r.team || person?.team || "",
