@@ -196,6 +196,16 @@ test("event equipment cannot be reserved by a conflicting appointment", async ({
 }) => {
   await open(page);
   await event(page, undefined, true);
+  await page.getByRole("button", { name: "Edit event plan" }).click();
+  await page
+    .getByLabel("Required competency", { exact: true })
+    .selectOption("Maintenance engineering");
+  await expect(
+    page
+      .getByLabel("Assigned staff", { exact: true })
+      .getByRole("option", { name: /Sample colleague B/ }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Save event changes" }).click();
   await go(page, "Bookings and appointments");
   await page
     .getByRole("button", { name: "Book appointment", exact: true })
@@ -355,6 +365,28 @@ test("CRM contacts, local calls, assigned follow-ups and quotation context use s
       .locator(".quote-document")
       .filter({ hasText: "Fictional Harbour Visits" }),
   ).toContainText("£25.00");
+  await page
+    .locator(".quote-document")
+    .filter({ hasText: "Fictional Harbour Visits" })
+    .getByRole("button", { name: "Open document" })
+    .click();
+  await expect(page.locator(".financial-print")).toContainText(
+    "Sample fictional organiser",
+  );
+  await page.getByRole("button", { name: "Open CRM customer" }).click();
+  await dialog.getByRole("button", { name: "Contacts", exact: true }).click();
+  await dialog.getByRole("button", { name: "Edit contact" }).click();
+  await dialog
+    .getByLabel("Contact name", { exact: true })
+    .fill("Sample revised organiser");
+  await dialog.getByRole("button", { name: "Save contact" }).click();
+  await dialog
+    .getByRole("button", { name: "Quotes & invoices", exact: true })
+    .click();
+  await dialog.locator(".schedule-linked").click();
+  await expect(page.locator(".financial-print")).toContainText(
+    "Sample revised organiser",
+  );
 });
 test("shared resource registry and calendar work by keyboard and reset removes session reservations", async ({
   page,
