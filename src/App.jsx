@@ -247,6 +247,7 @@ export default function App({ backend: suppliedBackend }) {
                       });
                     });
                   }}
+                  platformAnnouncements={ownerData.announcements}
                   page={customerPage}
                   setPage={setCustomerPage}
                   customerRole={customerRole}

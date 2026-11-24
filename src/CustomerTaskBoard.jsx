@@ -1,3 +1,6 @@
+import Subtasks from "./reconciliation/Subtasks";
+import { History } from "./completion/Shared";
+import { LinkedRecordFiles } from "./RecordFiles";
 import ProjectResources from "./completion/ProjectResources";
 import React, { useEffect, useMemo, useState } from "react";
 import { Panel, Empty, Modal, Status } from "./components";
@@ -56,6 +59,7 @@ const classPriority = (value) =>
 export default function CustomerTaskBoard({
   org,
   records,
+  historyRecords = records,
   onAdd,
   onUpdate,
   onNavigate,
@@ -63,6 +67,7 @@ export default function CustomerTaskBoard({
   canEdit = true,
   canCreate = true,
   canApprove = true,
+  canManageProjects = canEdit,
   createRequest = 0,
   focusId,
 }) {
@@ -105,6 +110,10 @@ export default function CustomerTaskBoard({
     [records, org],
   );
   const staff = teamMembers(records, org.id);
+  const historyScoped = historyRecords.filter(
+      (r) => r.orgId === org.id && org.modules.includes(r.module),
+    ),
+    historicalTasks = historyScoped.filter(isTask);
   const tasks = scoped.filter(isTask);
   const projects = scoped.filter(isProject);
   const assets = scoped.filter((r) =>
@@ -141,6 +150,13 @@ export default function CustomerTaskBoard({
     setNotice("");
     if (
       status === "Complete" &&
+      tasks.some((t) => t.parentTaskId === task.id && t.status !== "Complete")
+    ) {
+      setNotice("Complete the subtasks before finishing this task.");
+      return;
+    }
+    if (
+      status === "Complete" &&
       task.dependsOnId &&
       tasks.find((t) => t.id === task.dependsOnId)?.status !== "Complete"
     ) {
@@ -168,22 +184,29 @@ export default function CustomerTaskBoard({
         task.recurrence,
       );
       if (dueDate) {
-        const saved = await onAdd({
-          ...task,
-          id: undefined,
-          createdAt: new Date().toISOString(),
-          title: task.title,
-          originId: task.id,
-          dueDate,
-          status: "Planned",
-          approval: "Not requested",
-          workLogs: [],
-          comments: [],
-          checklist: (task.checklist || []).map((item) => ({
-            ...item,
-            done: false,
-          })),
-        });
+        const saved =
+          tasks.find(
+            (t) =>
+              t.originId === task.id &&
+              t.dueDate === dueDate &&
+              t.title === task.title,
+          ) ||
+          (await onAdd({
+            ...task,
+            id: undefined,
+            createdAt: new Date().toISOString(),
+            title: task.title,
+            originId: task.id,
+            dueDate,
+            status: "Planned",
+            approval: "Not requested",
+            workLogs: [],
+            comments: [],
+            checklist: (task.checklist || []).map((item) => ({
+              ...item,
+              done: false,
+            })),
+          }));
         if (!saved) {
           setNotice(
             "The next occurrence could not be created, so this task was not closed.",
@@ -201,6 +224,17 @@ export default function CustomerTaskBoard({
     );
     if (!dueDate) {
       setNotice("Select a repeat interval first.");
+      return;
+    }
+    const existing = tasks.find(
+      (t) =>
+        t.originId === task.id &&
+        t.dueDate === dueDate &&
+        t.title === task.title,
+    );
+    if (existing) {
+      setSelected(existing.id);
+      setNotice("The next occurrence already exists.");
       return;
     }
     const saved = await onAdd({
@@ -249,6 +283,7 @@ export default function CustomerTaskBoard({
       priority: f.priority || "Normal",
       dueDate: f.dueDate || "",
       personId: staff.find((p) => p.title === f.owner)?.id || "",
+      ownerId: staff.find((p) => p.title === f.owner)?.id || "",
       projectId: f.projectId || "",
       dependsOnId: f.dependsOnId || "",
       assetRefId: f.assetRefId || "",
@@ -293,6 +328,7 @@ export default function CustomerTaskBoard({
       detail: String(f.detail || "").trim(),
       owner: String(f.owner || "").trim(),
       leadId: staff.find((p) => p.title === f.owner)?.id || "",
+      ownerId: staff.find((p) => p.title === f.owner)?.id || "",
       memberIds: new FormData(e.currentTarget).getAll("members"),
       budget: Number(f.budget) || 0,
       risk: f.risk || "Low",
@@ -435,6 +471,7 @@ export default function CustomerTaskBoard({
               update(t, {
                 owner: name,
                 personId: staff.find((p) => p.title === name)?.id || "",
+                ownerId: staff.find((p) => p.title === name)?.id || "",
               });
           }}
         />
@@ -453,7 +490,7 @@ export default function CustomerTaskBoard({
         Project
         <select
           aria-label="Linked project"
-          disabled={!canEdit}
+          disabled={!canEdit || Boolean(t.parentTaskId)}
           value={t.projectId || ""}
           onChange={(e) => update(t, { projectId: e.target.value })}
         >
@@ -569,6 +606,23 @@ export default function CustomerTaskBoard({
           </button>
         </div>
       )}
+      <Subtasks
+        key={t.id}
+        task={t}
+        records={historyScoped}
+        onAdd={onAdd}
+        onOpen={(id) => {
+          const t = historyScoped.find((t) => t.id === id);
+          if (t?.archivedAt) onNavigate(t.module, { recordId: id });
+          else setSelected(id);
+        }}
+        canCreate={canCreate}
+      />
+      <LinkedRecordFiles
+        record={t}
+        records={historyScoped}
+        onNavigate={onNavigate}
+      />
       <h3>Checklist</h3>
       {(t.checklist || []).map((item, i) => (
         <label key={i} className="task-check">
@@ -724,6 +778,7 @@ export default function CustomerTaskBoard({
           />
         </label>
       )}
+      <History entries={t.activity} />
       <h3>Activity notes</h3>
       {(t.comments || []).map((n, i) => (
         <div className="task-note" key={i}>
@@ -763,7 +818,7 @@ export default function CustomerTaskBoard({
     </div>
   );
   const projectDetails = (p) => {
-    const linked = tasks.filter((t) => t.projectId === p.id),
+    const linked = historicalTasks.filter((t) => t.projectId === p.id),
       finished = linked.filter((t) => t.status === "Complete").length;
     return (
       <div className="project-details">
@@ -799,10 +854,10 @@ export default function CustomerTaskBoard({
         </div>
         <ProjectResources
           project={p}
-          records={scoped}
+          records={historyScoped}
           onUpdate={onUpdate}
           onNavigate={onNavigate}
-          canEdit={canEdit}
+          canEdit={canEdit && canManageProjects}
         />
         <p>
           {finished} / {linked.length} linked tasks complete
@@ -811,6 +866,11 @@ export default function CustomerTaskBoard({
           value={finished}
           max={Math.max(linked.length, 1)}
           aria-label="Project task progress"
+        />
+        <LinkedRecordFiles
+          record={p}
+          records={historyScoped}
+          onNavigate={onNavigate}
         />
         <h3>Milestones</h3>
         {(p.milestones || []).map((m, i) => (
@@ -855,6 +915,7 @@ export default function CustomerTaskBoard({
             <button>Add milestone</button>
           </form>
         )}
+        <History entries={p.activity} />
         <h3>Project tasks</h3>
         {linked.length ? (
           linked.map((t) => (
@@ -862,7 +923,15 @@ export default function CustomerTaskBoard({
               <span>
                 {t.title} · <Status>{t.status}</Status>
               </span>
-              <button onClick={() => setSelected(t.id)}>Open task</button>
+              <button
+                onClick={() =>
+                  t.archivedAt
+                    ? onNavigate(t.module, { recordId: t.id })
+                    : setSelected(t.id)
+                }
+              >
+                Open task
+              </button>
             </div>
           ))
         ) : (
@@ -1137,7 +1206,7 @@ export default function CustomerTaskBoard({
         <div className="project-cards">
           {projects.length ? (
             projects.map((p) => {
-              const items = tasks.filter((t) => t.projectId === p.id),
+              const items = historicalTasks.filter((t) => t.projectId === p.id),
                 done = items.filter((t) => t.status === "Complete").length;
               return (
                 <article className="project-card" key={p.id}>

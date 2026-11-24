@@ -1,8 +1,10 @@
+import PlatformNotices from "./reconciliation/PlatformNotices";
 import React, { useEffect, useState } from "react";
 import { Empty, Modal, Status } from "./components";
 import { moduleInfo, isTaskModule } from "./customerModules";
 import { noticeRelevant } from "./communicationRules";
 export default function CommunicationsWorkspace({
+  platformNotices = [],
   org,
   module,
   records,
@@ -126,6 +128,7 @@ export default function CommunicationsWorkspace({
     });
   return (
     <div className="communications-workspace">
+      <PlatformNotices notices={platformNotices} />
       <div className="ops-banner">
         <div>
           <span className="eyebrow">STAFF COMMUNICATIONS</span>

@@ -1,3 +1,4 @@
+import { eventStaffing } from "../reconciliation/rules";
 import React, { useState } from "react";
 import { exportCsv } from "./Shared";
 export function EventConfiguration({
@@ -8,6 +9,7 @@ export function EventConfiguration({
   records,
 }) {
   const [message, setMessage] = useState("");
+  const staffing = eventStaffing(r, records);
   return (
     <details className="completion-workspace">
       <summary>Ticket categories and event checklist</summary>
@@ -93,6 +95,39 @@ export function EventConfiguration({
             />
           </label>
           <button>Add ticket category</button>
+        </form>
+      )}
+      <h3>Event staffing requirement</h3>
+      <p role="status">
+        {staffing.eligible} eligible assigned / {staffing.required} required
+        {staffing.shortfall
+          ? " · Staffing shortfall: " + staffing.shortfall
+          : ""}
+      </p>
+      {canEdit && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onUpdate(org.id, r.id, {
+              minimumStaff: Number(
+                new FormData(e.currentTarget).get("minimumStaff"),
+              ),
+            });
+          }}
+        >
+          <label>
+            Minimum event staff
+            <input
+              name="minimumStaff"
+              type="number"
+              min="0"
+              max="1000"
+              step="1"
+              required
+              defaultValue={r.minimumStaff || 0}
+            />
+          </label>
+          <button>Save event staffing minimum</button>
         </form>
       )}
       <h3>Event readiness checklist</h3>

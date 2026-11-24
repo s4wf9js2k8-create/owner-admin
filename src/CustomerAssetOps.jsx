@@ -1,3 +1,4 @@
+import AssignmentPolicy from "./reconciliation/AssignmentPolicy";
 import { LinkedRecordFiles } from "./RecordFiles";
 import WorkOrderExtras from "./completion/WorkOrderExtras";
 import ScheduleTemplates from "./completion/ScheduleTemplates";
@@ -63,6 +64,7 @@ export default function CustomerAssetOps({
   org,
   module,
   records,
+  historyRecords = records,
   onAdd,
   onUpdate,
   onNavigate,
@@ -295,7 +297,7 @@ export default function CustomerAssetOps({
   };
   const related = (asset) =>
     relatedRecords(
-      records.filter((r) => r.orgId === org.id),
+      historyRecords.filter((r) => r.orgId === org.id),
       asset,
     );
   const assetsView = () => (
@@ -651,6 +653,15 @@ export default function CustomerAssetOps({
     <div className="asset-detail-content">
       <h3>{r.title}</h3>
       <p>{r.detail || r.fault}</p>
+      {["maintenance", "inspections"].includes(type) && (
+        <AssignmentPolicy
+          key={r.id}
+          record={r}
+          records={records}
+          onUpdate={onUpdate}
+          canEdit={canEdit}
+        />
+      )}
       {type === "assets" && (
         <>
           <div
@@ -1637,7 +1648,7 @@ export default function CustomerAssetOps({
           {details(current)}
           <LinkedRecordFiles
             record={current}
-            records={records}
+            records={historyRecords}
             onNavigate={onNavigate}
           />
           {type === "assets" && (

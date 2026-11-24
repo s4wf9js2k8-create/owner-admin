@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Modal, Status } from "./components";
 import { moduleInfo } from "./customerModules";
 export default function DocumentWorkspace({
+  actorId,
+  recentAccess = {},
+  onAccess,
   org,
   module,
   records,
@@ -22,7 +25,10 @@ export default function DocumentWorkspace({
     [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false);
   useEffect(() => {
-    if (focusId) setSelected(focusId);
+    if (focusId) {
+      setSelected(focusId);
+      onAccess?.(focusId);
+    }
   }, [focusId]);
   const docs = records.filter((r) => r.module === module),
     current = docs.find((r) => r.id === selected),
@@ -75,6 +81,10 @@ export default function DocumentWorkspace({
       sensitive: values.access === "Confidential",
       localFile: file || current?.localFile || null,
       modifiedAt: new Date().toISOString(),
+      approval: "Pending",
+      status: "Planned",
+      submittedById: actorId || "",
+      submittedAt: new Date().toISOString(),
     };
     const ok = editing
       ? await onUpdate(org.id, current.id, {
@@ -149,6 +159,36 @@ export default function DocumentWorkspace({
           </select>
         </label>
       </div>
+      {Object.keys(recentAccess).some((id) =>
+        docs.some((r) => r.id === id),
+      ) && (
+        <details open className="completion-workspace">
+          <summary>Recently opened documents</summary>
+          {Object.entries(recentAccess)
+            .sort((a, b) => b[1].localeCompare(a[1]))
+            .slice(0, 8)
+            .map(([id, at]) => {
+              const r = docs.find((r) => r.id === id);
+              return r ? (
+                <button
+                  key={id}
+                  onClick={() => {
+                    setSelected(id);
+                    onAccess?.(id);
+                  }}
+                >
+                  {r.title} · {new Date(at).toLocaleTimeString("en-GB")}
+                </button>
+              ) : null;
+            })}
+        </details>
+      )}
+      {!docs.length && (
+        <p>
+          No working documents yet. Use Add document to select a local file or
+          link a record to staff, equipment or a customer.
+        </p>
+      )}
       <div className="document-shelf">
         {docs
           .filter(
@@ -160,7 +200,10 @@ export default function DocumentWorkspace({
             <button
               className="document-cover"
               key={r.id}
-              onClick={() => setSelected(r.id)}
+              onClick={() => {
+                setSelected(r.id);
+                onAccess?.(r.id);
+              }}
             >
               <small>
                 {r.documentType || "Other"} · {r.folder || "Unfiled"}

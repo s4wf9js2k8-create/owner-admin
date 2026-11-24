@@ -22,6 +22,8 @@ const assignmentIds = (record) =>
     record.engineerId,
     record.inspectorId,
     record.custodianId,
+    record.leadId,
+    ...(record.memberIds || []),
     ...(record.staffIds || []),
   ].filter(Boolean);
 const reportAssignmentIds = (record, records) => [
@@ -273,7 +275,7 @@ export function buildReport(records, orgId, config) {
           person?.id === config.staff ||
           reportAssignmentIds(r, records).includes(config.staff)) &&
         (!config.department ||
-          (r.team || person?.team || person?.department) ===
+          (person?.team || person?.department || r.team) ===
             config.department) &&
         (!config.location || reportLocation(r, records) === config.location) &&
         (!config.status || reportStatus(r) === config.status) &&
@@ -341,7 +343,7 @@ export function buildReport(records, orgId, config) {
     config.group === "staff"
       ? reportPerson(r, records)?.title || r.person || r.owner || "Unassigned"
       : config.group === "department"
-        ? r.team || reportPerson(r, records)?.team || "Not recorded"
+        ? reportPerson(r, records)?.team || r.team || "Not recorded"
         : config.group === "date"
           ? reportDate(r, records) || "Undated"
           : config.group === "location"

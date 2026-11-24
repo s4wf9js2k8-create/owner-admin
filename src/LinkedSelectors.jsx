@@ -32,8 +32,8 @@ export const attachedName = (items,id,otherwise="Unassigned")=>items.find(p=>p.i
 
 /** Restrict assignment to staff who meet the role and schedule requirements.
  * The exclusions stay visible to managers for explanation, but cannot be selected. */
-export function QualifiedStaffSelect({records,orgId,kind="maintenance",date,startTime,endTime,excludedRecordId="",name="owner",value="",onChange,required=false,label="Assigned staff",disabled=false}){
- const {eligible,excluded}=eligibleStaff(records,orgId,{kind,date,startTime,endTime,excludedRecordId});
+export function QualifiedStaffSelect({records,orgId,kind="maintenance",date,startTime,endTime,excludedRecordId="",name="owner",value="",onChange,required=false,label="Assigned staff",disabled=false,department,requiredQualification}){
+ const {eligible,excluded}=eligibleStaff(records,orgId,{kind,date,startTime,endTime,excludedRecordId,department,requiredQualification});
  const current=eligible.find(p=>p.title===value);
  const invalid=value && !current;
  const choices=eligible.map(person=><option key={person.id} value={person.title}>{person.title}{person.team?" · "+person.team:""}</option>);

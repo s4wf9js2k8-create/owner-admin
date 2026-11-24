@@ -1,4 +1,5 @@
 import { reportPerson, reportLocation, reportStatus } from "./reportingRules";
+import PlatformNotices from "./reconciliation/PlatformNotices";
 import React, { useState } from "react";
 import { Empty, Status } from "./components";
 import { moduleInfo, isTaskModule } from "./customerModules";
@@ -31,6 +32,7 @@ const presets = {
   Visitor: ["events", "visitors", "staff", "bookings"],
 };
 export default function OperationalDashboard({
+  platformNotices = [],
   org,
   records,
   onNavigate,
@@ -222,8 +224,7 @@ export default function OperationalDashboard({
     rows[id] = list.filter(
       (r) =>
         (!f.department ||
-          reportPerson(r, all)?.team === f.department ||
-          r.team === f.department) &&
+          (reportPerson(r, all)?.team || r.team) === f.department) &&
         (!f.location || reportLocation(r, all) === f.location) &&
         (!f.status || reportStatus(r) === f.status),
     );
@@ -250,6 +251,7 @@ export default function OperationalDashboard({
           {custom ? "Finish customising" : "Customise dashboard"}
         </button>
       </header>
+      <PlatformNotices notices={platformNotices} />
       <div className="ops-action-strip">
         {attendance && canCreate && canEdit && (
           <button className="action-primary" onClick={clock}>

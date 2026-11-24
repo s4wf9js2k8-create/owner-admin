@@ -51,8 +51,9 @@ export default function LeaveCalendar({ org, records, onOpen }) {
               )
               .map((r) => (
                 <button key={r.id} onClick={() => onOpen(r.id)}>
-                  {people.find((p) => p.id === r.personId)?.title || r.person} ·{" "}
-                  {r.approval}
+                  {r.requestType === "Available" ? "Available: " : ""}
+                  {people.find((p) => p.id === r.personId)?.title ||
+                    r.person} · {r.approval}
                 </button>
               ))}
           </article>

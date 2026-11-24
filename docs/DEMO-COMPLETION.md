@@ -1,3 +1,19 @@
+# Current original-spec completion report
+
+The latest source reconciliation starts from merged PR #38 (`cf97d69`). [ORIGINAL-SPEC-RECONCILIATION.md](ORIGINAL-SPEC-RECONCILIATION.md) maps all 50 original sections and identifies the specific gaps found after that release. [FULL-APPLICATION-AUDIT.md](FULL-APPLICATION-AUDIT.md) is the current per-page inventory; it supersedes the earlier broad completion wording.
+
+New working controls cover separately assigned subtasks/parent gates, editable project briefs/managers/deadlines and activity, stable staff/contact/assignment identity, explicit approved availability, attendance expectations, vehicle/work assignment policies, event staffing alerts, non-event resource/service capacity bookings and invoicing, recently accessed/reviewed document versions, canonical owner announcements, active owner-account support assignment, refund history and related safety training. Historical dossiers and project progress retain archived records while active lists remain filtered.
+
+Business logic is separated into pure `reconciliation/rules.js` helpers and specialist React controls under `src/reconciliation/`. The existing fictional adapter validates and publishes connected writes atomically. No dependency, paid service, infrastructure or production backend change is introduced. EVLT is untouched.
+
+Local acceptance: npm ci, lint, **158 unit tests**, build, six new desktop workflow scenarios, the expanded archive/profile scenario and focused phone/tablet booking smoke have passed. The six include the uninterrupted new-employee → qualification → availability approval → rota → attendance/timesheet approval → reporting workflow. Final desktop regression, PostgreSQL CI, PR/merge/Pages/live evidence is recorded in the release PR. No previous build's result substitutes for this one. Routine checks remain desktop plus short phone/tablet smoke; no broad screenshot sweep is repeated.
+
+Production security, durable storage, external messaging/payments, unattended jobs and real host/backup operations remain explicitly unavailable as required by the public-demo specification.
+
+---
+
+## Historical PR #38 report
+
 # Final public-demo workflow completion
 
 Baseline: main `2044e05` after PR #37. Development branch: `completion/final-demo-workflows`.

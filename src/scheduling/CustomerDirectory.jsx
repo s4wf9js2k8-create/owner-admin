@@ -49,6 +49,14 @@ export function customerTimeline(customer, records) {
         at: p.date,
         record: r,
       });
+    for (const p of r.refunds || [])
+      entries.push({
+        id: p.id,
+        title: "Fictional refund · " + r.reference,
+        text: money(p.amountPence) + " · " + p.reference,
+        at: p.date,
+        record: r,
+      });
     for (const c of r.credits || [])
       entries.push({
         id: c.id,
@@ -66,6 +74,7 @@ export default function CustomerDirectory({
   org,
   module,
   records,
+  historyRecords = records,
   onAdd,
   onUpdate,
   onNavigate,
@@ -74,6 +83,7 @@ export default function CustomerDirectory({
   focusId,
   createRequest,
 }) {
+  const history = historyRecords.filter((r) => r.orgId === org.id);
   const all = records.filter((r) => r.orgId === org.id),
     customers = all.filter((r) => moduleInfo(r.module).type === "crm"),
     staff = teamMembers(all, org.id);
@@ -89,13 +99,13 @@ export default function CustomerDirectory({
     [editingContact, setEditingContact] = useState(null);
   const current = customers.find((c) => c.id === selected),
     finance = current
-      ? all.filter(
+      ? history.filter(
           (r) =>
             r.customerId === current.id &&
             moduleInfo(r.module).type === "finance",
         )
       : [],
-    linked = current ? all.filter((r) => r.customerId === current.id) : [];
+    linked = current ? history.filter((r) => r.customerId === current.id) : [];
   useEffect(() => {
     if (focusId) {
       setSelected(focusId);
@@ -223,7 +233,7 @@ export default function CustomerDirectory({
       )}
     </form>
   );
-  const timeline = current ? customerTimeline(current, all) : [];
+  const timeline = current ? customerTimeline(current, history) : [];
   const timelineView = (entries) => (
     <div className="crm-timeline">
       {entries.map((n) => (

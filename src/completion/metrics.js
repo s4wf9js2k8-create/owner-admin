@@ -36,6 +36,9 @@ export function leaveBalances(
     for (const r of records.filter(
       (r) =>
         r.approval === "Approved" &&
+        !["Available", "Unavailable", "Unavailability"].includes(
+          r.requestType,
+        ) &&
         (r.personId === p.id || (!r.personId && r.person === p.title)),
     )) {
       const start = new Date(

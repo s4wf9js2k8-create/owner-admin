@@ -1,3 +1,4 @@
+import ResourceBookings from "../reconciliation/ResourceBookings";
 import React, { useEffect, useState } from "react";
 import { Empty, Modal, Status } from "../components";
 import { moduleInfo } from "../customerModules";
@@ -20,6 +21,7 @@ export default function AppointmentsWorkspace({
   createRequest,
   canCreate = true,
   canEdit = true,
+  onConfigure,
 }) {
   const all = records.filter((r) => r.orgId === org.id),
     rows = all.filter(appointmentRecord),
@@ -75,6 +77,10 @@ export default function AppointmentsWorkspace({
   };
   useEffect(() => {
     if (focusId) {
+      if (
+        all.some((r) => r.id === focusId && r.recordType === "resource-booking")
+      )
+        setTab("Resource bookings");
       const r = rows.find((r) => r.id === focusId);
       if (r) {
         setSelected(r.id);
@@ -185,7 +191,7 @@ export default function AppointmentsWorkspace({
         )}
       </div>
       <div className="segmented-actions">
-        {["Diary", "Resources", "History"].map((t) => (
+        {["Diary", "Resource bookings", "Resources", "History"].map((t) => (
           <button key={t} aria-pressed={tab === t} onClick={() => setTab(t)}>
             {t}
           </button>
@@ -196,7 +202,20 @@ export default function AppointmentsWorkspace({
           {notice}
         </p>
       )}
-      {tab === "Resources" ? (
+      {tab === "Resource bookings" ? (
+        <ResourceBookings
+          org={org}
+          module={module}
+          records={all}
+          onAdd={onAdd}
+          onUpdate={onUpdate}
+          onNavigate={onNavigate}
+          canCreate={canCreate}
+          canEdit={canEdit}
+          onConfigure={onConfigure}
+          focusId={focusId}
+        />
+      ) : tab === "Resources" ? (
         <>
           <h3>Shared rooms and facilities</h3>
           <p>
@@ -220,6 +239,46 @@ export default function AppointmentsWorkspace({
                   }{" "}
                   active reservations
                 </small>
+                {canEdit && (
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const f = Object.fromEntries(
+                        new FormData(e.currentTarget),
+                      );
+                      if (
+                        await onUpdate(org.id, r.id, {
+                          capacity: Number(f.capacity),
+                          bookingMode: f.bookingMode,
+                        })
+                      )
+                        setNotice("Resource capacity saved.");
+                    }}
+                  >
+                    <label>
+                      Capacity for {r.title}
+                      <input
+                        name="capacity"
+                        type="number"
+                        min="1"
+                        step="1"
+                        required
+                        defaultValue={r.capacity || 1}
+                      />
+                    </label>
+                    <label>
+                      Reservation model for {r.title}
+                      <select
+                        name="bookingMode"
+                        defaultValue={r.bookingMode || "Exclusive"}
+                      >
+                        <option>Exclusive</option>
+                        <option>Shared capacity</option>
+                      </select>
+                    </label>
+                    <button>Save resource capacity</button>
+                  </form>
+                )}
               </article>
             ))}
           </div>
@@ -245,6 +304,8 @@ export default function AppointmentsWorkspace({
                   recordType: "resource",
                   title: f.title.trim(),
                   resourceType: f.resourceType,
+                  capacity: Number(f.capacity),
+                  bookingMode: f.bookingMode,
                   location: f.location,
                   status: "Active",
                 });
@@ -281,6 +342,24 @@ export default function AppointmentsWorkspace({
                   ).map((l) => (
                     <option key={l}>{l}</option>
                   ))}
+                </select>
+              </label>
+              <label>
+                Resource capacity
+                <input
+                  type="number"
+                  name="capacity"
+                  min="1"
+                  step="1"
+                  required
+                  defaultValue="1"
+                />
+              </label>
+              <label>
+                Reservation model
+                <select name="bookingMode">
+                  <option>Exclusive</option>
+                  <option>Shared capacity</option>
                 </select>
               </label>
               <button>Add shared resource</button>

@@ -105,7 +105,7 @@ test("support creation assignment notes and resolution update inbox and metrics"
     .click();
   await page
     .getByLabel("Assigned support person", { exact: true })
-    .selectOption("Fictional support agent");
+    .selectOption({ label: "Fictional support agent" });
   await page.getByLabel("Fictional message").fill("Checked configuration");
   await page.getByRole("button", { name: "Add local entry" }).click();
   await page
