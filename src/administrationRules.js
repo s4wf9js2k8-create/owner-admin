@@ -38,7 +38,7 @@ export function approvalType(r) {
   )
     return "Inspection results";
   if (
-    ["leave", "timesheets", "documents"].includes(type) &&
+    ["leave", "timesheets", "documents", "training"].includes(type) &&
     (r.approval || "Pending") === "Pending" &&
     !r.approvalNeedsChanges &&
     (type !== "timesheets" || r.endTime)
@@ -47,6 +47,7 @@ export function approvalType(r) {
       leave: "Leave request",
       timesheets: "Timesheet",
       documents: "Document review",
+      training: "Qualification approval",
     }[type];
   if (r.recordType === "purchase-request" && r.approval === "Pending")
     return "Purchase request";
@@ -141,6 +142,7 @@ export function decideApproval(record, request, org, records) {
             startTime: correction.startTime,
             endTime: correction.endTime,
             breakMinutes: Number(correction.breakMinutes),
+            location: correction.location || record.location || "",
             approval: "Approved",
             status: "Complete",
           }

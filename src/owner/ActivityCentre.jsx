@@ -6,7 +6,13 @@ export default function ActivityCentre({ controller: c }) {
     [date, setDate] = useState(""),
     [moduleFilter, setModuleFilter] = useState("");
   const rows = c.logs
-    .filter((l) => ownerPageAllowed(c.ownerRole, l.module || "Overview"))
+    .filter((l) =>
+      ownerPageAllowed(
+        c.ownerRole,
+        l.module || "Overview",
+        c.flags.ownerPolicies,
+      ),
+    )
     .filter(
       (l) =>
         (!company || l.orgId === company) &&

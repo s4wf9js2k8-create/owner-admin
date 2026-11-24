@@ -3,6 +3,7 @@ import {
   ownerCanManage,
   ownerCanSupport,
   ownerPageAllowed,
+  ownerCanWritePage,
 } from "../owner/rules";
 import { useState, useRef } from "react";
 import { useBackend } from "./useBackend";
@@ -11,7 +12,12 @@ import { demoRoleDefaults, defaultRoleModules } from "../customerWorkflows";
 export function useConsoleController(backend) {
   const { data, status, error, run: rawRun, retry } = useBackend(backend);
   const { orgs, records, tickets, logs, plans, flags } = data;
-  const [ownerRole, setOwnerRole] = useState("Platform Owner");
+  const [ownerAccountId, setOwnerAccountId] = useState("");
+  const ownerAccount = flags.ownerAccounts?.find(
+    (a) => a.id === ownerAccountId,
+  );
+  const [previewOwnerRole, setOwnerRole] = useState("Platform Owner");
+  const ownerRole = ownerAccount?.role || previewOwnerRole;
   const deny = () => {
     setMessage(
       "This action is unavailable to the selected demonstration owner role.",
@@ -19,13 +25,17 @@ export function useConsoleController(backend) {
     return Promise.resolve(false);
   };
   const run = (operation) =>
-    !customer && ownerRole === "Read-only Auditor" ? deny() : rawRun(operation);
+    !customer &&
+    (!ownerCanWritePage(ownerRole, page, flags.ownerPolicies) ||
+      ownerAccount?.status === "Suspended")
+      ? deny()
+      : rawRun(operation);
   const setPlans = (value) =>
-    ownerCanManage(ownerRole)
+    ownerCanManage(ownerRole, flags.ownerPolicies)
       ? run(() => backend.demoSettings.setPlans(value))
       : deny();
   const setFlags = (value) =>
-    ownerCanManage(ownerRole)
+    ownerCanManage(ownerRole, flags.ownerPolicies)
       ? run(() => backend.demoSettings.setFlags(value))
       : deny();
   const [page, setPage] = useState("Overview"),
@@ -56,7 +66,7 @@ export function useConsoleController(backend) {
     if (
       await run(() =>
         backend.auditEvents.append(orgId, event, {
-          actorName: "Fictional operator",
+          actorName: ownerAccount?.name || "Fictional operator",
           role: ownerRole,
           module: page,
         }),
@@ -65,7 +75,8 @@ export function useConsoleController(backend) {
       setMessage(event);
   };
   const update = async (id, patch, event = "Updated example organisation") => {
-    if (!customer && !ownerCanManage(ownerRole)) return deny();
+    if (!customer && !ownerCanManage(ownerRole, flags.ownerPolicies))
+      return deny();
     const saved = await run(async () => {
       const { modules: enabled, admins, ...fields } = patch;
       if (enabled) await backend.entitlements.replace(id, enabled);
@@ -86,7 +97,7 @@ export function useConsoleController(backend) {
     return saved;
   };
   const navigate = (name) => {
-    if (!customer && !ownerPageAllowed(ownerRole, name)) {
+    if (!customer && !ownerPageAllowed(ownerRole, name, flags.ownerPolicies)) {
       deny();
       return;
     }
@@ -99,7 +110,8 @@ export function useConsoleController(backend) {
     navigate("Company Profile");
   };
   const preview = (id) => {
-    if (!customer && !ownerCanManage(ownerRole)) return deny();
+    if (!customer && !ownerCanManage(ownerRole, flags.ownerPolicies))
+      return deny();
     if (
       !flags.customerPreview ||
       !orgs.some(
@@ -114,7 +126,7 @@ export function useConsoleController(backend) {
   };
   const closeMenu = useDrawer(menuOpen, setMenuOpen, menuRef, menuButton);
   const changeTicket = async (patch) => {
-    if (!ownerCanSupport(ownerRole)) return deny();
+    if (!ownerCanSupport(ownerRole, flags.ownerPolicies)) return deny();
     if (
       await run(() =>
         backend.supportTickets.update(ticket.orgId, ticketId, patch),
@@ -135,6 +147,7 @@ export function useConsoleController(backend) {
       setQuery("");
       setStatusFilter("All");
       setOwnerRole("Platform Owner");
+      setOwnerAccountId("");
       setCustomerRole("Administrator");
       setCustomerRoles(demoRoleDefaults);
       setRoleModules(defaultRoleModules);
@@ -154,6 +167,9 @@ export function useConsoleController(backend) {
     denyOwnerAction: deny,
     ownerRole,
     setOwnerRole,
+    ownerAccountId,
+    setOwnerAccountId,
+    ownerAccount,
     run,
     status,
     error,
@@ -171,7 +187,11 @@ export function useConsoleController(backend) {
     statusFilter,
     setStatusFilter,
     form,
-    setForm: (value) => (ownerCanManage(ownerRole) ? setForm(value) : deny()),
+    setForm: (value) =>
+      ownerCanManage(ownerRole, flags.ownerPolicies) &&
+      ownerCanWritePage(ownerRole, "Organisations", flags.ownerPolicies)
+        ? setForm(value)
+        : deny(),
     logs,
     message,
     plans,
@@ -193,6 +213,18 @@ export function useConsoleController(backend) {
     setConfirm,
     flags,
     setFlags,
+    saveOwnerPreferences: (values) =>
+      ownerAccount?.status === "Suspended"
+        ? deny()
+        : rawRun(() =>
+            backend.demoSettings.setFlags({
+              ...backend.getSnapshot().flags,
+              ownerUserPrefs: {
+                ...backend.getSnapshot().flags.ownerUserPrefs,
+                [ownerAccountId || ownerRole]: values,
+              },
+            }),
+          ),
     ticketId,
     setTicketId,
     tickets,

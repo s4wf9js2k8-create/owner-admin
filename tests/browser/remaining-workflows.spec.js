@@ -1,3 +1,4 @@
+import { openDestination } from "./navigation.js";
 import { test, expect } from "@playwright/test";
 async function enter(page, id = "demo-engineering") {
   await page.goto("./");
@@ -6,13 +7,7 @@ async function enter(page, id = "demo-engineering") {
     .click();
   await page.getByLabel("Example workspace").selectOption(id);
 }
-async function nav(page, name) {
-  await page.getByRole("button", { name: "Open navigation menu" }).click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name, exact: true })
-    .click();
-}
+const nav = openDestination;
 const overflow = async (page) =>
   expect(
     await page.evaluate(

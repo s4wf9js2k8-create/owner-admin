@@ -1,3 +1,4 @@
+import { openDestination } from "./navigation.js";
 import { test, expect } from "@playwright/test";
 
 // Inject an adapter at the module boundary; no production fault switches or URL flags.
@@ -16,15 +17,7 @@ async function mountAdapter(page, setup) {
   );
   await page.goto("./");
 }
-async function navigate(page, name) {
-  await page
-    .getByRole("button", { name: "Open navigation menu", exact: true })
-    .click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name, exact: true })
-    .click();
-}
+const navigate = openDestination;
 test("delayed adapter hides data until load completes", async ({ page }) => {
   await mountAdapter(
     page,

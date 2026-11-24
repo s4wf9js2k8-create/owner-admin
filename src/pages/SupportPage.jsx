@@ -17,7 +17,7 @@ export default function SupportPage({ controller: c }) {
         (priority === "All" || t.priority === priority) &&
         (queue === "All" || t.status === queue) &&
         t.subject.toLowerCase().includes(search.toLowerCase()) &&
-        (!assigneeFilter || t.assignee === assigneeFilter) &&
+        (!assigneeFilter || (t.assigneeId || t.assignee) === assigneeFilter) &&
         (!moduleFilter || t.module === moduleFilter) &&
         (!fromDate || t.createdAt?.slice(0, 10) >= fromDate),
     );
@@ -159,11 +159,15 @@ export default function SupportPage({ controller: c }) {
             onChange={(e) => setAssigneeFilter(e.target.value)}
           >
             <option value="">All assigned people</option>
-            {[...new Set(tickets.map((t) => t.assignee).filter(Boolean))].map(
-              (a) => (
-                <option key={a}>{a}</option>
+            {[
+              ...new Set(
+                tickets.map((t) => t.assigneeId || t.assignee).filter(Boolean),
               ),
-            )}
+            ].map((a) => (
+              <option key={a} value={a}>
+                {c.flags.ownerAccounts?.find((x) => x.id === a)?.name || a}
+              </option>
+            ))}
           </select>
         </label>
         <label>
@@ -203,7 +207,13 @@ export default function SupportPage({ controller: c }) {
                 {orgs.find((o) => o.id === t.orgId)?.name} · {t.priority} ·{" "}
                 {t.status}
               </small>
-              <small>Assigned: {t.assignee || "Unassigned"}</small>
+              <small>
+                Assigned:{" "}
+                {c.flags.ownerAccounts?.find((a) => a.id === t.assigneeId)
+                  ?.name ||
+                  t.assignee ||
+                  "Unassigned"}
+              </small>
             </button>
           ))}
           {!rows.length && (
@@ -218,6 +228,27 @@ export default function SupportPage({ controller: c }) {
               {orgs.find((o) => o.id === ticket.orgId)?.name}
             </small>
             <p>{ticket.description || "Legacy description not recorded"}</p>
+            <label>
+              Support category
+              <select
+                value={ticket.category || "General"}
+                onChange={(e) => c.changeTicket({ category: e.target.value })}
+              >
+                {[
+                  ...new Set([
+                    ticket.category || "General",
+                    ...(c.flags.business?.supportCategories || [
+                      "General",
+                      "Configuration",
+                      "Problem",
+                      "Feature request",
+                    ]),
+                  ]),
+                ].map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
+              </select>
+            </label>
             <div className="form-pair">
               <label>
                 Priority
@@ -226,7 +257,14 @@ export default function SupportPage({ controller: c }) {
                   value={ticket.priority}
                   onChange={(e) => c.changeTicket({ priority: e.target.value })}
                 >
-                  {["Low", "Normal", "High", "Urgent"].map((s) => (
+                  {(
+                    c.flags.business?.supportPriorities || [
+                      "Low",
+                      "Normal",
+                      "High",
+                      "Urgent",
+                    ]
+                  ).map((s) => (
                     <option key={s}>{s}</option>
                   ))}
                 </select>
@@ -254,13 +292,28 @@ export default function SupportPage({ controller: c }) {
                 Assigned support person
                 <select
                   aria-label="Assigned support person"
-                  value={ticket.assignee || ""}
-                  onChange={(e) => c.changeTicket({ assignee: e.target.value })}
+                  value={ticket.assigneeId || ticket.assignee || ""}
+                  onChange={(e) => {
+                    const account = c.flags.ownerAccounts?.find(
+                      (a) => a.id === e.target.value,
+                    );
+                    c.changeTicket({
+                      assigneeId: account?.id || "",
+                      assignee: account?.name || e.target.value,
+                    });
+                  }}
                 >
                   <option value="">Unassigned</option>
                   <option>Fictional platform owner</option>
                   <option>Fictional support agent</option>
                   <option>Fictional implementation lead</option>
+                  {(c.flags.ownerAccounts || [])
+                    .filter((a) => a.status === "Active")
+                    .map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
                 </select>
               </label>
               <label>

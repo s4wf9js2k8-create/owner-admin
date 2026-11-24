@@ -320,3 +320,28 @@
     font-size: 21px;
   }
 }
+.owner-permission-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+.qualified-coverage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+.qualified-coverage p {
+  font-size: 12px;
+  padding: 10px;
+  border: 1px solid #d4dfd7;
+  margin: 0;
+}
+.completion-workspace fieldset {
+  min-width: 0;
+  border: 1px solid #cad8cf;
+  padding: 12px;
+}
+.completion-workspace textarea {
+  max-width: 100%;
+}

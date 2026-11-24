@@ -1,3 +1,4 @@
+import { openDestination } from "./navigation.js";
 import { test, expect } from "@playwright/test";
 async function openEngineering(page) {
   await page.goto("./");
@@ -6,13 +7,7 @@ async function openEngineering(page) {
     .click();
   await page.getByLabel("Example workspace").selectOption("demo-engineering");
 }
-async function navigate(page, title) {
-  await page.getByRole("button", { name: "Open navigation menu" }).click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: title, exact: true })
-    .click();
-}
+const navigate = openDestination;
 test("maintenance assignment excludes unqualified staff and explains why", async ({
   page,
 }) => {

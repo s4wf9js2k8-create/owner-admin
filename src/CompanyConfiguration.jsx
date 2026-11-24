@@ -169,6 +169,32 @@ export default function CompanyConfiguration({
           <button disabled={!canManage}>Save company profile</button>
         </form>
       )}
+      {tab === "Operations" && canManage && (
+        <details>
+          <summary>Custom task workflow statuses</summary>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const values = String(
+                new FormData(e.currentTarget).get("statuses"),
+              )
+                .split("\n")
+                .map((s) => s.trim())
+                .filter(Boolean);
+              saveField("taskStatuses", [...new Set(values)]);
+            }}
+          >
+            <label>
+              Additional task statuses (one per line)
+              <textarea
+                name="statuses"
+                defaultValue={(config.taskStatuses || []).join("\n")}
+              />
+            </label>
+            <button>Save task workflow statuses</button>
+          </form>
+        </details>
+      )}
       {tab === "Operations" && (
         <form
           className="admin-panel"
@@ -197,6 +223,7 @@ export default function CompanyConfiguration({
               return;
             }
             saveField("operations", {
+              ...config.operations,
               departments: fields(f, "departments")
                 .split("\n")
                 .map((v) => v.trim())

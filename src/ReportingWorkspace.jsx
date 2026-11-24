@@ -75,9 +75,21 @@ export default function ReportingWorkspace({
   const options = metricOptions(moduleInfo(config.source).type),
     metric = options.find((m) => m.id === config.metric) || options[0];
   const invalidDates = config.from && config.to && config.from > config.to;
-  const result = buildReport(records, org.id, config),
+  const result = buildReport(records, org.id, {
+      ...config,
+      overtimeThreshold: Number(
+        org.workspaceConfig?.operations?.overtimeHours ?? 40,
+      ),
+    }),
     previous = previousPeriod(config),
-    comparison = previous ? buildReport(records, org.id, previous) : null;
+    comparison = previous
+      ? buildReport(records, org.id, {
+          ...previous,
+          overtimeThreshold: Number(
+            org.workspaceConfig?.operations?.overtimeHours ?? 40,
+          ),
+        })
+      : null;
   const update = (patch) => {
     setConfig({ ...config, ...patch });
     setSelectedGroup("");

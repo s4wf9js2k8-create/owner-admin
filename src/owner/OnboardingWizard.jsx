@@ -32,8 +32,8 @@ export default function OnboardingWizard({ controller: c, draft, onCreated }) {
         : "Engineering",
       modules: [...sectors.engineering.modules],
       plan: c.flags.business?.defaultPlan || c.plans[0]?.name,
-      color: "#315b77",
-      welcomeText: "",
+      color: c.flags.business?.defaultAccent || "#315b77",
+      welcomeText: c.flags.business?.defaultWelcome || "",
       dashboard: "Engineering",
       locations: "Office\nWorkshop",
       departments: "Operations\nAdministration",
@@ -84,7 +84,11 @@ export default function OnboardingWizard({ controller: c, draft, onCreated }) {
         logo,
         createdAt: now.toISOString(),
         onboardingComplete: true,
-        trialEnds: new Date(now.getTime() + Number(plan?.trial || 0) * 86400000)
+        trialEnds: new Date(
+          now.getTime() +
+            Number(c.flags.business?.defaultTrialDays ?? plan?.trial ?? 0) *
+              86400000,
+        )
           .toISOString()
           .slice(0, 10),
         workspaceConfig: {
@@ -137,6 +141,33 @@ export default function OnboardingWizard({ controller: c, draft, onCreated }) {
       {!createdId ||
       !c.orgs.find((o) => o.id === createdId)?.onboardingComplete ? (
         <form onSubmit={submit}>
+          {step === 0 && (
+            <label>
+              Saved onboarding template
+              <select
+                value=""
+                onChange={(e) => {
+                  const t = c.flags.onboardingTemplates?.find(
+                    (t) => t.id === e.target.value,
+                  );
+                  if (t) {
+                    const { id, name, logo, ...configuration } = t;
+                    void id;
+                    void name;
+                    set(configuration);
+                    setLogo(logo || "");
+                  }
+                }}
+              >
+                <option value="">Choose reusable configuration</option>
+                {(c.flags.onboardingTemplates || []).map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           {step === 0 && (
             <>
               {[

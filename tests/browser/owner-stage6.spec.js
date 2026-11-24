@@ -1,11 +1,6 @@
+import { openDestination } from "./navigation.js";
 import { test, expect } from "@playwright/test";
-async function go(page, name) {
-  await page.getByRole("button", { name: "Open navigation menu" }).click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name, exact: true })
-    .click();
-}
+const go = openDestination;
 async function finishWizard(page, welcome = "Fictional configured welcome") {
   for (let i = 0; i < 4; i++)
     await page.getByRole("button", { name: "Next step" }).click();

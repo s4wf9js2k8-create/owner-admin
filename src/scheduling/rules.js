@@ -18,8 +18,17 @@ export const eventUsage = (records, id) =>
     .reduce((n, r) => n + Number(r.guests || 1), 0);
 export const eventAttendance = (records, id) =>
   eventReservations(records, id)
-    .filter((r) => r.bookingStatus === "Checked in")
-    .reduce((n, r) => n + Number(r.guests || 1), 0);
+    .filter(activeReservation)
+    .reduce(
+      (n, r) =>
+        n +
+        (r.attendees?.length
+          ? r.attendees.filter((a) => a.checkedInAt).length
+          : r.bookingStatus === "Checked in"
+            ? Number(r.guests || 1)
+            : 0),
+      0,
+    );
 export const resourceRecords = (records) =>
   records.filter(
     (r) =>

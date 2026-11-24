@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import { createSearchIndex, searchIndex } from "./completion/searchIndex";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Command, Search, ArrowRight, Plus, BookmarkPlus } from "lucide-react";
 import { isTaskModule, moduleInfo } from "./customerModules";
 
@@ -51,7 +52,8 @@ export default function CustomerCommandBar({
   const [saved, setSaved] = useState([]);
   const [saveName, setSaveName] = useState("");
   const search = query.trim().toLowerCase();
-  const matches = records
+  const index = useMemo(() => createSearchIndex(records), [records]);
+  const matches = searchIndex(index, search)
     .filter(
       (r) =>
         ![
@@ -66,23 +68,7 @@ export default function CustomerCommandBar({
           "product",
         ].includes(r.recordType),
     )
-    .filter(
-      (r) =>
-        (moduleFilter === "All modules" || r.module === moduleFilter) &&
-        [
-          r.title,
-          r.detail,
-          r.owner,
-          r.asset,
-          r.company,
-          r.contact,
-          r.location,
-          r.reference,
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(search),
-    )
+    .filter((r) => moduleFilter === "All modules" || r.module === moduleFilter)
     .slice(0, 7);
   const commands = [
     { title: "Open Tasks & Projects", target: "Tasks & projects" },

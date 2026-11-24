@@ -1,8 +1,10 @@
+import PersonPermissions from "./completion/PersonPermissions";
 import { LinkedRecordFiles } from "./RecordFiles";
 import React, { useState } from "react";
 import { Empty, Status } from "./components";
 import { moduleInfo, isTaskModule } from "./customerModules";
 export default function StaffProfile({
+  org,
   person,
   records,
   canEdit,
@@ -82,6 +84,7 @@ export default function StaffProfile({
           "Assigned work",
           "History",
           "Documents",
+          "Permissions",
         ].map((t) => (
           <button
             role="tab"
@@ -94,7 +97,15 @@ export default function StaffProfile({
         ))}
       </div>
       <section role="tabpanel" aria-label={tab}>
-        {tab === "Documents" ? (
+        {tab === "Permissions" ? (
+          <PersonPermissions
+            org={org}
+            person={person}
+            records={records}
+            onUpdate={onUpdate}
+            canManage={canManage}
+          />
+        ) : tab === "Documents" ? (
           <LinkedRecordFiles
             record={person}
             records={records}

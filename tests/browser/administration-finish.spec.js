@@ -1,3 +1,4 @@
+import { openDestination } from "./navigation.js";
 import { test, expect } from "@playwright/test";
 async function open(page) {
   await page.goto("./");
@@ -6,13 +7,7 @@ async function open(page) {
     .click();
   await page.getByLabel("Example workspace").selectOption("demo-engineering");
 }
-async function go(page, name) {
-  await page.getByRole("button", { name: "Open navigation menu" }).click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name, exact: true })
-    .click();
-}
+const go = openDestination;
 test("leave approval enforces self-review policy and updates engineer eligibility", async ({
   page,
 }) => {

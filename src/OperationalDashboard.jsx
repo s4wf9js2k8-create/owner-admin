@@ -1,3 +1,4 @@
+import { reportPerson, reportLocation, reportStatus } from "./reportingRules";
 import React, { useState } from "react";
 import { Empty, Status } from "./components";
 import { moduleInfo, isTaskModule } from "./customerModules";
@@ -216,6 +217,17 @@ export default function OperationalDashboard({
     ),
     approvals: all.filter((r) => approvalType(r)),
   };
+  for (const [id, list] of Object.entries(rows)) {
+    const f = prefs.widgetFilters?.[id] || {};
+    rows[id] = list.filter(
+      (r) =>
+        (!f.department ||
+          reportPerson(r, all)?.team === f.department ||
+          r.team === f.department) &&
+        (!f.location || reportLocation(r, all) === f.location) &&
+        (!f.status || reportStatus(r) === f.status),
+    );
+  }
   return (
     <div className="ops-control">
       <header className="ops-banner">
@@ -307,6 +319,7 @@ export default function OperationalDashboard({
                 widgets: template,
                 wideWidgets: [],
                 widgetLimits: {},
+                widgetFilters: {},
               })
             }
           >
@@ -384,6 +397,49 @@ export default function OperationalDashboard({
                   ))}
                 </select>
               </label>
+            )}
+            {custom && (
+              <details className="completion-workspace">
+                <summary>Filters for {labels[id]}</summary>
+                {["department", "location", "status"].map((key) => (
+                  <label key={key}>
+                    {key}
+                    <select
+                      aria-label={labels[id] + " " + key + " filter"}
+                      value={prefs.widgetFilters?.[id]?.[key] || ""}
+                      onChange={(e) =>
+                        setPrefs({
+                          ...prefs,
+                          widgetFilters: {
+                            ...prefs.widgetFilters,
+                            [id]: {
+                              ...prefs.widgetFilters?.[id],
+                              [key]: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                    >
+                      <option value="">All</option>
+                      {[
+                        ...new Set(
+                          all
+                            .map((r) =>
+                              key === "department"
+                                ? reportPerson(r, all)?.team || r.team
+                                : key === "location"
+                                  ? reportLocation(r, all)
+                                  : reportStatus(r),
+                            )
+                            .filter(Boolean),
+                        ),
+                      ].map((v) => (
+                        <option key={v}>{v}</option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </details>
             )}
             {id === "financial" && (
               <p className="widget-summary">

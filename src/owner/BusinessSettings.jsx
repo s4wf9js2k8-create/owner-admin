@@ -1,3 +1,4 @@
+import BusinessDefaults from "./BusinessDefaults";
 import React, { useState } from "react";
 export default function BusinessSettings({ controller: c }) {
   const [saved, setSaved] = useState(false),
@@ -5,11 +6,12 @@ export default function BusinessSettings({ controller: c }) {
   return (
     <div>
       <h2>Channel Systems business settings</h2>
+      <BusinessDefaults controller={c} />
       <form
         onSubmit={async (e) => {
           e.preventDefault();
           const f = Object.fromEntries(new FormData(e.currentTarget));
-          if (await c.setFlags({ ...c.flags, business: f })) {
+          if (await c.setFlags({ ...c.flags, business: { ...b, ...f } })) {
             await c.log("Updated owner business settings");
             setSaved(true);
           }

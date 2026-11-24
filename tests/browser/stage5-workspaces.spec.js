@@ -1,3 +1,4 @@
+import { openDestination } from "./navigation.js";
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 async function open(page) {
@@ -7,13 +8,7 @@ async function open(page) {
     .click();
   await page.getByLabel("Example workspace").selectOption("demo-engineering");
 }
-async function go(page, name) {
-  await page.getByRole("button", { name: "Open navigation menu" }).click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name, exact: true })
-    .click();
-}
+const go = openDestination;
 test("report filters current records, saves its configuration and exports the filtered CSV", async ({
   page,
 }) => {

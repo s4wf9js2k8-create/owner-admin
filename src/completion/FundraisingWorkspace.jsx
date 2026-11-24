@@ -16,7 +16,9 @@ export default function FundraisingWorkspace({
   focusId,
   onNavigate,
 }) {
-  const rows = records.filter((r) => r.orgId === org.id && r.module === module),
+  const rows = records.filter(
+      (r) => r.orgId === org.id && moduleInfo(r.module).type === "donations",
+    ),
     campaigns = rows.filter((r) => r.recordType === "campaign"),
     donations = rows.filter((r) => r.recordType !== "campaign"),
     customers = records.filter(
@@ -28,7 +30,8 @@ export default function FundraisingWorkspace({
         moduleInfo(r.module).type === "events" &&
         r.recordType !== "booking",
     );
-  const [creating, setCreating] = useState(false),
+  const [source, setSource] = useState("All"),
+    [creating, setCreating] = useState(false),
     [selected, setSelected] = useState(""),
     [campaign, setCampaign] = useState("All"),
     [message, setMessage] = useState("");
@@ -38,10 +41,11 @@ export default function FundraisingWorkspace({
   const current = rows.find((r) => r.id === selected),
     shown = donations.filter(
       (d) =>
-        campaign === "All" ||
-        d.campaignId === campaign ||
-        (!d.campaignId &&
-          d.campaign === campaigns.find((c) => c.id === campaign)?.title),
+        (source === "All" || d.module === source) &&
+        (campaign === "All" ||
+          d.campaignId === campaign ||
+          (!d.campaignId &&
+            d.campaign === campaigns.find((c) => c.id === campaign)?.title)),
     );
   return (
     <div className="completion-workspace fundraising-workspace">
@@ -58,36 +62,49 @@ export default function FundraisingWorkspace({
           <button onClick={() => setCreating(true)}>Record donation</button>
         )}
       </div>
+      <label>
+        Source module
+        <select value={source} onChange={(e) => setSource(e.target.value)}>
+          <option>All</option>
+          {[...new Set(rows.map((r) => r.module))].map((m) => (
+            <option key={m}>{m}</option>
+          ))}
+        </select>
+      </label>
       <div className="purpose-grid">
-        {campaigns.map((c) => {
-          const amount = donations
-            .filter(
-              (d) =>
-                d.campaignId === c.id ||
-                (!d.campaignId && d.campaign === c.title),
-            )
-            .reduce((n, d) => n + Number(d.amount || 0), 0);
-          return (
-            <article className="purpose-card" key={c.id}>
-              <span className="eyebrow">{c.status}</span>
-              <h3>{c.title}</h3>
-              <p>{c.detail}</p>
-              <progress
-                value={amount}
-                max={Math.max(amount, Number(c.target) || 1)}
-              />
-              <p>
-                {money(amount)} of {money(c.target)} target
-              </p>
-              <button onClick={() => setCampaign(c.id)}>
-                View contributions
-              </button>
-              {canEdit && (
-                <button onClick={() => setSelected(c.id)}>Edit campaign</button>
-              )}
-            </article>
-          );
-        })}
+        {campaigns
+          .filter((c) => source === "All" || c.module === source)
+          .map((c) => {
+            const amount = donations
+              .filter(
+                (d) =>
+                  d.campaignId === c.id ||
+                  (!d.campaignId && d.campaign === c.title),
+              )
+              .reduce((n, d) => n + Number(d.amount || 0), 0);
+            return (
+              <article className="purpose-card" key={c.id}>
+                <span className="eyebrow">{c.status}</span>
+                <h3>{c.title}</h3>
+                <p>{c.detail}</p>
+                <progress
+                  value={amount}
+                  max={Math.max(amount, Number(c.target) || 1)}
+                />
+                <p>
+                  {money(amount)} of {money(c.target)} target
+                </p>
+                <button onClick={() => setCampaign(c.id)}>
+                  View contributions
+                </button>
+                {canEdit && (
+                  <button onClick={() => setSelected(c.id)}>
+                    Edit campaign
+                  </button>
+                )}
+              </article>
+            );
+          })}
       </div>
       {canCreate && (
         <details>

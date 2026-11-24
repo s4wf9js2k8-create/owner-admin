@@ -169,18 +169,7 @@ export default function ModulesPage({ controller }) {
                     <span>
                       <b>{m.name}</b>
                       <small>{m.description}</small>
-                      <small>
-                        {[
-                          "Inventory and stock",
-                          "Documents & files",
-                          "Tasks & projects",
-                          "Attendance & timesheets",
-                          "Leave and availability",
-                          "Quotes and invoices",
-                        ].includes(m.name)
-                          ? "Functional demo"
-                          : "Partially implemented demo"}
-                      </small>
+                      <small>Functional demo</small>
                       <small>
                         Industry presets:{" "}
                         {Object.values(sectors)

@@ -21,6 +21,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run test:e2e
+      - run: npm run test:e2e:mobile
   postgres:
     runs-on: ubuntu-latest
     steps:

@@ -91,13 +91,13 @@ export default function CustomerAssetOps({
   const templates = records.filter(
     (r) =>
       r.orgId === org.id &&
-      r.module === module &&
+      moduleInfo(r.module).type === type &&
       r.recordType === "inspection-template",
   );
   const rows = records.filter(
     (r) =>
       r.orgId === org.id &&
-      r.module === module &&
+      moduleInfo(r.module).type === type &&
       r.recordType !== "inspection-template" &&
       r.recordType !== "maintenance-template",
   );

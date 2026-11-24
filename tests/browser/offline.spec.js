@@ -27,5 +27,5 @@ test("offline service isolates synthetic tenants in browser runtime without chan
     };
   });
   expect(result).toEqual({ denial: "FORBIDDEN", progress: 100, beta: [] });
-  await expect(page.locator("body")).toContainText("Owner Admin");
+  await expect(page.locator("body")).toContainText("Channel Systems");
 });

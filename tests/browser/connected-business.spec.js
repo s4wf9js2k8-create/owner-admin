@@ -1,6 +1,7 @@
+import { openDestination } from "./navigation.js";
 import {test,expect} from "@playwright/test";
 async function enter(page){await page.goto("./");await page.getByRole("button",{name:"Explore customer workspace"}).click();await page.getByLabel("Example workspace").selectOption("demo-visitor");}
-async function nav(page,name){await page.getByRole("button",{name:"Open navigation menu"}).click();await page.getByRole("navigation").getByRole("button",{name,exact:true}).click();}
+const nav = openDestination;
 test("event capacity, waitlist and check-in",async({page})=>{
  await enter(page);await nav(page,"Events & bookings");await page.getByRole("button",{name:"New event"}).click();
  await page.getByLabel("Event name").fill("Sample guided tour");await page.getByLabel("Starts").fill("2026-12-15T10:00");await page.getByLabel("Capacity").fill("2");await page.getByRole("button",{name:"Create event"}).click();

@@ -1,3 +1,4 @@
+import { canonicalModule } from "./completion/moduleNavigation";
 import React, { useState, useEffect } from "react";
 import { isTaskModule, moduleInfo } from "./customerModules";
 const InventoryWorkspace = React.lazy(() => import("./InventoryWorkspace"));
@@ -7,7 +8,11 @@ const NotificationInbox = React.lazy(() => import("./NotificationInbox"));
 const CommunicationsWorkspace = React.lazy(
   () => import("./CommunicationsWorkspace"),
 );
-import { recordInScope, approvalToken } from "./administrationRules";
+import {
+  recordInScope,
+  approvalToken,
+  approvalType,
+} from "./administrationRules";
 const CompanyConfiguration = React.lazy(() => import("./CompanyConfiguration"));
 const ApprovalsPage = React.lazy(() =>
   import("./AdministrationPages").then((m) => ({ default: m.ApprovalsPage })),
@@ -35,6 +40,9 @@ const CustomerDirectory = React.lazy(
 );
 const CustomerFormsOps = React.lazy(
   () => import("./completion/FormsWorkspace"),
+);
+const CollectionWorkspace = React.lazy(
+  () => import("./completion/CollectionWorkspace"),
 );
 const VisitorWorkspace = React.lazy(
   () => import("./completion/VisitorWorkspace"),
@@ -88,6 +96,7 @@ export default function CustomerWorkspace({
   customerRoles,
   roleModules,
   roleTeams,
+  onPersona,
   externalFocus,
   notificationStore,
   setNotificationStore,
@@ -127,18 +136,39 @@ export default function CustomerWorkspace({
     if (externalFocus?.orgId === org.id && externalFocus.id)
       setFocus({ page: externalFocus.page, id: externalFocus.id });
   }, [externalFocus, org.id]);
-  const roleActions =
-    customerRoles[customerRole] || demoRoleDefaults[customerRole] || [];
+  const people = scopedRecords(records, org).filter((r) =>
+    ["Staff & volunteers", "Volunteers", "Staff"].includes(r.module),
+  );
+  const [actor, setActor] = useState(
+    () =>
+      people.find((p) => p.module === "Staff & volunteers")?.title ||
+      people[0]?.title ||
+      "Sample team member",
+  );
+  const currentPerson =
+    people.find((p) => p.title === actor) ||
+    people.find((p) => p.module === "Staff & volunteers") ||
+    people[0];
+  const activeActor = currentPerson?.title || "Sample team member",
+    personPolicy = currentPerson?.permissionOverrides || {};
+  useEffect(() => {
+    onPersona?.({ orgId: org.id, ...personPolicy });
+  }, [org.id, currentPerson, onPersona]);
+  const roleActions = (
+    customerRoles[customerRole] ||
+    demoRoleDefaults[customerRole] ||
+    []
+  ).filter((a) => !personPolicy.disabledActions?.includes(a));
   const canView = roleActions.includes("View");
   const visibleOrg = {
     ...org,
     modules: org.modules.filter(
-      (m) => canView && moduleAllowed(customerRole, m, roleModules),
+      (m) =>
+        canView &&
+        moduleAllowed(customerRole, m, roleModules) &&
+        !personPolicy.disabledModules?.includes(m),
     ),
   };
-  const people = scopedRecords(records, org).filter((r) =>
-    ["Staff & volunteers", "Volunteers", "Staff"].includes(r.module),
-  );
   const currentTeam = roleTeams[customerRole] || "All teams";
   const visibleRecords = scopedRecords(records, visibleOrg).filter((r) => {
     if (currentTeam === "All teams") return true;
@@ -155,7 +185,7 @@ export default function CustomerWorkspace({
   });
   const choices = [
     ...new Set(
-      visibleRecords
+      people
         .filter((r) =>
           ["Staff & volunteers", "Staff", "Volunteers"].includes(r.module),
         )
@@ -167,43 +197,14 @@ export default function CustomerWorkspace({
         .map((r) => r.title),
     ),
   ];
-  const [actor, setActor] = useState(choices[0] || "Sample team member");
-  const canEdit =
-    canView &&
-    (
-      customerRoles[customerRole] ||
-      demoRoleDefaults[customerRole] ||
-      []
-    ).includes("Edit");
-  const canCreate =
-    canView &&
-    (
-      customerRoles[customerRole] ||
-      demoRoleDefaults[customerRole] ||
-      []
-    ).includes("Create");
-  const canApprove =
-    canView &&
-    (
-      customerRoles[customerRole] ||
-      demoRoleDefaults[customerRole] ||
-      []
-    ).includes("Approve");
-  const canManage =
-    canView && (customerRoles[customerRole] || []).includes("Manage");
-  const canExport =
-    canView &&
-    (
-      customerRoles[customerRole] ||
-      demoRoleDefaults[customerRole] ||
-      []
-    ).includes("Export");
-  const canManageStaff = canManage || roleActions.includes("Manage staff");
-  const canReport = canView && roleActions.includes("Reports");
-  const activeActor = choices.includes(actor)
-    ? actor
-    : choices[0] || "Sample team member";
-  const currentPerson = people.find((p) => p.title === activeActor);
+
+  const canEdit = canView && roleActions.includes("Edit"),
+    canCreate = canView && roleActions.includes("Create"),
+    canApprove = canView && roleActions.includes("Approve"),
+    canManage = canView && roleActions.includes("Manage"),
+    canExport = canView && roleActions.includes("Export"),
+    canManageStaff = canManage || roleActions.includes("Manage staff"),
+    canReport = canView && roleActions.includes("Reports");
   const actorKey = org.id + ":" + (currentPerson?.id || activeActor);
   const userInbox = notificationUsers[actorKey] || {
     read: [],
@@ -226,6 +227,9 @@ export default function CustomerWorkspace({
   const scope = {
     ownership: ["Staff", "Volunteer"].includes(customerRole) ? "Mine" : "All",
     ...org.workspaceConfig?.roleScopes?.[customerRole],
+    ...(personPolicy.department ? { department: personPolicy.department } : {}),
+    ...(personPolicy.location ? { location: personPolicy.location } : {}),
+    ...(personPolicy.ownOnly ? { ownership: "Mine" } : {}),
     sensitive:
       customerRole === "Administrator" ||
       Boolean(org.workspaceConfig?.roleScopes?.[customerRole]?.sensitive),
@@ -253,8 +257,10 @@ export default function CustomerWorkspace({
                 canReport)) ||
             (target === "Tasks & projects" &&
               visibleOrg.modules.some(isTaskModule));
-  const current = allowedPage(page) ? page : "Dashboard";
+  const normalizedPage = canonicalModule(page, visibleOrg.modules);
+  const current = allowedPage(normalizedPage) ? normalizedPage : "Dashboard";
   const navigate = (target, options = {}) => {
+    target = canonicalModule(target, visibleOrg.modules);
     if (!allowedPage(target)) {
       setAccessMessage(
         "This page is unavailable to the selected demonstration role.",
@@ -291,6 +297,9 @@ export default function CustomerWorkspace({
         !(
           canApprove &&
           (patch._approval ||
+            ["decideSwap", "creditInvoice", "refundInvoice"].includes(
+              patch._workflow?.kind,
+            ) ||
             Object.keys(patch).every((key) => key === "approverId"))
         ))
     )
@@ -302,6 +311,8 @@ export default function CustomerWorkspace({
         "personId",
         "relatedRecordId",
         "assetRefId",
+        "targetId",
+        "reviewerId",
       ]) {
         const target = patch._workflow[key];
         if (target && !permittedRecords.some((r) => r.id === target))
@@ -312,12 +323,24 @@ export default function CustomerWorkspace({
           "Creating corrective maintenance requires Create permission.",
         );
       if (
-        ["archive", "restore", "assessTraining"].includes(kind) &&
+        [
+          "archive",
+          "restore",
+          "assessTraining",
+          "decideSwap",
+          "creditInvoice",
+          "refundInvoice",
+        ].includes(kind) &&
         !canApprove
       )
         return deny("This workflow requires approval permission.");
       if (
-        ["formSubmit", "correctiveSafety", "generateSchedule"].includes(kind) &&
+        [
+          "formSubmit",
+          "correctiveSafety",
+          "generateSchedule",
+          "repeatInspection",
+        ].includes(kind) &&
         !canCreate
       )
         return deny("Creating linked records requires Create permission.");
@@ -329,6 +352,8 @@ export default function CustomerWorkspace({
       )
         return deny("This role can record its own work only.");
     }
+    if ((patch.permissionOverrides || patch.demoRole) && !canManage)
+      return deny("Changing profile permissions requires Manage permission.");
     if (moduleInfo(record.module).type === "people" && !canManageStaff)
       return deny("Managing staff profiles requires Manage staff permission.");
     if (
@@ -356,6 +381,25 @@ export default function CustomerWorkspace({
       !accessibleRecords.some((r) => r.id === patch._stockMovement.orderId)
     )
       return deny("The receiving job is outside your access.");
+    if (
+      ["leave", "timesheets", "documents", "training"].includes(
+        moduleInfo(record.module).type,
+      ) &&
+      ["Approved", "Rejected"].includes(patch.approval) &&
+      approvalType(record)
+    ) {
+      if (!currentPerson)
+        return deny("Choose a staff profile before reviewing.");
+      return onUpdate(orgId, id, {
+        _actor: actorMeta,
+        _approval: {
+          token: approvalToken(record),
+          actorId: currentPerson.id,
+          decision: patch.approval === "Approved" ? "Approve" : "Reject",
+          comment: "Decision recorded in " + record.module,
+        },
+      });
+    }
     if (
       record.requiresSupervisorReview &&
       ["Approved", "Requires changes"].includes(patch.review)
@@ -419,7 +463,10 @@ export default function CustomerWorkspace({
     actor: activeActor,
     canEdit,
   };
-  const focusId = focus?.page === current ? focus.id : null;
+  const focusId =
+    canonicalModule(focus?.page, visibleOrg.modules) === current
+      ? focus.id
+      : null;
   let content;
   if (current === "Dashboard")
     content = (
@@ -586,6 +633,8 @@ export default function CustomerWorkspace({
         }
         canApprove={canApprove}
         canManage={canManage}
+        onConfigure={configure}
+        actorId={currentPerson?.id || ""}
         createRequest={createRequest}
       />
     );
@@ -621,6 +670,17 @@ export default function CustomerWorkspace({
         onAdd={safeAdd}
         focusId={focusId}
         canCreate={canCreate}
+      />
+    );
+  else if (moduleInfo(current).type === "archives")
+    content = (
+      <CollectionWorkspace
+        {...shared}
+        module={current}
+        onAdd={safeAdd}
+        canCreate={canCreate}
+        canExport={canExport}
+        focusId={focusId}
       />
     );
   else if (moduleInfo(current).type === "visitors")
@@ -718,6 +778,7 @@ export default function CustomerWorkspace({
   else if (moduleInfo(current).type === "finance")
     content = (
       <FinancialWorkspace
+        onConfigure={canManage ? configure : undefined}
         key={current}
         {...shared}
         module={current}
@@ -764,6 +825,7 @@ export default function CustomerWorkspace({
   else if (moduleInfo(current).type === "events")
     content = (
       <CustomerEventsOps
+        canExport={canExport}
         key={current}
         org={visibleOrg}
         module={current}
@@ -845,7 +907,12 @@ export default function CustomerWorkspace({
           <select
             aria-label="Sample team member"
             value={activeActor}
-            onChange={(e) => setActor(e.target.value)}
+            onChange={(e) => {
+              setActor(e.target.value);
+              const p = people.find((p) => p.title === e.target.value);
+              if (p?.demoRole && customerRoles[p.demoRole])
+                setCustomerRole(p.demoRole);
+            }}
           >
             {choices.length ? (
               choices.map((name) => <option key={name}>{name}</option>)
