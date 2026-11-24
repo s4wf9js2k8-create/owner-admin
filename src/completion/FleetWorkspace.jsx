@@ -1,3 +1,4 @@
+import AssignmentPolicy from "../reconciliation/AssignmentPolicy";
 import React, { useEffect, useState } from "react";
 import { Modal, Empty, Status } from "../components";
 import { moduleInfo } from "../customerModules";
@@ -10,6 +11,7 @@ export default function FleetWorkspace({
   org,
   module,
   records,
+  historyRecords = records,
   onAdd,
   onUpdate,
   onNavigate,
@@ -33,7 +35,12 @@ export default function FleetWorkspace({
     [requestId, setRequestId] = useState(() => crypto.randomUUID()),
     [busy, setBusy] = useState(false);
   const current = rows.find((r) => r.id === selected),
-    eligibility = eligibleStaff(records, org.id, { kind: "fleet", date }),
+    eligibility = eligibleStaff(records, org.id, {
+      kind: "fleet",
+      date,
+      requiredQualification: current?.requiredQualification,
+      department: current?.requiredDepartment,
+    }),
     engineers = eligibleStaff(records, org.id, { kind: "maintenance", date });
   useEffect(() => {
     if (focusId) setSelected(focusId);
@@ -55,7 +62,9 @@ export default function FleetWorkspace({
     return ok;
   };
   const jobs = current
-    ? records.filter((r) => r.sourceFleetId === current.id)
+    ? historyRecords.filter(
+        (r) => r.orgId === org.id && r.sourceFleetId === current.id,
+      )
     : [];
   return (
     <div className="completion-workspace fleet-workspace">
@@ -356,6 +365,13 @@ export default function FleetWorkspace({
               </ul>
             </>
           )}
+          <AssignmentPolicy
+            key={current.id}
+            record={current}
+            records={records}
+            onUpdate={onUpdate}
+            canEdit={canEdit}
+          />
           {tab === "Daily checks" && (
             <>
               {canEdit && (

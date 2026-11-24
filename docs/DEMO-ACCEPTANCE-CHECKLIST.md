@@ -1,3 +1,27 @@
+# Current original-spec acceptance
+
+Baseline: merged PR #38. This release reconciles the [original specification](ORIGINAL-SPEC-RECONCILIATION.md) and [current page audit](FULL-APPLICATION-AUDIT.md). Final release identifiers and CI/deployment/live verification are recorded in its PR.
+
+- [x] Separately assigned subtasks retain parent/project IDs, prevent cycles and block premature completion; manual recurrence does not duplicate the next occurrence.
+- [x] Project brief/manager/deadline/risk can be edited; staff/resource/date rules and visible history remain connected.
+- [x] Staff personal name/email/telephone editing retains acting-user identity and refreshes foreign-key labels.
+- [x] Approved available-date requests and Recorded dates only policies gate assignments without consuming leave; changed request dates invalidate stale decisions.
+- [x] New employee → training approval → availability approval → shift → clock-in/out → timesheet approval → reporting passes as one browser workflow.
+- [x] Attendance expectations/stale sessions, vehicle-specific qualification/department rules and event staffing-shortage alerts derive from connected records.
+- [x] Service/resource bookings enforce concurrent capacity, exclusive scheduling clashes, price/customer references, single invoicing and cancellation corrections.
+- [x] Document recent links survive module navigation; revisions retain history and re-enter independent review.
+- [x] Owner announcements reach selected organisations without optional communications and disappear from dashboard/notifications on archive.
+- [x] Related dossiers/progress keep permitted archived records; source links open the archived record and restoration retains its history.
+- [x] Support assignments use active fictional owner-account IDs; local refunds and safety training appear in related histories.
+- [x] npm ci, lint, 158 unit tests and build passed locally; changed workflows and short phone/tablet booking smoke passed.
+- Final desktop regression and isolated PostgreSQL CI must pass before merging. Pages deployment and a small live verification must succeed before publication is reported.
+
+No permanent storage, production authentication/authorization, external delivery/payment or real server/backup operation is claimed. No EVLT, Vercel or paid infrastructure is used.
+
+---
+
+## Historical acceptance evidence
+
 # Demonstration acceptance checklist
 
 Verified baseline release: [PR #35](https://github.com/s4wf9js2k8-create/owner-admin/pull/35) and [PR #36](https://github.com/s4wf9js2k8-create/owner-admin/pull/36), merged as `266dd08` and `5671507`. **137 unit tests, 252 browser cases and 18 PostgreSQL integration tests passed in CI; 93 browser workflows passed against the deployed GitHub Pages site.** The public JS/CSS bytes match the built artifact. See [release report](RELEASE-2026-11-22.md) and [current checklist](PAGE-CHECKLIST.md). Earlier counts below are historical evidence for earlier commits, not replacements for final-head verification.

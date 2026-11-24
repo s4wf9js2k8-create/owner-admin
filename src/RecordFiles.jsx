@@ -30,6 +30,7 @@ export function LinkedRecordFiles({ record, records, onNavigate }) {
             key={r.id}
             onClick={() => onNavigate(r.module, { recordId: r.id })}
           >
+            {r.archivedAt ? "Archived · " : ""}
             {r.title} · Version {r.version || 1}
           </button>
         ))

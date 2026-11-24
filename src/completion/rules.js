@@ -1,3 +1,4 @@
+import { originalCommand } from "../reconciliation/rules.js";
 import { finalCommand, validateFinalRecord } from "./finalRules.js";
 import { validateDemoAssignment } from "../demoAssignmentRules.js";
 import { moduleInfo } from "../customerModules.js";
@@ -172,6 +173,8 @@ export function relatedTo(record, id) {
   ].includes(id);
 }
 export function businessCommand(records, org, id, command, actor = {}) {
+  const original = originalCommand(records, org, id, command, actor);
+  if (original) return original;
   const final = finalCommand(records, org, id, command, actor);
   if (final) return final;
   let next = structuredClone(records);
@@ -217,6 +220,9 @@ export function businessCommand(records, org, id, command, actor = {}) {
       startTime: command.startTime,
       endTime: command.endTime,
       excludedRecordId: id,
+      requiredQualification:
+        kind === "fleet" ? record.requiredQualification : undefined,
+      department: kind === "fleet" ? record.requiredDepartment : undefined,
     });
     assert(
       assessment.eligible,

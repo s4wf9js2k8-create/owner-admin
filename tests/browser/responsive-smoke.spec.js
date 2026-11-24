@@ -27,6 +27,29 @@ test("touch navigation, operational agenda and owner access controls fit the scr
     page.getByRole("button", { name: "Save person permissions" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Close dialog" }).click();
+  await page.getByLabel("Example workspace").selectOption("demo-visitor");
+  await nav(page, "Bookings and appointments");
+  await page
+    .getByRole("button", { name: "Resource bookings", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "New resource booking", exact: true })
+    .click();
+  const booking = page.getByRole("dialog");
+  await booking.getByLabel("Booking title").fill("Touch resource reservation");
+  await booking
+    .getByRole("combobox", { name: "Booking customer", exact: true })
+    .selectOption({ index: 1 });
+  await booking.getByLabel("Booking starts").fill("2027-01-07T09:00");
+  await booking.getByLabel("Booking ends").fill("2027-01-07T10:00");
+  await booking
+    .getByRole("combobox", { name: "Bookable resource", exact: true })
+    .selectOption("demo-visitor-meeting-room");
+  await booking.getByRole("button", { name: "Save resource booking" }).click();
+  await expect(booking).toHaveCount(0);
+  await expect(page.locator(".resource-booking-card")).toContainText(
+    "Touch resource reservation",
+  );
   await page
     .getByRole("button", { name: "Owner console", exact: true })
     .click();

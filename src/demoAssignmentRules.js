@@ -20,6 +20,9 @@ export function validateDemoAssignment(
   )
     return;
   const keys = [
+    "leadId",
+    "requiredDepartment",
+    "requiredQualification",
     "driverId",
     "personId",
     "ownerId",
@@ -34,6 +37,7 @@ export function validateDemoAssignment(
   ];
   if (!creating && !keys.some((key) => key in patch)) return;
   const id =
+    record.leadId ||
     record.driverId ||
     record.engineerId ||
     record.inspectorId ||

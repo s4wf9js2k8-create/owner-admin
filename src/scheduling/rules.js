@@ -7,6 +7,7 @@ export const reservationRecord = (r) =>
 export const appointmentRecord = (r) =>
   moduleInfo(r.module).type === "bookings" &&
   r.recordType !== "resource" &&
+  r.recordType !== "resource-booking" &&
   !reservationRecord(r);
 export const activeReservation = (r) =>
   ["Confirmed", "Checked in"].includes(r.bookingStatus);
@@ -207,6 +208,7 @@ export function validateScheduledRecord(record, previous, records, org) {
           startTime: record.startTime,
           endTime: record.endTime,
           excludedRecordId: record.id,
+          department: record.requiredDepartment,
           requiredQualification:
             record.bookingType === "Site inspection"
               ? "Safety inspection"
@@ -232,7 +234,9 @@ export function validateScheduledRecord(record, previous, records, org) {
           (r) =>
             r.id !== record.id &&
             scheduledActive(r) &&
-            (eventRecord(r) || appointmentRecord(r)) &&
+            (eventRecord(r) ||
+              appointmentRecord(r) ||
+              r.recordType === "resource-booking") &&
             resourcesFor(r).includes(id) &&
             overlaps(r, record),
         );

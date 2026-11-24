@@ -114,6 +114,52 @@ export default function StaffProfile({
         ) : tab === "Personal details" ? (
           <>
             <p>{person.detail}</p>
+            <dl className="completion-properties">
+              <dt>Email</dt>
+              <dd>{person.email || "Not recorded"}</dd>
+              <dt>Telephone</dt>
+              <dd>{person.phone || "Not recorded"}</dd>
+            </dl>
+            {canEdit && (
+              <form
+                key={person.id}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  onUpdate(
+                    person.orgId,
+                    person.id,
+                    Object.fromEntries(new FormData(e.currentTarget)),
+                  );
+                }}
+              >
+                <label>
+                  Profile name
+                  <input
+                    name="title"
+                    required
+                    maxLength={120}
+                    defaultValue={person.title}
+                  />
+                </label>
+                <label>
+                  Profile email
+                  <input
+                    name="email"
+                    type="email"
+                    defaultValue={person.email || ""}
+                  />
+                </label>
+                <label>
+                  Profile telephone
+                  <input
+                    name="phone"
+                    type="tel"
+                    defaultValue={person.phone || ""}
+                  />
+                </label>
+                <button>Save personal details</button>
+              </form>
+            )}
             <div className="form-pair">
               <label>
                 Role
@@ -172,6 +218,24 @@ export default function StaffProfile({
             <h3>
               {tab === "History" ? "Completed work & approved records" : tab}
             </h3>
+            {tab === "Schedule" && (
+              <label>
+                Availability policy
+                <select
+                  aria-label="Availability policy"
+                  disabled={!canEdit}
+                  value={person.availabilityMode || "Regular availability"}
+                  onChange={(e) => update({ availabilityMode: e.target.value })}
+                >
+                  <option>Regular availability</option>
+                  <option>Recorded dates only</option>
+                </select>
+                <small>
+                  Recorded dates only requires approved availability for every
+                  assignment day.
+                </small>
+              </label>
+            )}
             {list.map((r) => (
               <button
                 key={r.id}
@@ -191,7 +255,8 @@ export default function StaffProfile({
                       r.dueDate ||
                       r.expiry ||
                       "No date"}{" "}
-                    · {r.location || r.module}
+                    · {r.archivedAt ? "Archived · " : ""}
+                    {r.location || r.module}
                   </small>
                 </span>
                 <Status>{r.approval || r.status}</Status>
@@ -201,8 +266,8 @@ export default function StaffProfile({
             {!list.length && <Empty>No linked records in this section.</Empty>}
             {tab === "History" && (
               <p className="module-disclaimer">
-                History is derived from current completed and approved records;
-                it is not a secure audit trail.
+                History includes current and archived completed or approved
+                records; it is not a secure audit trail.
               </p>
             )}
           </>

@@ -845,39 +845,6 @@ function Announcements({ data, setData, controller }) {
       setAnnouncementError("Select at least one customer before publishing.");
       return;
     }
-    if (!draft) {
-      const targets = controller.orgs.filter(
-        (o) =>
-          o.status !== "Archived" &&
-          (audience === "All companies" ||
-            (audience === "Selected companies" && companyIds.includes(o.id)) ||
-            (audience === "Pilot customers" && o.plan === "Pilot") ||
-            (audience === "Professional customers" &&
-              o.plan === "Professional") ||
-            (audience === "Enterprise customers" && o.plan === "Enterprise")),
-      );
-      if (
-        !(await controller.run(async () => {
-          for (const o of targets) {
-            const module = o.modules.find((m) => m === "Staff communications");
-            if (module)
-              await controller.backend.records.create(o.id, {
-                module,
-                title: title.trim(),
-                body: body.trim(),
-                audience: "Company",
-                recordType: "notice",
-                status: "Published",
-                priority: "Normal",
-                publishedAt: new Date().toISOString(),
-                sourceOwnerAnnouncementId: id,
-                acknowledgements: [],
-              });
-          }
-        }))
-      )
-        return;
-    }
     setData((d) => ({
       ...d,
       announcements: [
@@ -888,6 +855,7 @@ function Announcements({ data, setData, controller }) {
           audience,
           companyIds,
           status: draft ? "Draft" : "Published (demo)",
+          publishedAt: draft ? "" : new Date().toISOString(),
           date: new Date().toLocaleDateString("en-GB"),
         },
         ...d.announcements.filter((a) => a.id !== id),

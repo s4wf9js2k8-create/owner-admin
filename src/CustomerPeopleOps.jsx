@@ -13,6 +13,9 @@ import RotaPlanner from "./RotaPlanner";
 import StaffProfile from "./StaffProfile";
 import { weeklyHours, timesheetCsv } from "./timeReporting";
 import { StaffingRequirements, ShiftSwaps } from "./completion/RotaExtensions";
+import AvailabilityRanges from "./reconciliation/AvailabilityRanges";
+import AttendanceExpectations from "./reconciliation/AttendanceExpectations";
+import AssignmentPolicy from "./reconciliation/AssignmentPolicy";
 import AttendanceCorrection from "./completion/AttendanceCorrection";
 import ScheduleTemplates from "./completion/ScheduleTemplates";
 import LeaveCalendar from "./completion/LeaveCalendar";
@@ -76,6 +79,7 @@ export default function CustomerPeopleOps({
   org,
   module,
   records,
+  historyRecords = records,
   onAdd,
   onUpdate,
   onNavigate,
@@ -374,6 +378,11 @@ export default function CustomerPeopleOps({
           </div>
         )}
         {error && <p role="alert">{error}</p>}
+        <AttendanceExpectations
+          org={org}
+          records={records}
+          onNavigate={onNavigate}
+        />
         <h3 className="section-title">Open clock-ins</h3>
         <div className="people-time-list">
           {open.length ? (
@@ -664,6 +673,13 @@ export default function CustomerPeopleOps({
           person. Approved requests affect assignment eligibility; holiday and
           pro-rata payroll rules are not inferred.
         </p>
+        <AvailabilityRanges
+          org={org}
+          module={module}
+          records={records}
+          onAdd={onAdd}
+          canCreate={canCreate}
+        />
         <LeaveCalendar org={org} records={records} onOpen={setSelected} />
         <div className="leave-list">
           {filtered.map((r) => (
@@ -671,11 +687,12 @@ export default function CustomerPeopleOps({
               <div>
                 <h3>{r.person || r.title}</h3>
                 <p>
+                  {r.requestType === "Available" ? "Available dates · " : ""}
                   {date(r.startDate)} – {date(r.endDate)} ·{" "}
                   <Status>{r.approval || "Pending"}</Status>
                 </p>
                 <small>{r.detail}</small>
-                {conflicts(r).length > 0 && (
+                {r.requestType !== "Available" && conflicts(r).length > 0 && (
                   <div className="rota-warning">
                     <AlertTriangle size={14} /> {conflicts(r).length} scheduled
                     shifts overlap this request.
@@ -930,6 +947,13 @@ export default function CustomerPeopleOps({
             {error && <p role="alert">{error}</p>}
             <button disabled={!canEdit}>Save shift changes</button>
           </form>
+          <AssignmentPolicy
+            key={r.id}
+            record={r}
+            records={records}
+            onUpdate={onUpdate}
+            canEdit={canEdit}
+          />
           <ShiftSwaps
             actorId={actorId}
             org={org}
@@ -944,9 +968,9 @@ export default function CustomerPeopleOps({
         <StaffProfile
           org={org}
           person={r}
-          records={records}
+          records={historyRecords}
           canEdit={canEdit}
-          canManage={canManage}
+          canManage={canManage && canEdit}
           onUpdate={onUpdate}
           onNavigate={onNavigate}
         />

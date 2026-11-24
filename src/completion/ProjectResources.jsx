@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
+import { QualifiedStaffSelect } from "../LinkedSelectors";
+import { eligibleStaff } from "../staffEligibility";
 import { moduleInfo } from "../customerModules";
 export default function ProjectResources({
   project: p,
@@ -7,6 +9,8 @@ export default function ProjectResources({
   onNavigate,
   canEdit,
 }) {
+  const [deadline, setDeadline] = useState(p.dueDate || ""),
+    [message, setMessage] = useState("");
   const people = records.filter(
       (r) => r.orgId === p.orgId && moduleInfo(r.module).type === "people",
     ),
@@ -25,6 +29,12 @@ export default function ProjectResources({
         r.projectId === p.id &&
         moduleInfo(r.module).type === "timesheets",
     );
+  const assessed = eligibleStaff(records, p.orgId, {
+      kind: "projects",
+      date: p.dueDate || new Date().toISOString().slice(0, 10),
+      excludedRecordId: p.id,
+    }),
+    eligibleIds = new Set(assessed.eligible.map((s) => s.id));
   const hours = times.reduce(
       (n, t) =>
         n +
@@ -40,6 +50,70 @@ export default function ProjectResources({
     cost = (p.costs || []).reduce((n, c) => n + Number(c.amount || 0), 0);
   return (
     <section className="completion-workspace">
+      {canEdit && (
+        <details>
+          <summary>Edit project brief, manager and deadline</summary>
+          <form
+            key={p.id}
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const f = Object.fromEntries(new FormData(e.currentTarget)),
+                lead = people.find((s) => s.title === f.manager);
+              if (
+                await onUpdate(p.orgId, p.id, {
+                  title: f.title,
+                  detail: f.detail,
+                  dueDate: f.dueDate,
+                  leadId: lead?.id || "",
+                  ownerId: lead?.id || "",
+                  owner: lead?.title || "",
+                  risk: f.risk,
+                })
+              )
+                setMessage("Project brief saved.");
+            }}
+          >
+            <label>
+              Project name
+              <input name="title" required defaultValue={p.title} />
+            </label>
+            <label>
+              Project brief
+              <textarea name="detail" defaultValue={p.detail} />
+            </label>
+            <label>
+              Project deadline
+              <input
+                type="date"
+                name="dueDate"
+                required
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+              />
+            </label>
+            <QualifiedStaffSelect
+              records={records}
+              orgId={p.orgId}
+              kind="projects"
+              date={deadline}
+              name="manager"
+              label="Project manager"
+              value={p.owner}
+              required
+            />
+            <label>
+              Project risk level
+              <select name="risk" defaultValue={p.risk || "Low"}>
+                <option>Low</option>
+                <option>Medium</option>
+                <option>High</option>
+              </select>
+            </label>
+            <button>Save project brief</button>
+            {message && <p role="status">{message}</p>}
+          </form>
+        </details>
+      )}
       <details>
         <summary>Project team, resources and budget controls</summary>
         {canEdit && (
@@ -58,18 +132,55 @@ export default function ProjectResources({
           >
             <fieldset>
               <legend>Existing project team</legend>
-              {people.map((s) => (
-                <label className="task-check" key={s.id}>
-                  <input
-                    type="checkbox"
-                    name="member"
-                    value={s.id}
-                    defaultChecked={p.memberIds?.includes(s.id)}
-                  />
-                  {s.title}
-                </label>
-              ))}
+              {people
+                .filter(
+                  (s) => eligibleIds.has(s.id) || p.memberIds?.includes(s.id),
+                )
+                .map((s) => (
+                  <label className="task-check" key={s.id}>
+                    <input
+                      type="checkbox"
+                      name="member"
+                      value={s.id}
+                      disabled={!eligibleIds.has(s.id)}
+                      defaultChecked={p.memberIds?.includes(s.id)}
+                    />
+                    {s.title}
+                    {!eligibleIds.has(s.id) && (
+                      <>
+                        <input name="member" type="hidden" value={s.id} />
+                        <span>
+                          {" "}
+                          · Existing member unavailable; remove or reassign
+                          before rescheduling.
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onUpdate(p.orgId, p.id, {
+                              memberIds: p.memberIds.filter(
+                                (id) => id !== s.id,
+                              ),
+                            })
+                          }
+                        >
+                          Remove unavailable member
+                        </button>
+                      </>
+                    )}
+                  </label>
+                ))}
             </fieldset>
+            {!!assessed.excluded.length && (
+              <details>
+                <summary>Why other team members are unavailable</summary>
+                {assessed.excluded.map((s) => (
+                  <p key={s.id}>
+                    {s.title}: {s.assessment.reasons.join("; ")}
+                  </p>
+                ))}
+              </details>
+            )}
             <fieldset>
               <legend>Project equipment</legend>
               {assets.map((a) => (

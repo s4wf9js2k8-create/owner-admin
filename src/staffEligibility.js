@@ -126,15 +126,40 @@ export function availabilityAssessment(
       (r.personId === person.id ||
         (!r.personId && normal(r.person) === normal(person.title))) &&
       r.approval === "Approved" &&
+      r.requestType !== "Available" &&
       datePart(r.startDate) <= lastDay &&
       datePart(r.endDate) >= day,
   );
   if (leave.length) reasons.push("Approved leave on " + day);
+  if (person.availabilityMode === "Recorded dates only") {
+    const available = related.filter(
+      (r) =>
+        typeOf(r) === "leave" &&
+        r.requestType === "Available" &&
+        r.approval === "Approved" &&
+        (r.personId === person.id ||
+          (!r.personId && r.person === person.title)),
+    );
+    for (
+      let point = Date.parse(day + "T12:00Z"),
+        end = Date.parse(lastDay + "T12:00Z");
+      point <= end;
+      point += 86400000
+    ) {
+      const d = new Date(point).toISOString().slice(0, 10);
+      if (!available.some((r) => r.startDate <= d && r.endDate >= d)) {
+        reasons.push("Approved availability not recorded for " + d);
+        break;
+      }
+    }
+  }
   const unavailable = related.filter(
     (r) =>
       typeOf(r) === "leave" &&
       (r.personId === person.id ||
         (!r.personId && normal(r.person) === normal(person.title))) &&
+      !["Cancelled", "Rejected"].includes(r.approval) &&
+      !["Cancelled", "Rejected"].includes(r.status) &&
       ["Unavailable", "Unavailability"].includes(
         r.requestType || r.availabilityStatus,
       ) &&

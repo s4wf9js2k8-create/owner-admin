@@ -412,6 +412,29 @@ export default function SafetyWorkspace({
               Download browser-local evidence
             </a>
           )}
+          <details>
+            <summary>Related safety training</summary>
+            {records
+              .filter(
+                (r) =>
+                  r.orgId === org.id &&
+                  moduleInfo(r.module).type === "training" &&
+                  /safety|risk|inspection/i.test(
+                    r.qualification || r.title || "",
+                  ),
+              )
+              .map((r) => (
+                <p key={r.id}>
+                  <button
+                    onClick={() => onNavigate(r.module, { recordId: r.id })}
+                  >
+                    {r.qualification || r.title}
+                  </button>{" "}
+                  · {people.find((p) => p.id === r.personId)?.title || r.person}{" "}
+                  · {r.approval} · {r.expiry || "No expiry recorded"}
+                </p>
+              ))}
+          </details>
           <History entries={current.activity} />
           {message && <p role="status">{message}</p>}
         </Modal>

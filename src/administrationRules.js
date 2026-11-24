@@ -44,7 +44,10 @@ export function approvalType(r) {
     (type !== "timesheets" || r.endTime)
   )
     return {
-      leave: "Leave request",
+      leave:
+        r.requestType === "Available"
+          ? "Availability request"
+          : "Leave request",
       timesheets: "Timesheet",
       documents: "Document review",
       training: "Qualification approval",
@@ -62,6 +65,24 @@ export const approvalToken = (r) =>
     r.submittedAt,
     r.correctionRequest?.at,
     r.approvalHistory?.length || 0,
+    r.startDate,
+    r.endDate,
+    r.startTime,
+    r.endTime,
+    r.breakMinutes,
+    r.qualification,
+    r.expiry,
+    r.validFrom,
+    r.noExpiry,
+    r.requestType,
+    r.title,
+    r.customerId,
+    r.lineItems,
+    r.responses,
+    r.checklist,
+    r.workChecklist,
+    r.version,
+    r.modifiedAt,
   ]);
 export const requesterId = (r) =>
   r.correctionRequest?.requesterId ||
@@ -408,7 +429,7 @@ export function recordInScope(record, scope = {}, person, records = []) {
         [record.owner, record.person].includes(p.title)),
   );
   if (record.sensitive && !scope.sensitive) return false;
-  if (scope.department && (record.team || related?.team) !== scope.department)
+  if (scope.department && (related?.team || record.team) !== scope.department)
     return false;
   if (
     scope.location &&

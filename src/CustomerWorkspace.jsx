@@ -1,5 +1,6 @@
+import { platformAnnouncementRelevant } from "./reconciliation/rules";
 import { canonicalModule } from "./completion/moduleNavigation";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { isTaskModule, moduleInfo } from "./customerModules";
 const InventoryWorkspace = React.lazy(() => import("./InventoryWorkspace"));
 const DocumentWorkspace = React.lazy(() => import("./DocumentWorkspace"));
@@ -86,6 +87,7 @@ const universal = [
 export default function CustomerWorkspace({
   org,
   records,
+  platformAnnouncements = [],
   onUpdate,
   onAdd,
   onConfigure,
@@ -132,6 +134,12 @@ export default function CustomerWorkspace({
   const [createRequest, setCreateRequest] = useState(0);
   const [createContext, setCreateContext] = useState({});
   const [focus, setFocus] = useState(null);
+  const [documentAccess, setDocumentAccess] = useState({});
+  const markDocumentAccess = useCallback(
+    (id) =>
+      setDocumentAccess((old) => ({ ...old, [id]: new Date().toISOString() })),
+    [],
+  );
   useEffect(() => {
     if (externalFocus?.orgId === org.id && externalFocus.id)
       setFocus({ page: externalFocus.page, id: externalFocus.id });
@@ -141,12 +149,12 @@ export default function CustomerWorkspace({
   );
   const [actor, setActor] = useState(
     () =>
-      people.find((p) => p.module === "Staff & volunteers")?.title ||
-      people[0]?.title ||
+      people.find((p) => p.module === "Staff & volunteers")?.id ||
+      people[0]?.id ||
       "Sample team member",
   );
   const currentPerson =
-    people.find((p) => p.title === actor) ||
+    people.find((p) => p.id === actor || p.title === actor) ||
     people.find((p) => p.module === "Staff & volunteers") ||
     people[0];
   const activeActor = currentPerson?.title || "Sample team member",
@@ -203,7 +211,9 @@ export default function CustomerWorkspace({
     canApprove = canView && roleActions.includes("Approve"),
     canManage = canView && roleActions.includes("Manage"),
     canExport = canView && roleActions.includes("Export"),
-    canManageStaff = canManage || roleActions.includes("Manage staff"),
+    canManageStaff =
+      (canManage || roleActions.includes("Manage staff")) &&
+      !personPolicy.disabledActions?.includes("Manage staff"),
     canReport = canView && roleActions.includes("Reports");
   const actorKey = org.id + ":" + (currentPerson?.id || activeActor);
   const userInbox = notificationUsers[actorKey] || {
@@ -318,6 +328,14 @@ export default function CustomerWorkspace({
         if (target && !permittedRecords.some((r) => r.id === target))
           return deny("The linked record is outside your access.");
       }
+      if (
+        kind === "invoiceResourceBooking" &&
+        (!canCreate ||
+          !visibleOrg.modules.some((m) => moduleInfo(m).type === "finance"))
+      )
+        return deny(
+          "Creating a booking invoice requires Create permission and financial module access.",
+        );
       if (patch._workflow.createWork && !canCreate)
         return deny(
           "Creating corrective maintenance requires Create permission.",
@@ -352,6 +370,22 @@ export default function CustomerWorkspace({
       )
         return deny("This role can record its own work only.");
     }
+    if (
+      record.recordType === "project" &&
+      !canManageStaff &&
+      [
+        "memberIds",
+        "resourceIds",
+        "budget",
+        "costs",
+        "leadId",
+        "title",
+        "detail",
+        "dueDate",
+        "risk",
+      ].some((k) => k in patch)
+    )
+      return deny("Project administration requires Manage staff permission.");
     if ((patch.permissionOverrides || patch.demoRole) && !canManage)
       return deny("Changing profile permissions requires Manage permission.");
     if (moduleInfo(record.module).type === "people" && !canManageStaff)
@@ -454,7 +488,11 @@ export default function CustomerWorkspace({
     canManage
       ? onConfigure(patch, event, actorMeta)
       : deny("Company configuration requires Manage permission.");
+  const platformNotices = platformAnnouncements.filter((a) =>
+    platformAnnouncementRelevant(a, org),
+  );
   const shared = {
+    platformNotices,
     org: visibleOrg,
     records: accessibleRecords,
     historyRecords: permittedRecords,
@@ -497,7 +535,17 @@ export default function CustomerWorkspace({
         setState={setUserInbox}
         actorId={currentPerson?.id || ""}
         department={currentPerson?.team || ""}
-        notices={accessibleRecords.filter((r) => r.recordType === "notice")}
+        notices={[
+          ...accessibleRecords.filter((r) => r.recordType === "notice"),
+          ...platformNotices.map((a) => ({
+            ...a,
+            orgId: org.id,
+            module: "Dashboard",
+            status: "Published",
+            audience: "Company",
+            publishedAt: a.publishedAt || a.date,
+          })),
+        ]}
       />
     );
   else if (current === "Settings")
@@ -597,6 +645,7 @@ export default function CustomerWorkspace({
   else if (isTaskModule(current))
     content = (
       <CustomerTaskBoard
+        canManageProjects={canManageStaff}
         org={visibleOrg}
         records={accessibleRecords}
         onAdd={safeAdd}
@@ -617,6 +666,7 @@ export default function CustomerWorkspace({
   )
     content = (
       <CustomerPeopleOps
+        historyRecords={permittedRecords}
         key={current}
         org={visibleOrg}
         module={current}
@@ -652,6 +702,9 @@ export default function CustomerWorkspace({
   else if (moduleInfo(current).type === "documents")
     content = (
       <DocumentWorkspace
+        actorId={currentPerson?.id || ""}
+        recentAccess={documentAccess}
+        onAccess={markDocumentAccess}
         key={current}
         {...shared}
         module={current}
@@ -728,6 +781,7 @@ export default function CustomerWorkspace({
   else if (moduleInfo(current).type === "bookings")
     content = (
       <AppointmentsWorkspace
+        onConfigure={canManage ? configure : undefined}
         key={current}
         {...shared}
         module={current}
@@ -846,6 +900,7 @@ export default function CustomerWorkspace({
   )
     content = (
       <CustomerAssetOps
+        historyRecords={permittedRecords}
         key={current}
         org={visibleOrg}
         module={current}
@@ -908,7 +963,10 @@ export default function CustomerWorkspace({
             aria-label="Sample team member"
             value={activeActor}
             onChange={(e) => {
-              setActor(e.target.value);
+              setActor(
+                people.find((p) => p.title === e.target.value)?.id ||
+                  e.target.value,
+              );
               const p = people.find((p) => p.title === e.target.value);
               if (p?.demoRole && customerRoles[p.demoRole])
                 setCustomerRole(p.demoRole);

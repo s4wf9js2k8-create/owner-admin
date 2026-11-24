@@ -1,3 +1,7 @@
+import {
+  deriveRecordLinks,
+  validateOriginalRecord,
+} from "../reconciliation/rules.js";
 import { moduleInfo } from "../customerModules.js";
 import { validateScheduledRecord } from "../scheduling/rules.js";
 import {
@@ -50,7 +54,32 @@ export function fictionalFixtures() {
       },
     ],
     plans: copy(plans),
-    flags: { customerPreview: true },
+    flags: {
+      customerPreview: true,
+      ownerAccounts: [
+        {
+          id: "owner-default",
+          name: "Fictional platform owner",
+          email: "owner@example.invalid",
+          role: "Platform Owner",
+          status: "Active",
+        },
+        {
+          id: "support-default",
+          name: "Fictional support agent",
+          email: "support@example.invalid",
+          role: "Support Agent",
+          status: "Active",
+        },
+        {
+          id: "implementation-default",
+          name: "Fictional implementation lead",
+          email: "implementation@example.invalid",
+          role: "Platform Administrator",
+          status: "Active",
+        },
+      ],
+    },
   };
 }
 const freeze = (value) => {
@@ -163,6 +192,7 @@ export function createFictionalBackend({
         validateDemoAssignment(record, record, state.records, true);
         validateScheduledRecord(record, null, state.records, org);
         validateCompletionRecord(record, null, state.records);
+        validateOriginalRecord(record, null, state.records, org);
         let createdRows = [...state.records, record];
         if (moduleInfo(record.module).type === "fleet" && !record.assetRefId) {
           const assetModule = org.modules.find(
@@ -195,7 +225,7 @@ export function createFictionalBackend({
         );
         publish({
           ...state,
-          records: automated.records,
+          records: deriveRecordLinks(automated.records, state.records),
           orgs: state.orgs.map((o) =>
             o.id === orgId
               ? {
@@ -224,7 +254,10 @@ export function createFictionalBackend({
             patch._workflow,
             patch._actor,
           );
-          publish({ ...state, records: next });
+          publish({
+            ...state,
+            records: deriveRecordLinks(next, state.records),
+          });
           return copy(next.find((r) => r.id === id));
         }
         if (patch._stockMovement) {
@@ -235,7 +268,10 @@ export function createFictionalBackend({
             patch._stockMovement,
             patch._actor,
           );
-          publish({ ...state, records: next });
+          publish({
+            ...state,
+            records: deriveRecordLinks(next, state.records),
+          });
           return copy(next.find((r) => r.id === id));
         }
         const { _actor, _approval, ...fields } = copy(patch);
@@ -314,6 +350,7 @@ export function createFictionalBackend({
         validateDemoAssignment(changed, fields, state.records);
         validateScheduledRecord(changed, record, state.records, org);
         validateCompletionRecord(changed, record, state.records);
+        validateOriginalRecord(changed, record, state.records, org);
         const automated = processAutomations(
           next,
           changed,
@@ -322,7 +359,7 @@ export function createFictionalBackend({
         );
         publish({
           ...state,
-          records: automated.records,
+          records: deriveRecordLinks(automated.records, state.records),
           orgs: state.orgs.map((o) =>
             o.id === orgId
               ? {
@@ -348,6 +385,13 @@ export function createFictionalBackend({
         return copy(ticket);
       },
       update: async (orgId, id, patch) => {
+        if (
+          patch.assigneeId &&
+          !state.flags.ownerAccounts?.some(
+            (a) => a.id === patch.assigneeId && a.status === "Active",
+          )
+        )
+          throw new Error("Select an active fictional owner account.");
         if (!scoped(state.tickets, orgId).some((t) => t.id === id))
           throw new Error("Example ticket unavailable.");
         if ("orgId" in patch || "id" in patch)

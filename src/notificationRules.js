@@ -1,3 +1,4 @@
+import { eventStaffing } from "./reconciliation/rules.js";
 import { noticeRelevant } from "./communicationRules.js";
 import { moduleInfo, isTaskModule } from "./customerModules.js";
 import {
@@ -128,9 +129,12 @@ export function generateNotifications(
         "leave",
         "People",
         (r.approval === "Pending"
-          ? "Leave approval required: "
-          : "Leave " + String(r.approval || "pending").toLowerCase() + ": ") +
-          r.title,
+          ? (r.requestType === "Available" ? "Availability" : "Leave") +
+            " approval required: "
+          : (r.requestType === "Available" ? "Availability" : "Leave") +
+            " " +
+            String(r.approval || "pending").toLowerCase() +
+            ": ") + r.title,
         r.approval === "Pending",
       );
     if (type === "training" && r.noExpiry !== true) {
@@ -161,11 +165,29 @@ export function generateNotifications(
     )
       add(r, "stock", "Stock", "Low stock: " + r.title, true);
     if (
+      type === "events" &&
+      r.recordType !== "booking" &&
+      open &&
+      r.startTime?.slice(0, 10) >= day &&
+      r.startTime?.slice(0, 10) <= limit
+    ) {
+      const staffing = eventStaffing(r, records);
+      if (staffing.shortfall)
+        add(
+          r,
+          "staffing",
+          "Bookings",
+          "Event staffing shortfall: " + r.title,
+          true,
+          [staffing.required, staffing.eligible],
+        );
+    }
+    if (
       ["events", "bookings"].includes(type) &&
       r.recordType !== "booking" &&
       r.startTime?.slice(0, 10) >= day &&
       r.startTime?.slice(0, 10) <= limit &&
-      r.status !== "Cancelled"
+      !["Complete", "Completed", "Cancelled"].includes(r.status)
     )
       add(r, "booking", "Bookings", "Upcoming: " + r.title, false, r.startTime);
     if (

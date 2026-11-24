@@ -292,7 +292,14 @@ export default function SupportPage({ controller: c }) {
                 Assigned support person
                 <select
                   aria-label="Assigned support person"
-                  value={ticket.assigneeId || ticket.assignee || ""}
+                  value={
+                    ticket.assigneeId ||
+                    c.flags.ownerAccounts?.find(
+                      (a) => a.name === ticket.assignee,
+                    )?.id ||
+                    ticket.assignee ||
+                    ""
+                  }
                   onChange={(e) => {
                     const account = c.flags.ownerAccounts?.find(
                       (a) => a.id === e.target.value,
@@ -304,9 +311,24 @@ export default function SupportPage({ controller: c }) {
                   }}
                 >
                   <option value="">Unassigned</option>
-                  <option>Fictional platform owner</option>
-                  <option>Fictional support agent</option>
-                  <option>Fictional implementation lead</option>
+                  {ticket.assigneeId &&
+                    c.flags.ownerAccounts?.some(
+                      (a) =>
+                        a.id === ticket.assigneeId && a.status !== "Active",
+                    ) && (
+                      <option value={ticket.assigneeId} disabled>
+                        Existing account suspended — reassign
+                      </option>
+                    )}
+                  {!ticket.assigneeId &&
+                    ticket.assignee &&
+                    !c.flags.ownerAccounts?.some(
+                      (a) => a.name === ticket.assignee,
+                    ) && (
+                      <option value={ticket.assignee} disabled>
+                        {ticket.assignee} · legacy assignment
+                      </option>
+                    )}
                   {(c.flags.ownerAccounts || [])
                     .filter((a) => a.status === "Active")
                     .map((a) => (

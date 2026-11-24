@@ -40,7 +40,22 @@ test("archive and restore retain completed attendance history, links and CSV row
   await page.getByRole("button", { name: "Export archive CSV" }).click();
   const file = await dl;
   expect(file.suggestedFilename()).toBe("business-archive.csv");
-  await card.getByRole("button", { name: "Review historical record" }).click();
+  await nav(page, "Staff & volunteers");
+  await page
+    .locator(".people-profile")
+    .filter({ hasText: "Sample colleague B" })
+    .getByRole("button", { name: "Open profile" })
+    .click();
+  await page.getByRole("tab", { name: "History", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText(
+    "Afternoon volunteer support",
+  );
+  await page
+    .getByRole("dialog")
+    .getByRole("button")
+    .filter({ hasText: "Afternoon volunteer support" })
+    .click();
+
   await expect(page.getByRole("dialog")).toContainText(
     "Superseded certificate",
   );

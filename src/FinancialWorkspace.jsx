@@ -966,6 +966,19 @@ export default function FinancialWorkspace({
                   Convert to invoice
                 </button>
               )}
+            {current.resourceBookingId &&
+              all.some((b) => b.id === current.resourceBookingId) && (
+                <button
+                  onClick={() => {
+                    const b = all.find(
+                      (b) => b.id === current.resourceBookingId,
+                    );
+                    onNavigate(b.module, { recordId: b.id });
+                  }}
+                >
+                  Open resource booking
+                </button>
+              )}
             {current.jobId && all.some((work) => work.id === current.jobId) && (
               <button
                 onClick={() => {
