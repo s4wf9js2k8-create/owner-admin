@@ -110,6 +110,27 @@ export const metricOptions = (type) => [
         },
       ]
     : []),
+  ...(type === "projects"
+    ? [
+        { id: "progress", label: "Project task completion", unit: "%" },
+        { id: "budget", label: "Project budgets", unit: "GBP" },
+        { id: "cost", label: "Recorded project costs", unit: "GBP" },
+        {
+          id: "remainingBudget",
+          label: "Project budget remaining",
+          unit: "GBP",
+        },
+      ]
+    : []),
+  ...(type === "timesheets"
+    ? [
+        {
+          id: "overtime",
+          label: "Weekly overtime (configured threshold)",
+          unit: "hours",
+        },
+      ]
+    : []),
   ...(type === "finance"
     ? [
         {
@@ -136,15 +157,38 @@ export const metricOptions = (type) => [
       ]
     : []),
 ];
-export function reportValue(r, metric) {
+export function reportValue(r, metric, records = []) {
+  if (["progress", "budget", "cost", "remainingBudget"].includes(metric)) {
+    if (r.recordType !== "project") return null;
+    const tasks = records.filter(
+        (x) =>
+          x.orgId === r.orgId &&
+          x.projectId === r.id &&
+          x.recordType !== "project" &&
+          moduleInfo(x.module).type === "projects",
+      ),
+      cost = (r.costs || []).reduce((n, c) => n + Number(c.amount || 0), 0);
+    return metric === "progress"
+      ? tasks.length
+        ? (tasks.filter((t) => t.status === "Complete").length / tasks.length) *
+          100
+        : null
+      : metric === "budget"
+        ? Number(r.budget || 0)
+        : metric === "cost"
+          ? cost
+          : Number(r.budget || 0) - cost;
+  }
   if (metric === "count") return 1;
   if (["places", "admissions", "bookingValue"].includes(metric)) {
     if (r.recordType !== "booking") return null;
     const active = ["Confirmed", "Checked in"].includes(r.bookingStatus);
     return metric === "admissions"
-      ? r.bookingStatus === "Checked in"
-        ? Number(r.guests)
-        : 0
+      ? r.attendees?.length
+        ? r.attendees.filter((a) => a.checkedInAt).length
+        : r.bookingStatus === "Checked in"
+          ? Number(r.guests)
+          : 0
       : active
         ? Number(r.guests) *
           (metric === "bookingValue" ? Number(r.unitPrice || 0) : 1)
@@ -171,7 +215,9 @@ export function reportValue(r, metric) {
     return null;
   if (["invoiceTotal", "balance"].includes(metric))
     return documentKind(r) === "invoice"
-      ? (metric === "invoiceTotal" ? totalPence(r) : balancePence(r)) / 100
+      ? (metric === "invoiceTotal"
+          ? totalPence(r)
+          : Math.max(0, balancePence(r))) / 100
       : null;
   if (metric === "labour")
     return (
@@ -206,13 +252,22 @@ export function buildReport(records, orgId, config) {
         "shift-template",
       ].includes(r.recordType),
   );
+  const metric = metricOptions(moduleInfo(config.source).type).some(
+    (m) => m.id === config.metric,
+  )
+    ? config.metric
+    : "count";
   const rows = scoped
     .filter((r) => r.module === config.source)
     .filter((r) => {
       const person = reportPerson(r, records),
         date = reportDate(r, records);
       return (
-        (!config.from || (date && date >= config.from)) &&
+        (!config.from ||
+          (date &&
+            (metric === "overtime"
+              ? String(r.endTime || date).slice(0, 10)
+              : date) >= config.from)) &&
         (!config.to || (date && date <= config.to)) &&
         (!config.staff ||
           person?.id === config.staff ||
@@ -230,13 +285,57 @@ export function buildReport(records, orgId, config) {
             "Not recorded") === config.category)
       );
     });
-  const metric = metricOptions(moduleInfo(config.source).type).some(
-    (m) => m.id === config.metric,
-  )
-    ? config.metric
-    : "count";
+  const overtime = new Map(),
+    weekly = new Map();
+  if (metric === "overtime")
+    for (const row of scoped
+      .filter(
+        (r) =>
+          moduleInfo(r.module).type === "timesheets" &&
+          r.startTime &&
+          r.endTime,
+      )
+      .sort((a, b) => a.startTime.localeCompare(b.startTime))) {
+      const value = reportValue(row, "hours", records);
+      if (value === null) continue;
+      const utc = (v) =>
+        Date.parse(v.endsWith("Z") || /[+-]\d\d:\d\d$/.test(v) ? v : v + "Z");
+      const from = utc(row.startTime),
+        until = utc(row.endTime),
+        ratio = value / ((until - from) / 3600000);
+      let sum = 0;
+      for (let point = from; point < until;) {
+        const date = new Date(point),
+          day = date.toISOString().slice(0, 10),
+          next = Math.min(until, Date.parse(day + "T00:00Z") + 86400000);
+        date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7));
+        const key =
+            (row.personId || row.person) +
+            ":" +
+            date.toISOString().slice(0, 10),
+          before = weekly.get(key) || 0,
+          threshold = Number(config.overtimeThreshold ?? 40),
+          hours = ((next - point) / 3600000) * ratio;
+        weekly.set(key, before + hours);
+        if (
+          (!config.from || day >= config.from) &&
+          (!config.to || day <= config.to)
+        )
+          sum +=
+            Math.max(0, before + hours - threshold) -
+            Math.max(0, before - threshold);
+        point = next;
+      }
+      overtime.set(row.id, sum);
+    }
   const accepted = rows
-    .map((record) => ({ record, value: reportValue(record, metric) }))
+    .map((record) => ({
+      record,
+      value:
+        metric === "overtime"
+          ? (overtime.get(record.id) ?? null)
+          : reportValue(record, metric, records),
+    }))
     .filter((r) => r.value !== null && Number.isFinite(r.value));
   const grouping = (r) =>
     config.group === "staff"

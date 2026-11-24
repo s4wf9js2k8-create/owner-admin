@@ -25,7 +25,7 @@ import {
 import { QualifiedStaffSelect, teamMembers } from "./LinkedSelectors";
 import { validateAssignee } from "./staffEligibility";
 
-const statuses = ["Planned", "In progress", "Complete"];
+const defaultStatuses = ["Planned", "In progress", "Complete"];
 const priorities = ["Low", "Normal", "High", "Urgent"];
 const repeats = ["None", "Daily", "Weekly", "Monthly", "Quarterly", "Yearly"];
 const repeatModes = ["After completion", "Manual schedule", "Template only"];
@@ -66,6 +66,16 @@ export default function CustomerTaskBoard({
   createRequest = 0,
   focusId,
 }) {
+  const statuses = [
+    ...new Set([
+      ...defaultStatuses,
+      ...(org.workspaceConfig?.taskStatuses || []),
+      ...records
+        .filter((r) => r.orgId === org.id && isTask(r))
+        .map((r) => r.status)
+        .filter(Boolean),
+    ]),
+  ];
   const [view, setView] = useState("mine");
   const [query, setQuery] = useState("");
   const [priority, setPriority] = useState("All");

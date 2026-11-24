@@ -1,13 +1,6 @@
+import { openDestination } from "./navigation.js";
 import { test, expect } from "@playwright/test";
-async function navigate(page, name) {
-  await page
-    .getByRole("button", { name: "Open navigation menu", exact: true })
-    .click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name, exact: true })
-    .click();
-}
+const navigate = openDestination;
 test.beforeEach(async ({ page }) => {
   await page.goto("./");
 });

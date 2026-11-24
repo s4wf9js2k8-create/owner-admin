@@ -1,3 +1,4 @@
+import { openDestination } from "./navigation.js";
 import { test, expect } from "@playwright/test";
 async function open(page, id = "demo-engineering") {
   await page.goto("./");
@@ -6,13 +7,7 @@ async function open(page, id = "demo-engineering") {
     .click();
   await page.getByLabel("Example workspace").selectOption(id);
 }
-async function go(page, name) {
-  await page.getByRole("button", { name: "Open navigation menu" }).click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name, exact: true })
-    .click();
-}
+const go = openDestination;
 test("dashboard presets, ordering and direct work order creation", async ({
   page,
 }) => {

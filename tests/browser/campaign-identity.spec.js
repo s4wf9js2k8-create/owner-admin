@@ -1,11 +1,6 @@
+import { openDestination } from "./navigation.js";
 import { test, expect } from "@playwright/test";
-async function nav(page, name) {
-  await page.getByRole("button", { name: "Open navigation menu" }).click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name, exact: true })
-    .click();
-}
+const nav = openDestination;
 test("editing a campaign preserves the independent retained fundraising module", async ({
   page,
 }) => {
@@ -15,11 +10,12 @@ test("editing a campaign preserves the independent retained fundraising module",
     .click();
   await page.getByLabel("Example workspace").selectOption("demo-charity");
   await nav(page, "Donations and fundraising");
-  const modern = page
-    .locator(".purpose-card")
-    .filter({
-      has: page.getByRole("heading", { name: "General fund", exact: true }),
-    });
+  await page
+    .getByRole("combobox", { name: "Source module", exact: true })
+    .selectOption("Donations and fundraising");
+  const modern = page.locator(".purpose-card").filter({
+    has: page.getByRole("heading", { name: "General fund", exact: true }),
+  });
   await modern.getByRole("button", { name: "Edit campaign" }).click();
   await page
     .getByRole("dialog")
@@ -33,15 +29,18 @@ test("editing a campaign preserves the independent retained fundraising module",
   ).toBeVisible();
   await page.getByRole("button", { name: "Close dialog" }).click();
   await expect(modern).toContainText("£4200.00 target");
-  await nav(page, "Donations");
+  await page
+    .getByRole("combobox", { name: "Source module", exact: true })
+    .selectOption("Donations");
   await expect(
-    page
-      .locator(".purpose-card")
-      .filter({
-        has: page.getByRole("heading", { name: "General fund", exact: true }),
-      }),
+    page.locator(".purpose-card").filter({
+      has: page.getByRole("heading", { name: "General fund", exact: true }),
+    }),
   ).toContainText("£2500.00 target");
   await nav(page, "Donations and fundraising");
+  await page
+    .getByRole("combobox", { name: "Source module", exact: true })
+    .selectOption("Donations and fundraising");
   await expect(modern).toContainText("£4200.00 target");
   expect(
     await page.evaluate(

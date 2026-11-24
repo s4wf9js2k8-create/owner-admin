@@ -1,3 +1,4 @@
+import { OwnerAlerts } from "./BusinessDefaults";
 import React, { useState } from "react";
 import { Panel, Status } from "../components";
 import {
@@ -31,7 +32,9 @@ export default function BusinessDashboard({ controller, data }) {
   const layout = flags.ownerDashboard || widgets,
     setLayout = (next) =>
       controller.setFlags({ ...flags, ownerDashboard: next });
-  const jump = (page) => ownerPageAllowed(ownerRole, page) && navigate(page);
+  const jump = (page) =>
+    ownerPageAllowed(ownerRole, page, controller.flags.ownerPolicies) &&
+    navigate(page);
   return (
     <div className="owner-business-dashboard">
       <div className="ops-banner">
@@ -44,7 +47,7 @@ export default function BusinessDashboard({ controller, data }) {
           </p>
         </div>
         <button
-          disabled={!ownerCanManage(ownerRole)}
+          disabled={!ownerCanManage(ownerRole, controller.flags.ownerPolicies)}
           onClick={() => setEditing(!editing)}
         >
           Customise business dashboard
@@ -60,7 +63,9 @@ export default function BusinessDashboard({ controller, data }) {
           ["Modules", "Module catalogue"],
           ["Announcements", "Create customer announcement"],
         ]
-          .filter(([p]) => ownerPageAllowed(ownerRole, p))
+          .filter(([p]) =>
+            ownerPageAllowed(ownerRole, p, controller.flags.ownerPolicies),
+          )
           .map(([p, l]) => (
             <button key={p} onClick={() => jump(p)}>
               {l}
@@ -76,7 +81,7 @@ export default function BusinessDashboard({ controller, data }) {
           </button>
         )}
       </div>
-      {editing && ownerCanManage(ownerRole) && (
+      {editing && ownerCanManage(ownerRole, controller.flags.ownerPolicies) && (
         <div className="owner-widget-picker">
           {widgets.map((w) => (
             <label className="task-check" key={w}>
@@ -99,6 +104,7 @@ export default function BusinessDashboard({ controller, data }) {
           </button>
         </div>
       )}
+      <OwnerAlerts controller={controller} data={data} />
       <div className="owner-control-grid">
         {layout
           .filter((w) =>
@@ -113,28 +119,30 @@ export default function BusinessDashboard({ controller, data }) {
                 "Platform health": "Infrastructure",
                 "Recent activity": "Activity Logs",
               }[w],
+              controller.flags.ownerPolicies,
             ),
           )
           .map((w) => (
             <Panel key={w} title={w}>
-              {editing && ownerCanManage(ownerRole) && (
-                <div>
-                  <button
-                    aria-label={"Move " + w + " up"}
-                    disabled={layout.indexOf(w) === 0}
-                    onClick={() => setLayout(reorder(layout, w, -1))}
-                  >
-                    ↑
-                  </button>
-                  <button
-                    aria-label={"Move " + w + " down"}
-                    disabled={layout.indexOf(w) === layout.length - 1}
-                    onClick={() => setLayout(reorder(layout, w, 1))}
-                  >
-                    ↓
-                  </button>
-                </div>
-              )}
+              {editing &&
+                ownerCanManage(ownerRole, controller.flags.ownerPolicies) && (
+                  <div>
+                    <button
+                      aria-label={"Move " + w + " up"}
+                      disabled={layout.indexOf(w) === 0}
+                      onClick={() => setLayout(reorder(layout, w, -1))}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      aria-label={"Move " + w + " down"}
+                      disabled={layout.indexOf(w) === layout.length - 1}
+                      onClick={() => setLayout(reorder(layout, w, 1))}
+                    >
+                      ↓
+                    </button>
+                  </div>
+                )}
               {w === "Customer status" && (
                 <>
                   <div className="owner-status-strip">
@@ -255,7 +263,11 @@ export default function BusinessDashboard({ controller, data }) {
                     The static frontend is running. Host resource readings and
                     backup operations are unavailable.
                   </p>
-                  {ownerPageAllowed(ownerRole, "Infrastructure") && (
+                  {ownerPageAllowed(
+                    ownerRole,
+                    "Infrastructure",
+                    controller.flags.ownerPolicies,
+                  ) && (
                     <button onClick={() => jump("Infrastructure")}>
                       Inspect platform boundaries
                     </button>

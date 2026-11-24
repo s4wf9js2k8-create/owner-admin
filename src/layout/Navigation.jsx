@@ -1,3 +1,4 @@
+import { uniqueModules, canonicalModule } from "../completion/moduleNavigation";
 import { ownerPageAllowed } from "../owner/rules";
 import React, { useState } from "react";
 import { moduleInfo, isTaskModule } from "../customerModules";
@@ -95,7 +96,7 @@ const customerGroups = (org, role, roleModules, actions = []) => {
   const enabled = org.modules.filter((m) =>
     moduleAllowed(role, m, roleModules),
   );
-  const modules = enabled.filter(
+  const modules = uniqueModules(enabled).filter(
     (m) =>
       !isTaskModule(m) &&
       !(m === "Events" && enabled.includes("Events & bookings")),
@@ -166,8 +167,9 @@ const ownerGroups = [
 export default function Navigation({ controller }) {
   const [collapsed, setCollapsed] = useState({});
   const isDestinationActive = (name) =>
-    (controller.customer ? controller.customerPage : controller.page) ===
-      name ||
+    (controller.customer
+      ? canonicalModule(controller.customerPage, controller.active.modules)
+      : controller.page) === name ||
     (controller.customer &&
       name === "Events & bookings" &&
       controller.customerPage === "Events");
@@ -209,7 +211,9 @@ export default function Navigation({ controller }) {
               className="header-company-logo"
             />
           )}
-          {customer ? active.name : "Owner Admin"}
+          {customer
+            ? active.name
+            : controller.flags.business?.name || "Channel Systems"}
         </span>
         <span className="tag">Fictional demo</span>
         {customer && (
@@ -249,7 +253,11 @@ export default function Navigation({ controller }) {
         className={menuOpen ? "menu-open" : ""}
         inert={!menuOpen ? "" : undefined}
       >
-        <div className="brand">{customer ? active.name : "Owner Admin"}</div>
+        <div className="brand">
+          {customer
+            ? active.name
+            : controller.flags.business?.name || "Channel Systems"}
+        </div>
         <div className="sub">
           {customer
             ? customerRole + " · Demo workspace"
@@ -267,7 +275,11 @@ export default function Navigation({ controller }) {
                 .map(([g, items]) => [
                   g,
                   items.filter(([p]) =>
-                    ownerPageAllowed(controller.ownerRole, p),
+                    ownerPageAllowed(
+                      controller.ownerRole,
+                      p,
+                      controller.flags.ownerPolicies,
+                    ),
                   ),
                 ])
                 .filter(([, items]) => items.length)

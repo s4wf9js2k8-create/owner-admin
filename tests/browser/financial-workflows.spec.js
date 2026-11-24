@@ -1,6 +1,7 @@
+import { openDestination } from "./navigation.js";
 import {test,expect} from '@playwright/test';
 async function open(page){await page.goto('./');await page.getByRole('button',{name:'Explore customer workspace'}).click();await page.getByLabel('Example workspace').selectOption('demo-engineering');await go(page,'Quotes and invoices');}
-async function go(page,name){await page.getByRole('button',{name:'Open navigation menu'}).click();await page.getByRole('navigation').getByRole('button',{name,exact:true}).click();}
+const go = openDestination;
 test('discounted VAT quotation converts to an invoice with partial payment and CRM history',async({page})=>{
  await open(page);await page.getByRole('button',{name:'Build quote',exact:true}).click();await page.getByLabel('Quote reference').fill('Q-TEST-300');await page.getByRole('dialog').getByLabel('Customer',{exact:true}).selectOption({label:'Example Co A'});
  for(let i=0;i<3;i++){if(i)await page.getByRole('button',{name:'Add line item'}).click();const line=page.locator('.financial-line-editor').nth(i);await line.getByLabel('Item '+(i+1),{exact:true}).fill(['Labour','Parts','Travel'][i]);await line.getByLabel('Qty',{exact:true}).fill(String([3,2,1][i]));await line.getByLabel('Unit price (£)',{exact:true}).fill(String([80,25,10][i]));await line.getByLabel('Discount (%)',{exact:true}).fill(String(i?0:10));await line.getByLabel('VAT (%)',{exact:true}).fill(String(i===2?0:20));}

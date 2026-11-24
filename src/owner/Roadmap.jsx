@@ -57,6 +57,36 @@ export default function Roadmap({ data, setData }) {
                       ))}
                     </select>
                   </label>
+                  <p>
+                    Demand score:{" "}
+                    {(r.interestedCompanyIds?.length || 0) * 5 +
+                      Number(r.votes || 0) +
+                      ({ Urgent: 10, High: 5, Normal: 2, Low: 0 }[r.priority] ||
+                        0)}
+                  </p>
+                  <label>
+                    Release announcement
+                    <select
+                      value={r.announcementId || ""}
+                      onChange={(e) =>
+                        setData((d) => ({
+                          ...d,
+                          requests: d.requests.map((x) =>
+                            x.id === r.id
+                              ? { ...x, announcementId: e.target.value }
+                              : x,
+                          ),
+                        }))
+                      }
+                    >
+                      <option value="">No announcement linked</option>
+                      {data.announcements.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.title} · {a.status}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   <label>
                     Development notes
                     <textarea

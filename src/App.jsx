@@ -9,13 +9,13 @@ import OwnerAccess from "./owner/OwnerAccess";
 import BusinessSettings from "./owner/BusinessSettings";
 import Roadmap from "./owner/Roadmap";
 import {
-  ownerRoles,
+  configuredOwnerRoles,
   ownerPageAllowed,
   ownerCanManage,
   ownerCanWritePage,
 } from "./owner/rules";
 import { activityEntry } from "./administrationRules";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import OwnerBusinessPages, { ownerSeed } from "./OwnerBusinessPages";
 import CompanyOnboarding from "./CompanyOnboarding";
 import ServerWorkspace from "./ServerWorkspace";
@@ -35,10 +35,26 @@ export default function App({ backend: suppliedBackend }) {
   const [serverWorkspace, setServerWorkspace] = useState(false);
   const [onboarding, setOnboarding] = useState(false);
   const [notificationStore, setNotificationStore] = useState({});
+  const [personaPolicy, setPersonaPolicy] = useState(null);
   const [ownerData, setOwnerData] = useState(ownerSeed);
   const [demoBackend] = useState(() => createFictionalBackend());
   const backend = suppliedBackend || demoBackend;
   const controller = useConsoleController(backend);
+  useEffect(() => {
+    document.title = controller.customer
+      ? (controller.active?.name || "Workspace") +
+        " · " +
+        controller.customerPage
+      : (controller.flags.business?.name || "Channel Systems") +
+        " · " +
+        controller.page;
+  }, [
+    controller.customer,
+    controller.active?.name,
+    controller.customerPage,
+    controller.page,
+    controller.flags.business?.name,
+  ]);
   const [deepFocus, setDeepFocus] = useState(null);
   useDeepLink(controller, setDeepFocus);
   const {
@@ -80,7 +96,27 @@ export default function App({ backend: suppliedBackend }) {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <Navigation controller={controller} />
+      <Navigation
+        controller={
+          customer && personaPolicy?.orgId === active?.id
+            ? {
+                ...controller,
+                active: {
+                  ...active,
+                  modules: active.modules.filter(
+                    (m) => !personaPolicy.disabledModules?.includes(m),
+                  ),
+                },
+                customerRoles: {
+                  ...controller.customerRoles,
+                  [controller.customerRole]: (
+                    controller.customerRoles[controller.customerRole] || []
+                  ).filter((a) => !personaPolicy.disabledActions?.includes(a)),
+                },
+              }
+            : controller
+        }
+      />
       <main id="main" tabIndex="-1">
         <section>
           <div className="demo-strip">
@@ -104,6 +140,19 @@ export default function App({ backend: suppliedBackend }) {
             >
               Reset fictional demo
             </button>
+            {!customer &&
+              (controller.ownerRole !== "Platform Owner" ||
+                controller.ownerAccountId) && (
+                <button
+                  onClick={() => {
+                    controller.setOwnerAccountId("");
+                    controller.setOwnerRole("Platform Owner");
+                    controller.setPage("Overview");
+                  }}
+                >
+                  Return to owner preview
+                </button>
+              )}
             <button onClick={() => setServerWorkspace(true)}>
               Private server workspace
             </button>
@@ -145,6 +194,7 @@ export default function App({ backend: suppliedBackend }) {
                   </label>
                 </div>
                 <CustomerWorkspace
+                  onPersona={setPersonaPolicy}
                   externalFocus={deepFocus}
                   notificationStore={notificationStore}
                   setNotificationStore={setNotificationStore}
@@ -231,23 +281,60 @@ export default function App({ backend: suppliedBackend }) {
               </>
             ) : (
               <>
-                {!ownerPageAllowed(controller.ownerRole, page) ? (
+                {controller.ownerAccount?.status === "Suspended" && (
+                  <p role="alert">This fictional account is suspended. </p>
+                )}
+                {controller.ownerAccount?.status === "Suspended" ||
+                !ownerPageAllowed(
+                  controller.ownerRole,
+                  page,
+                  controller.flags.ownerPolicies,
+                ) ? (
                   <p role="alert">
                     This page is unavailable to the selected owner role.
                   </p>
                 ) : (
                   <>
+                    <label>
+                      Fictional owner account
+                      <select
+                        aria-label="Fictional owner account"
+                        value={controller.ownerAccountId}
+                        onChange={(e) => {
+                          controller.setOwnerAccountId(e.target.value);
+                          const account = controller.flags.ownerAccounts?.find(
+                            (a) => a.id === e.target.value,
+                          );
+                          controller.setOwnerRole(
+                            account?.role || "Platform Owner",
+                          );
+                          controller.setPage("Overview");
+                        }}
+                      >
+                        <option value="">Platform owner / role preview</option>
+                        {(controller.flags.ownerAccounts || []).map((a) => (
+                          <option
+                            key={a.id}
+                            value={a.id}
+                            disabled={a.status === "Suspended"}
+                          >
+                            {a.name} · {a.role}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                     <label className="owner-role-preview">
                       Simulated owner role
                       <select
                         aria-label="Simulated owner role"
+                        disabled={Boolean(controller.ownerAccountId)}
                         value={controller.ownerRole}
                         onChange={(e) => {
                           controller.setOwnerRole(e.target.value);
                           controller.setPage("Overview");
                         }}
                       >
-                        {ownerRoles.map((r) => (
+                        {configuredOwnerRoles(controller.flags).map((r) => (
                           <option key={r}>{r}</option>
                         ))}
                       </select>
@@ -265,7 +352,12 @@ export default function App({ backend: suppliedBackend }) {
                       </div>
                       <button
                         className="primary"
-                        disabled={!ownerCanManage(controller.ownerRole)}
+                        disabled={
+                          !ownerCanManage(
+                            controller.ownerRole,
+                            controller.flags.ownerPolicies,
+                          )
+                        }
                         onClick={() => setForm({ type: "create" })}
                       >
                         + Add example organisation
@@ -297,7 +389,13 @@ export default function App({ backend: suppliedBackend }) {
                       <Roadmap
                         data={ownerData}
                         setData={(update) => {
-                          if (!ownerCanWritePage(controller.ownerRole, page))
+                          if (
+                            !ownerCanWritePage(
+                              controller.ownerRole,
+                              page,
+                              controller.flags.ownerPolicies,
+                            )
+                          )
                             return controller.denyOwnerAction();
                           const next =
                             typeof update === "function"
@@ -354,7 +452,13 @@ export default function App({ backend: suppliedBackend }) {
                         controller={controller}
                         data={ownerData}
                         setData={(update) => {
-                          if (!ownerCanWritePage(controller.ownerRole, page))
+                          if (
+                            !ownerCanWritePage(
+                              controller.ownerRole,
+                              page,
+                              controller.flags.ownerPolicies,
+                            )
+                          )
                             return controller.denyOwnerAction();
                           const next =
                             typeof update === "function"

@@ -12,6 +12,8 @@ import { QualifiedStaffSelect } from "./LinkedSelectors";
 import RotaPlanner from "./RotaPlanner";
 import StaffProfile from "./StaffProfile";
 import { weeklyHours, timesheetCsv } from "./timeReporting";
+import { StaffingRequirements, ShiftSwaps } from "./completion/RotaExtensions";
+import AttendanceCorrection from "./completion/AttendanceCorrection";
 import ScheduleTemplates from "./completion/ScheduleTemplates";
 import LeaveCalendar from "./completion/LeaveCalendar";
 import TrainingSessions from "./completion/TrainingSessions";
@@ -83,6 +85,8 @@ export default function CustomerPeopleOps({
   canApprove = true,
   canManage = false,
   createRequest = 0,
+  onConfigure,
+  actorId,
 }) {
   const type = moduleInfo(module).type;
   useEffect(() => {
@@ -98,7 +102,7 @@ export default function CustomerPeopleOps({
   const list = records.filter(
     (r) =>
       r.orgId === org.id &&
-      r.module === module &&
+      moduleInfo(r.module).type === type &&
       r.recordType !== "training-session" &&
       r.recordType !== "schedule-template",
   );
@@ -536,6 +540,12 @@ export default function CustomerPeopleOps({
             <ArrowRight size={16} />
           </button>
         </div>
+        <StaffingRequirements
+          org={org}
+          records={records}
+          onConfigure={onConfigure}
+          canManage={canManage}
+        />
         <ScheduleTemplates
           org={org}
           module={module}
@@ -852,74 +862,87 @@ export default function CustomerPeopleOps({
       <h3>{r.title}</h3>
       <p>{r.detail}</p>
       {type === "schedule" ? (
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const f = Object.fromEntries(new FormData(e.currentTarget));
-            const result = validateAssignee(records, org.id, f.person, {
-              kind: "schedule",
-              startTime: f.startTime,
-              endTime: f.endTime,
-              excludedRecordId: r.id,
-            });
-            if (!f.person || !result.eligible) {
-              setError(
-                result.reasons.join("; ") || "Choose an eligible person",
-              );
-              return;
-            }
-            if (
-              await update(r, {
-                ...f,
-                personId: people.find((p) => p.title === f.person)?.id || "",
-              })
-            ) {
-              setError("");
-              setSelected(null);
-            }
-          }}
-        >
-          <label>
-            Shift start
-            <input
-              name="startTime"
-              type="datetime-local"
+        <>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const f = Object.fromEntries(new FormData(e.currentTarget));
+              const result = validateAssignee(records, org.id, f.person, {
+                kind: "schedule",
+                startTime: f.startTime,
+                endTime: f.endTime,
+                excludedRecordId: r.id,
+              });
+              if (!f.person || !result.eligible) {
+                setError(
+                  result.reasons.join("; ") || "Choose an eligible person",
+                );
+                return;
+              }
+              if (
+                await update(r, {
+                  ...f,
+                  personId: people.find((p) => p.title === f.person)?.id || "",
+                })
+              ) {
+                setError("");
+                setSelected(null);
+              }
+            }}
+          >
+            <label>
+              Shift start
+              <input
+                name="startTime"
+                type="datetime-local"
+                required
+                defaultValue={r.startTime}
+                onChange={(e) => setShiftStart(e.target.value)}
+              />
+            </label>
+            <label>
+              Shift end
+              <input
+                name="endTime"
+                type="datetime-local"
+                required
+                defaultValue={r.endTime}
+                onChange={(e) => setShiftEnd(e.target.value)}
+              />
+            </label>
+            <QualifiedStaffSelect
+              records={records}
+              orgId={org.id}
+              kind="schedule"
+              startTime={shiftStart || r.startTime}
+              endTime={shiftEnd || r.endTime}
+              excludedRecordId={r.id}
+              key={r.personId || r.person}
+              label="Reassign shift"
+              name="person"
+              value={r.person}
               required
-              defaultValue={r.startTime}
-              onChange={(e) => setShiftStart(e.target.value)}
             />
-          </label>
-          <label>
-            Shift end
-            <input
-              name="endTime"
-              type="datetime-local"
-              required
-              defaultValue={r.endTime}
-              onChange={(e) => setShiftEnd(e.target.value)}
-            />
-          </label>
-          <QualifiedStaffSelect
+            <label>
+              Shift location
+              <input name="location" required defaultValue={r.location} />
+            </label>
+            {error && <p role="alert">{error}</p>}
+            <button disabled={!canEdit}>Save shift changes</button>
+          </form>
+          <ShiftSwaps
+            actorId={actorId}
+            org={org}
+            shift={r}
             records={records}
-            orgId={org.id}
-            kind="schedule"
-            startTime={shiftStart || r.startTime}
-            endTime={shiftEnd || r.endTime}
-            excludedRecordId={r.id}
-            label="Reassign shift"
-            name="person"
-            value={r.person}
-            required
+            onUpdate={onUpdate}
+            canEdit={canEdit}
+            canApprove={canApprove}
           />
-          <label>
-            Shift location
-            <input name="location" required defaultValue={r.location} />
-          </label>
-          {error && <p role="alert">{error}</p>}
-          <button disabled={!canEdit}>Save shift changes</button>
-        </form>
+        </>
       ) : type === "people" ? (
         <StaffProfile
+          org={org}
           person={r}
           records={records}
           canEdit={canEdit}
@@ -939,12 +962,16 @@ export default function CustomerPeopleOps({
             "qualification",
             "expiry",
           ]
-            .filter((key) => r[key] !== undefined)
+            .filter(
+              (key) =>
+                r[key] !== undefined &&
+                !(type === "timesheets" && key === "person"),
+            )
             .map((key) => (
               <label key={key}>
                 {key}
                 <input
-                  disabled={!canEdit}
+                  disabled={!canEdit || type === "timesheets"}
                   type={
                     key === "startTime" || key === "endTime"
                       ? "datetime-local"
@@ -959,6 +986,15 @@ export default function CustomerPeopleOps({
                 />
               </label>
             ))}
+          {type === "timesheets" && (
+            <AttendanceCorrection
+              org={org}
+              record={r}
+              onUpdate={onUpdate}
+              actorId={actorId}
+              canEdit={canEdit}
+            />
+          )}
           {type === "timesheets" && (
             <div className="completion-workspace">
               <label>
@@ -1008,7 +1044,7 @@ export default function CustomerPeopleOps({
                   min="0"
                   step="1"
                   value={r.breakMinutes || 0}
-                  disabled={!canEdit}
+                  disabled={true}
                   onChange={(e) =>
                     update(r, { breakMinutes: Number(e.target.value) })
                   }

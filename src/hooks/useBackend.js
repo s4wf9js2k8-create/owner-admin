@@ -31,8 +31,14 @@ export function useBackend(backend) {
     try {
       await operation();
       return true;
-    } catch {
-      setError("Demo change failed. Please retry; no real data was saved.");
+    } catch (failure) {
+      setError(
+        backend.kind === "fictional-memory" && failure?.message
+          ? "Demo change failed. " +
+              failure.message +
+              " No real data was saved."
+          : "Demo change failed. Please retry; no real data was saved.",
+      );
       return false;
     }
   };

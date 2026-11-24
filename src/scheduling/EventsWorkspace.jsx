@@ -1,3 +1,7 @@
+import {
+  EventConfiguration,
+  AttendeeCheckin,
+} from "../completion/EventExtensions";
 import React, { useEffect, useState } from "react";
 import { Empty, Modal, Status } from "../components";
 import { moduleInfo } from "../customerModules";
@@ -27,6 +31,7 @@ export default function EventsWorkspace({
   onNavigate,
   canCreate = true,
   canEdit = true,
+  canExport = false,
   focusId,
   createRequest = 0,
 }) {
@@ -124,7 +129,33 @@ export default function EventsWorkspace({
     if (busy || next === b.bookingStatus) return;
     setNotice("");
     setBusy(true);
+    if (next === "Cancelled") {
+      try {
+        if (
+          await onUpdate(org.id, b.id, {
+            _workflow: { kind: "cancelReservation" },
+          })
+        )
+          setNotice(
+            "Booking cancelled; capacity and linked financial records updated.",
+          );
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     const patch = {
+      ...(b.attendees?.length
+        ? {
+            attendees: b.attendees.map((a) => ({
+              ...a,
+              checkedInAt:
+                next === "Checked in"
+                  ? a.checkedInAt || new Date().toISOString()
+                  : "",
+            })),
+          }
+        : {}),
       bookingStatus: next,
       status:
         next === "Cancelled"
@@ -157,6 +188,9 @@ export default function EventsWorkspace({
       f = Object.fromEntries(new FormData(form));
     setNotice("");
     try {
+      const category = event.ticketCategories?.find(
+        (t) => t.id === f.ticketCategoryId,
+      );
       const guests = Number(f.guests),
         full = eventUsage(all, event.id) + guests > Number(event.capacity),
         bookingStatus = full ? "Waitlist" : "Confirmed";
@@ -173,7 +207,14 @@ export default function EventsWorkspace({
         customerId: f.customerId,
         title: f.title.trim(),
         guests,
-        unitPrice: Number(f.unitPrice),
+        unitPrice: category ? Number(category.price) : Number(f.unitPrice),
+        ticketCategoryId: category?.id || "",
+        ticketCategoryName: category?.name || "",
+        attendees: String(f.attendeeNames || "")
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .map((name) => ({ id: crypto.randomUUID(), name })),
         bookingStatus,
         status: full ? "Waiting" : "Planned",
         history: [
@@ -420,6 +461,15 @@ export default function EventsWorkspace({
                 />
               </div>
               {tab === "Event detail" && (
+                <EventConfiguration
+                  org={org}
+                  event={event}
+                  records={all}
+                  onUpdate={onUpdate}
+                  canEdit={canEdit}
+                />
+              )}
+              {tab === "Event detail" && (
                 <>
                   <div className="profile-tabs">
                     {[
@@ -630,6 +680,27 @@ export default function EventsWorkspace({
                         <input name="title" required maxLength={100} />
                       </label>
                       <label>
+                        Ticket category
+                        <select
+                          name="ticketCategoryId"
+                          required={Boolean(event.ticketCategories?.length)}
+                        >
+                          <option value="">Standard / no category</option>
+                          {(event.ticketCategories || []).map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.name} · £{Number(t.price).toFixed(2)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        Individual attendee names (one per place, optional)
+                        <textarea
+                          name="attendeeNames"
+                          placeholder="Use fictional names only"
+                        />
+                      </label>
+                      <label>
                         Places
                         <input
                           name="guests"
@@ -701,6 +772,13 @@ export default function EventsWorkspace({
                                     ?.title ||
                                   "Legacy attendee; CRM not linked"}
                               </small>
+                              <AttendeeCheckin
+                                canExport={canExport}
+                                org={org}
+                                booking={b}
+                                onUpdate={onUpdate}
+                                canEdit={canEdit}
+                              />
                             </td>
                             <td data-label="Places">{b.guests}</td>
                             <td>

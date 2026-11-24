@@ -1,6 +1,7 @@
+import { openDestination } from "./navigation.js";
 import {test,expect} from '@playwright/test';
 async function open(page,id='demo-engineering'){await page.goto('./');await page.getByRole('button',{name:'Explore customer workspace'}).click();await page.getByLabel('Example workspace').selectOption(id);}
-async function go(page,name){await page.getByRole('button',{name:'Open navigation menu'}).click();await page.getByRole('navigation').getByRole('button',{name,exact:true}).click();}
+const go = openDestination;
 test('daily opening check records staff, supervisor approval and acknowledged handover',async({page})=>{
  await open(page,'demo-visitor');await go(page,'Daily operations');await page.getByLabel('Recording as',{exact:true}).selectOption({label:'Sample colleague B'});
  await page.getByRole('button',{name:'Add daily check',exact:true}).click();await page.getByLabel('Check title').fill('Unlock reception safely');await page.getByLabel('Assigned staff',{exact:true}).selectOption({label:'Sample colleague B'});await page.getByRole('button',{name:'Save daily check'}).click();

@@ -1,13 +1,6 @@
+import { openDestination } from "./navigation.js";
 import { test, expect } from "@playwright/test";
-async function go(page, name) {
-  await page
-    .getByRole("button", { name: "Open navigation menu", exact: true })
-    .click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name, exact: true })
-    .click();
-}
+const go = openDestination;
 async function open(page, finance = false) {
   await page.goto("./");
   if (finance) {

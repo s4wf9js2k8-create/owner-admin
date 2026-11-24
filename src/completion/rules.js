@@ -1,3 +1,4 @@
+import { finalCommand, validateFinalRecord } from "./finalRules.js";
 import { validateDemoAssignment } from "../demoAssignmentRules.js";
 import { moduleInfo } from "../customerModules.js";
 import { availabilityAssessment } from "../staffEligibility.js";
@@ -171,6 +172,8 @@ export function relatedTo(record, id) {
   ].includes(id);
 }
 export function businessCommand(records, org, id, command, actor = {}) {
+  const final = finalCommand(records, org, id, command, actor);
+  if (final) return final;
   let next = structuredClone(records);
   const record = next.find((r) => r.id === id && r.orgId === org.id);
   assert(record, "Record not available in this company.");
@@ -598,6 +601,7 @@ export function businessCommand(records, org, id, command, actor = {}) {
   return next;
 }
 export function validateCompletionRecord(record, previous, records) {
+  validateFinalRecord(record, previous, records);
   if (type(record) === "maintenance" && record.requiresSupervisorReview) {
     if (
       record.completionRequestedAt ||

@@ -8,12 +8,14 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test tests/*.test.js",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --project=desktop",
     "lint": "eslint .",
     "format": "prettier --write src tests *.js package.json .github/workflows/*.yml",
     "test:policy": "node --test tests/tenant-policy.test.js",
     "test:integration": "npm --prefix server test",
-    "test:compose": "node server/scripts/verify-compose.mjs"
+    "test:compose": "node server/scripts/verify-compose.mjs",
+    "test:e2e:mobile": "playwright test responsive-smoke.spec.js --project=iphone --project=ipad",
+    "test:e2e:all": "playwright test"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

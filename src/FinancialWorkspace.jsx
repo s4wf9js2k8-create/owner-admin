@@ -1,3 +1,7 @@
+import {
+  ProductCatalogue,
+  CreditRefunds,
+} from "./completion/FinanceExtensions";
 import React, { useEffect, useState } from "react";
 import { printFinancialDocument } from "./printFinancialDocument";
 import { Empty, Modal, Status } from "./components";
@@ -36,9 +40,10 @@ export default function FinancialWorkspace({
   canApprove,
   createRequest,
   initialCustomerId,
+  onConfigure,
 }) {
   const all = records.filter((r) => r.orgId === org.id),
-    rows = all.filter((r) => r.module === module);
+    rows = all.filter((r) => r.module === module && r.recordType !== "product");
   const customers = all.filter((r) => moduleInfo(r.module).type === "crm"),
     people = teamMembers(all, org.id);
   const [kind, setKind] = useState("quote"),
@@ -108,9 +113,16 @@ export default function FinancialWorkspace({
             expiryDate: dateAfter(30),
             dueDate: dateAfter(30),
             description: "",
-            terms: "Payment within 30 days. Fictional demonstration only.",
+            terms:
+              org.workspaceConfig?.finance?.terms ||
+              "Payment within 30 days. Fictional demonstration only.",
             internalNotes: "",
-            lineItems: [blank()],
+            lineItems: [
+              {
+                ...blank(),
+                vat: org.workspaceConfig?.finance?.defaultVat || 0,
+              },
+            ],
           },
     );
   };
@@ -580,6 +592,16 @@ export default function FinancialWorkspace({
           </select>
         </label>
       </div>
+      <ProductCatalogue
+        org={org}
+        module={module}
+        records={all}
+        onAdd={onAdd}
+        onUpdate={onUpdate}
+        onConfigure={onConfigure}
+        canCreate={canCreate}
+        canEdit={canEdit}
+      />
       <div className="quote-library">
         {shown.map((r) => (
           <article key={r.id} className="quote-document">
@@ -725,6 +747,41 @@ export default function FinancialWorkspace({
               />
             </label>
             <h3>Products & services</h3>
+            <label>
+              Add product/service to document
+              <select
+                value=""
+                onChange={(e) => {
+                  const p = all.find((r) => r.id === e.target.value);
+                  if (p)
+                    setEditor({
+                      ...editor,
+                      lineItems: [
+                        ...editor.lineItems.filter(
+                          (l) => l.description || Number(l.rate),
+                        ),
+                        {
+                          productId: p.id,
+                          description: p.title,
+                          quantity: 1,
+                          rate: p.rate,
+                          discount: 0,
+                          vat: p.vat,
+                        },
+                      ],
+                    });
+                }}
+              >
+                <option value="">Choose catalogue item</option>
+                {all
+                  .filter((r) => r.recordType === "product")
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.code} · {p.title}
+                    </option>
+                  ))}
+              </select>
+            </label>
             {editor.lineItems.map((line, index) => (
               <fieldset className="financial-line-editor" key={index}>
                 <legend>Line {index + 1}</legend>
@@ -958,6 +1015,12 @@ export default function FinancialWorkspace({
           )}
           {documentKind(current) === "invoice" && (
             <div className="invoice-settlements">
+              <CreditRefunds
+                org={org}
+                invoice={current}
+                onUpdate={onUpdate}
+                canEdit={canApprove}
+              />
               <h3>Outstanding balance: {money(balancePence(current))}</h3>
               <p>Fictional payment recording only. No money is collected.</p>
               {canEdit &&

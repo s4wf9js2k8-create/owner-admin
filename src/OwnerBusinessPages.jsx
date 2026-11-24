@@ -396,6 +396,68 @@ function Leads({ data, setData, controller }) {
                         />
                       </label>
                     ))}
+                    <label>
+                      Sales owner
+                      <select
+                        value={lead.ownerAccountId || ""}
+                        onChange={(e) =>
+                          setData((d) => ({
+                            ...d,
+                            leads: d.leads.map((l) =>
+                              l.id === lead.id
+                                ? { ...l, ownerAccountId: e.target.value }
+                                : l,
+                            ),
+                          }))
+                        }
+                      >
+                        <option value="">Unassigned</option>
+                        {(controller.flags.ownerAccounts || [])
+                          .filter((a) => a.status === "Active")
+                          .map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {a.name}
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                    <label>
+                      Proposal reference
+                      <input
+                        value={lead.proposalReference || ""}
+                        onChange={(e) =>
+                          setData((d) => ({
+                            ...d,
+                            leads: d.leads.map((l) =>
+                              l.id === lead.id
+                                ? { ...l, proposalReference: e.target.value }
+                                : l,
+                            ),
+                          }))
+                        }
+                      />
+                    </label>
+                    <label>
+                      Proposal outcome
+                      <select
+                        value={lead.proposalStatus || "Draft"}
+                        onChange={(e) =>
+                          setData((d) => ({
+                            ...d,
+                            leads: d.leads.map((l) =>
+                              l.id === lead.id
+                                ? { ...l, proposalStatus: e.target.value }
+                                : l,
+                            ),
+                          }))
+                        }
+                      >
+                        <option>Draft</option>
+                        <option>Sent (recorded only)</option>
+                        <option>Accepted</option>
+                        <option>Rejected</option>
+                      </select>
+                    </label>
                     <form
                       onSubmit={(e) => {
                         e.preventDefault();

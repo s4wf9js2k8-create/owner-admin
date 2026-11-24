@@ -1,9 +1,7 @@
+import { openDestination } from "./navigation.js";
 import { test, expect } from "@playwright/test";
 
-async function navigate(page, title) {
-  await page.getByRole("button", {name:"Open navigation menu",exact:true}).click();
-  await page.getByRole("navigation").getByRole("button",{name:title,exact:true}).click();
-}
+const navigate = openDestination;
 async function openCustomer(page) {
   await page.goto("./");
   await page.getByRole("button",{name:"Explore customer workspace"}).click();

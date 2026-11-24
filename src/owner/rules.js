@@ -5,7 +5,7 @@ export const ownerRoles = [
   "Sales Representative",
   "Read-only Auditor",
 ];
-const all = [
+export const ownerPages = [
   "Overview",
   "Organisations",
   "Company Profile",
@@ -25,11 +25,20 @@ const all = [
   "Settings",
   "Owner Access",
 ];
-export function ownerPageAllowed(role, page) {
+export function ownerPageAllowed(role, page, policies = {}) {
+  const original = role;
+  role = ownerRoles.includes(role)
+    ? role
+    : policies.customRoles?.find((r) => r.name === role)?.base;
+  if (
+    original !== "Platform Owner" &&
+    policies.roles?.[original]?.disabledPages?.includes(page)
+  )
+    return false;
   return role === "Platform Owner" ||
     role === "Platform Administrator" ||
     role === "Read-only Auditor"
-    ? all.includes(page)
+    ? ownerPages.includes(page)
     : role === "Support Agent"
       ? [
           "Overview",
@@ -47,10 +56,19 @@ export function ownerPageAllowed(role, page) {
           ].includes(page)
         : false;
 }
-export const ownerCanManage = (role) =>
-  ["Platform Owner", "Platform Administrator"].includes(role);
-export const ownerCanSupport = (role) =>
-  ownerCanManage(role) || role === "Support Agent";
+export const ownerBase = (role, policies = {}) =>
+  ownerRoles.includes(role)
+    ? role
+    : policies.customRoles?.find((r) => r.name === role)?.base;
+export const ownerCanManage = (role, policies = {}) =>
+  ["Platform Owner", "Platform Administrator"].includes(
+    ownerBase(role, policies),
+  ) &&
+  (role === "Platform Owner" ||
+    (!policies.roles?.[role]?.readOnly &&
+      policies.roles?.[role]?.manage !== false));
+export const ownerCanSupport = (role, policies = {}) =>
+  ownerCanWritePage(role, "Support", policies);
 export function illustrativeAmount(org, plans) {
   const plan = plans.find((p) => p.name === org.plan);
   if (!plan) return null;
@@ -94,8 +112,17 @@ export function monthlyEquivalent(org, plans) {
   return value === null ? null : value / (org.cycle === "Annual" ? 12 : 1);
 }
 
-export const ownerCanWritePage = (role, page) =>
-  ownerCanManage(role) ||
-  (role === "Support Agent" &&
-    ["Support", "Feature Requests"].includes(page)) ||
-  (role === "Sales Representative" && page === "Sales Leads");
+export const ownerCanWritePage = (role, page, policies = {}) =>
+  ownerPageAllowed(role, page, policies) &&
+  (role === "Platform Owner" ||
+    (!policies.roles?.[role]?.readOnly &&
+      !policies.roles?.[role]?.disabledWrites?.includes(page))) &&
+  (ownerCanManage(role, policies) ||
+    (ownerBase(role, policies) === "Support Agent" &&
+      ["Support", "Feature Requests"].includes(page)) ||
+    (ownerBase(role, policies) === "Sales Representative" &&
+      page === "Sales Leads"));
+export const configuredOwnerRoles = (flags) => [
+  ...ownerRoles,
+  ...(flags?.ownerPolicies?.customRoles || []).map((r) => r.name),
+];

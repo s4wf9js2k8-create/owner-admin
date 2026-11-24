@@ -1,3 +1,4 @@
+import { openDestination } from "./navigation.js";
 import { test, expect } from "@playwright/test";
 async function enter(page, company) {
   await page.goto("./");
@@ -6,13 +7,7 @@ async function enter(page, company) {
     .click();
   await page.getByLabel("Example workspace").selectOption(company);
 }
-async function nav(page, name) {
-  await page.getByRole("button", { name: "Open navigation menu" }).click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name, exact: true })
-    .click();
-}
+const nav = openDestination;
 test("maintenance engineer comes from the staff directory, with a linked asset", async ({
   page,
 }) => {
